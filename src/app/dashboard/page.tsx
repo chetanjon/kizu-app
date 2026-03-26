@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { Pill, SmallPill, Avatar } from "@/components/ui";
 import { InviteButton } from "@/components/invite-button";
+import { SignOutButton } from "@/components/sign-out-button";
 
 function getInitials(name: string) {
   return name
@@ -47,22 +48,28 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-const AVATAR_COLORS = ["bg-lime", "bg-blue", "bg-pink", "bg-purple", "bg-orange"];
+const AVATAR_COLORS = [
+  "bg-lime",
+  "bg-blue",
+  "bg-pink",
+  "bg-purple",
+  "bg-orange",
+];
 
 export default async function Dashboard() {
   const supabase = await createClient();
 
-  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  // Get user's pod membership
   const { data: membership } = await supabase
     .from("pod_members")
-    .select("pod_id, wins, losses, current_streak, pods(id, name, invite_code, created_at)")
+    .select(
+      "pod_id, wins, losses, current_streak, pods(id, name, invite_code, created_at)"
+    )
     .eq("user_id", user.id)
     .limit(1)
     .single();
@@ -80,7 +87,6 @@ export default async function Dashboard() {
   const myStreak = membership.current_streak;
   const weekNum = getWeekNumber(pod.created_at);
 
-  // Get user's display name
   const { data: userData } = await supabase
     .from("users")
     .select("name")
@@ -89,7 +95,6 @@ export default async function Dashboard() {
   const myName = userData?.name || user.email?.split("@")[0] || "You";
   const myInitials = getInitials(myName);
 
-  // Get all pod members with user info
   const { data: podMembers } = await supabase
     .from("pod_members")
     .select("user_id, wins, losses, current_streak, users(id, name)")
@@ -108,7 +113,6 @@ export default async function Dashboard() {
     };
   });
 
-  // Get current week's bets
   const monday = getCurrentMonday();
   const { data: bets } = await supabase
     .from("bets")
@@ -116,11 +120,8 @@ export default async function Dashboard() {
     .eq("pod_id", pod.id)
     .eq("week_start", monday);
 
-  const betsMap = new Map(
-    (bets || []).map((b) => [b.user_id, b])
-  );
+  const betsMap = new Map((bets || []).map((b) => [b.user_id, b]));
 
-  // Get current week's checkins (through bets)
   const betIds = (bets || []).map((b) => b.id);
   const { data: checkins } = betIds.length
     ? await supabase
@@ -129,14 +130,9 @@ export default async function Dashboard() {
         .in("bet_id", betIds)
     : { data: [] };
 
-  const checkinsByBet = new Map(
-    (checkins || []).map((c) => [c.bet_id, c])
-  );
-
-  // Count sealed members
+  const checkinsByBet = new Map((checkins || []).map((c) => [c.bet_id, c]));
   const sealedCount = (checkins || []).length;
 
-  // Get proof drops this week
   const { data: proofs } = betIds.length
     ? await supabase
         .from("proof_drops")
@@ -146,7 +142,6 @@ export default async function Dashboard() {
         .limit(5)
     : { data: [] };
 
-  // Get stares this week
   const { data: stares } = await supabase
     .from("stares")
     .select("id")
@@ -155,20 +150,60 @@ export default async function Dashboard() {
 
   const stareCount = stares?.length || 0;
   const proofCount = proofs?.length || 0;
-
-  // Find my bet for the brief
   const myBet = betsMap.get(user.id);
 
-  // Days into the week
   const dayOfWeek = new Date().getDay();
-  const dayNum = dayOfWeek === 0 ? 7 : dayOfWeek; // Mon=1, Sun=7
+  const dayNum = dayOfWeek === 0 ? 7 : dayOfWeek;
   const daysLeft = Math.max(0, 7 - dayNum);
   const dayNames = ["", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
   return (
-    <div className="flex min-h-screen bg-bg">
-      {/* ═══ SIDEBAR ═══ */}
-      <aside className="w-[220px] shrink-0 bg-white border-r-[2.5px] border-stroke flex flex-col h-screen sticky top-0">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-bg">
+      {/* ═══ MOBILE TOP NAV ═══ */}
+      <nav className="lg:hidden border-b-[2.5px] border-stroke bg-white px-4 py-3">
+        <div className="flex justify-between items-center">
+          <span className="font-h text-xl font-black">Kizu</span>
+          <div className="flex items-center gap-2">
+            <Pill bg="bg-bg">W{weekNum}</Pill>
+            <Avatar initials={myInitials} bg="bg-yellow" size="small" />
+          </div>
+        </div>
+        <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
+          <a
+            href="/dashboard"
+            className="shrink-0 bg-lime border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] rounded-lg px-3 py-1.5 font-b font-bold text-xs"
+          >
+            Dashboard
+          </a>
+          <a
+            href="/bet"
+            className="shrink-0 rounded-lg px-3 py-1.5 font-b text-xs text-[#888] border-2 border-transparent"
+          >
+            Place Bet
+          </a>
+          <a
+            href="/checkin"
+            className="shrink-0 rounded-lg px-3 py-1.5 font-b text-xs text-[#888] border-2 border-transparent"
+          >
+            Check In
+          </a>
+          <a
+            href="/drop"
+            className="shrink-0 rounded-lg px-3 py-1.5 font-b text-xs text-[#888] border-2 border-transparent"
+          >
+            The Drop
+          </a>
+          <a
+            href="/profile"
+            className="shrink-0 rounded-lg px-3 py-1.5 font-b text-xs text-[#888] border-2 border-transparent"
+          >
+            Profile
+          </a>
+        </div>
+      </nav>
+
+      {/* ═══ DESKTOP SIDEBAR ═══ */}
+      <aside className="hidden lg:flex w-[220px] shrink-0 bg-white border-r-[2.5px] border-stroke flex-col h-screen sticky top-0">
         <div className="px-5 pb-5 pt-6 border-b-[2.5px] border-stroke">
           <span className="font-h text-[26px] font-black">Kizu</span>
         </div>
@@ -187,16 +222,28 @@ export default async function Dashboard() {
           <div className="bg-lime border-2 border-stroke shadow-[3px_3px_0_#1A1A1A] rounded-[10px] px-3.5 py-2.5 mb-1 font-b font-bold text-sm">
             Dashboard
           </div>
-          <a href="/bet" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
+          <a
+            href="/bet"
+            className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors"
+          >
             Place Bet
           </a>
-          <a href="/checkin" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
+          <a
+            href="/checkin"
+            className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors"
+          >
             Check In
           </a>
-          <a href="/drop" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
+          <a
+            href="/drop"
+            className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors"
+          >
             The Drop
           </a>
-          <a href="/profile" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
+          <a
+            href="/profile"
+            className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors"
+          >
             Profile
           </a>
         </div>
@@ -207,14 +254,17 @@ export default async function Dashboard() {
             {pod.name}
           </div>
           <InviteButton inviteCode={pod.invite_code} />
+          <div className="mt-2">
+            <SignOutButton />
+          </div>
         </div>
       </aside>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <main className="flex-1 p-7">
+      <main className="flex-1 p-4 lg:p-7">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="font-h text-[28px] font-black tracking-[-0.03em]">
+            <h1 className="font-h text-2xl lg:text-[28px] font-black tracking-[-0.03em]">
               Dashboard
             </h1>
             <div className="font-m text-[11px] text-[#888] mt-1">
@@ -229,15 +279,15 @@ export default async function Dashboard() {
         </div>
 
         {/* ═══ BENTO GRID ═══ */}
-        <div className="grid grid-cols-4 gap-3.5">
-          {/* Brief — yellow, spans 2 */}
-          <div className="col-span-2 bg-yellow rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] px-[26px] py-6 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* Brief — yellow, spans 2 on lg */}
+          <div className="md:col-span-2 bg-yellow rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] px-5 lg:px-[26px] py-5 lg:py-6 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
             <div className="font-m text-[10px] font-bold text-yellow-t opacity-45 tracking-[0.08em] mb-3">
               THE BRIEF // {dayNames[dayNum]}
             </div>
             {myBet ? (
               <>
-                <div className="font-h text-[22px] font-bold text-yellow-t leading-[1.25] mb-2">
+                <div className="font-h text-lg lg:text-[22px] font-bold text-yellow-t leading-[1.25] mb-2">
                   Day {dayNum} of &apos;{myBet.goal_text}&apos;
                 </div>
                 <div className="font-b text-[13px] text-yellow-t opacity-60 leading-relaxed">
@@ -250,7 +300,7 @@ export default async function Dashboard() {
               </>
             ) : (
               <>
-                <div className="font-h text-[22px] font-bold text-yellow-t leading-[1.25] mb-2">
+                <div className="font-h text-lg lg:text-[22px] font-bold text-yellow-t leading-[1.25] mb-2">
                   No bet placed yet.
                 </div>
                 <div className="font-b text-[13px] text-yellow-t opacity-60 leading-relaxed">
@@ -259,7 +309,7 @@ export default async function Dashboard() {
               </>
             )}
             {sealedCount > 0 && (
-              <div className="flex gap-2 mt-3.5">
+              <div className="flex gap-2 mt-3.5 flex-wrap">
                 {members
                   .filter((m) => {
                     const bet = betsMap.get(m.id);
@@ -300,9 +350,9 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          {/* Members — white, spans 3 */}
-          <div className="col-span-3 bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] overflow-hidden transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
-            <div className="px-[22px] py-3.5 border-b-[2.5px] border-stroke flex justify-between items-center">
+          {/* Members — white, spans 3 on lg, full on mobile */}
+          <div className="md:col-span-2 lg:col-span-3 bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] overflow-hidden transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+            <div className="px-4 lg:px-[22px] py-3.5 border-b-[2.5px] border-stroke flex justify-between items-center">
               <span className="font-h text-base font-extrabold">Members</span>
               <Pill bg="bg-bg">{members.length} people</Pill>
             </div>
@@ -312,10 +362,10 @@ export default async function Dashboard() {
               const isSealed = !!checkin;
               return (
                 <div key={m.id}>
-                  <div className="flex items-center gap-3 px-[22px] py-3">
+                  <div className="flex items-center gap-3 px-4 lg:px-[22px] py-3">
                     <Avatar initials={m.initials} bg={m.avatarBg} />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-b font-semibold text-[13px]">
                           {m.name}
                         </span>
@@ -323,12 +373,10 @@ export default async function Dashboard() {
                           {m.wins}–{m.losses}
                         </span>
                         {m.streak > 0 && (
-                          <SmallPill bg="bg-purple">
-                            {m.streak}W 🔥
-                          </SmallPill>
+                          <SmallPill bg="bg-purple">{m.streak}W 🔥</SmallPill>
                         )}
                       </div>
-                      <div className="font-b text-[11px] text-[#888] mt-0.5">
+                      <div className="font-b text-[11px] text-[#888] mt-0.5 truncate">
                         {bet ? bet.goal_text : "No bet yet"}
                       </div>
                     </div>
@@ -348,9 +396,9 @@ export default async function Dashboard() {
             })}
           </div>
 
-          {/* Proofs + Stares stacked */}
-          <div className="flex flex-col gap-3.5">
-            <div className="bg-purple rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-5 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+          {/* Proofs + Stares — stacked on desktop, side by side on mobile */}
+          <div className="flex flex-row md:flex-col gap-3.5">
+            <div className="flex-1 bg-purple rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-5 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
               <div className="font-m text-[10px] font-bold text-purple-t opacity-45 tracking-[0.08em] mb-2">
                 PROOFS
               </div>
@@ -362,7 +410,7 @@ export default async function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-pink rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-5 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+            <div className="flex-1 bg-pink rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-5 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
               <div className="font-m text-[10px] font-bold text-pink-t opacity-45 tracking-[0.08em] mb-2">
                 STARES
               </div>
@@ -375,8 +423,8 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          {/* Proof Drops — white, spans 2 */}
-          <div className="col-span-2 bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] px-[22px] py-5 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+          {/* Proof Drops — white */}
+          <div className="md:col-span-1 lg:col-span-2 bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] px-4 lg:px-[22px] py-5 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
             <div className="font-h text-base font-extrabold mb-3">
               Proof Drops
             </div>
@@ -416,27 +464,33 @@ export default async function Dashboard() {
             )}
           </div>
 
-          {/* Record — black, spans 2 */}
-          <div className="col-span-2 bg-stroke rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-[26px]">
+          {/* Record — black */}
+          <div className="md:col-span-1 lg:col-span-2 bg-stroke rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-5 lg:p-[26px]">
             <div className="font-m text-[10px] font-bold text-[#555] tracking-[0.1em] mb-3.5">
               YOUR RECORD
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-h text-[68px] font-black text-white leading-none tracking-[-0.04em]">
+              <span className="font-h text-[52px] lg:text-[68px] font-black text-white leading-none tracking-[-0.04em]">
                 {myWins}
               </span>
-              <span className="font-m text-[26px] text-[#444]">–</span>
-              <span className="font-h text-[50px] font-black text-red leading-none">
+              <span className="font-m text-xl lg:text-[26px] text-[#444]">
+                –
+              </span>
+              <span className="font-h text-[38px] lg:text-[50px] font-black text-red leading-none">
                 {myLosses}
               </span>
             </div>
             <div className="flex gap-2 mt-4">
               <Pill bg="bg-lime">{getTitle(myWins).toUpperCase()}</Pill>
-              {myStreak > 0 && (
-                <Pill bg="bg-purple">{myStreak}W 🔥</Pill>
-              )}
+              {myStreak > 0 && <Pill bg="bg-purple">{myStreak}W 🔥</Pill>}
             </div>
           </div>
+        </div>
+
+        {/* Mobile footer */}
+        <div className="lg:hidden mt-6 flex justify-between items-center">
+          <InviteButton inviteCode={pod.invite_code} />
+          <SignOutButton />
         </div>
       </main>
     </div>
