@@ -18,6 +18,7 @@ export default function PlaceBet() {
   >([]);
   const [podId, setPodId] = useState("");
   const [weekNum, setWeekNum] = useState(1);
+  const [myName, setMyName] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [goalText, setGoalText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,14 @@ export default function PlaceBet() {
         .single();
 
       if (!membership) return;
+
+      // Get user's name
+      const { data: userData } = await supabase
+        .from("users")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+      setMyName(userData?.name?.split(" ")[0] || "You");
 
       const pod = membership.pods as unknown as { id: string; name: string; created_at: string };
       setPodId(pod.id);
@@ -159,14 +168,30 @@ export default function PlaceBet() {
           <br />
           shot.
         </h1>
-        <p className="font-b text-[15px] text-[#888] mt-3 mb-10">
-          One goal. One week. Direct it at someone.
+        <p className="font-b text-[15px] text-[#888] mt-3 mb-3">
+          Write one goal for this week. Pick who you&apos;re betting to — if you fail, they set your goal next week.
         </p>
 
+        {/* Dynamic preview */}
+        {selected && goalText.trim() && (
+          <div className="bg-yellow rounded-xl border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] px-4 py-3 mb-8">
+            <p className="font-b text-sm text-yellow-t">
+              <span className="font-bold">{myName}</span> bets{" "}
+              <span className="font-bold">{members.find((m) => m.id === selected)?.name.split(" ")[0]}</span>{" "}
+              they&apos;ll{" "}
+              <span className="italic">&ldquo;{goalText.trim()}&rdquo;</span>
+            </p>
+          </div>
+        )}
+        {!selected || !goalText.trim() ? <div className="mb-8" /> : null}
+
         {/* Member selector */}
-        <div className="font-m text-[11px] font-bold text-[#7A7A7A] tracking-[0.08em] mb-3.5">
-          DIRECTING TO
+        <div className="font-m text-[11px] font-bold text-[#7A7A7A] tracking-[0.08em] mb-1.5">
+          WHO ARE YOU BETTING TO?
         </div>
+        <p className="font-b text-xs text-[#AAA] mb-3.5">
+          If you miss, this person sets your goal next week.
+        </p>
         <div className="flex gap-[18px] mb-10">
           {members.map((m) => (
             <div
@@ -193,11 +218,14 @@ export default function PlaceBet() {
         </div>
 
         {/* Goal textarea */}
+        <div className="font-m text-[11px] font-bold text-[#7A7A7A] tracking-[0.08em] mb-3.5">
+          YOUR GOAL THIS WEEK
+        </div>
         <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] overflow-hidden mb-3">
           <textarea
             value={goalText}
             onChange={(e) => setGoalText(e.target.value)}
-            placeholder="What will you accomplish this week?"
+            placeholder={`e.g. "Send 5 cold emails to hiring managers"`}
             className="w-full min-h-[150px] px-[22px] py-5 bg-transparent border-none font-b text-base leading-[1.7] resize-none outline-none placeholder:text-[#CCC]"
           />
         </div>
