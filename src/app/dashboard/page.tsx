@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { Pill, SmallPill, Avatar } from "@/components/ui";
+import { InviteButton } from "@/components/invite-button";
 
 function getInitials(name: string) {
   return name
@@ -205,6 +206,7 @@ export default async function Dashboard() {
           <div className="font-m text-[10px] text-[#888] mt-1.5">
             {pod.name}
           </div>
+          <InviteButton inviteCode={pod.invite_code} />
         </div>
       </aside>
 
