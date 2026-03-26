@@ -186,18 +186,18 @@ export default async function Dashboard() {
           <div className="bg-lime border-2 border-stroke shadow-[3px_3px_0_#1A1A1A] rounded-[10px] px-3.5 py-2.5 mb-1 font-b font-bold text-sm">
             Dashboard
           </div>
-          <div className="px-3.5 py-2.5 text-[#888] font-b text-sm">
+          <a href="/bet" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
             Place Bet
-          </div>
-          <div className="px-3.5 py-2.5 text-[#888] font-b text-sm">
+          </a>
+          <a href="/checkin" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
             Check In
-          </div>
-          <div className="px-3.5 py-2.5 text-[#888] font-b text-sm">
+          </a>
+          <a href="/drop" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
             The Drop
-          </div>
-          <div className="px-3.5 py-2.5 text-[#888] font-b text-sm">
+          </a>
+          <a href="/profile" className="block px-3.5 py-2.5 text-[#888] font-b text-sm hover:text-stroke transition-colors">
             Profile
-          </div>
+          </a>
         </div>
 
         <div className="mt-auto px-5 py-3.5 border-t-[2.5px] border-stroke">

@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protect app routes — redirect to /login if not signed in
-  const protectedPaths = ["/dashboard", "/create-pod", "/join"];
+  const protectedPaths = ["/dashboard", "/create-pod", "/join", "/bet", "/checkin", "/drop", "/profile"];
   const isProtected = protectedPaths.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   );
@@ -48,5 +48,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/create-pod", "/join/:path*"],
+  matcher: ["/dashboard/:path*", "/create-pod", "/join/:path*", "/bet", "/checkin", "/drop", "/profile"],
 };
