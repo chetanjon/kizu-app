@@ -88,6 +88,12 @@ export default function TheDrop() {
         };
       });
 
+      // Wins-first reveal: deliveries first, then halfway, then misses, then no check-in.
+      // Research: users need witnesses to wins, not just losses.
+      const resultRank = (r: string | null) =>
+        r === "delivered" ? 1 : r === "halfway" ? 2 : r === "missed" ? 3 : 4;
+      memberResults.sort((a, b) => resultRank(a.result) - resultRank(b.result));
+
       setMembers(memberResults);
       setLoading(false);
     }

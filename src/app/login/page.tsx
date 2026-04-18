@@ -27,7 +27,7 @@ function LoginContent() {
             Kizu
           </h1>
           <p className="font-m text-[11px] text-[#AAA] mt-2">
-            Scars don&apos;t lie.
+            Someone&apos;s watching.
           </p>
         </div>
 
@@ -37,7 +37,7 @@ function LoginContent() {
             Sign in
           </h2>
           <p className="font-b text-sm text-[#888] mb-8 leading-relaxed">
-            Join your pod. Make your bet. Face the consequences.
+            Join your pod. Five people who&apos;ll actually notice.
           </p>
 
           <button

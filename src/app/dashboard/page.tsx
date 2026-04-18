@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase-server";
 import { Pill, SmallPill, Avatar } from "@/components/ui";
 import { InviteButton } from "@/components/invite-button";
 import { SignOutButton } from "@/components/sign-out-button";
+import { StareButton } from "@/components/stare-button";
 
 function getInitials(name: string) {
   return name
@@ -144,11 +145,28 @@ export default async function Dashboard() {
 
   const { data: stares } = await supabase
     .from("stares")
-    .select("id")
+    .select("id, from_user, to_user")
     .eq("pod_id", pod.id)
     .eq("week_start", monday);
 
   const stareCount = stares?.length || 0;
+  const staresSentByMe = new Set(
+    (stares || [])
+      .filter((s) => s.from_user === user.id)
+      .map((s) => s.to_user)
+  );
+  const staresReceivedFromIds = (stares || [])
+    .filter((s) => s.to_user === user.id)
+    .map((s) => s.from_user);
+  const memberNameById = new Map(
+    (podMembers || []).map((pm) => {
+      const u = pm.users as unknown as { id: string; name: string };
+      return [u.id, u.name];
+    })
+  );
+  const staresReceived = staresReceivedFromIds.map(
+    (id) => memberNameById.get(id)?.split(" ")[0] || "Someone"
+  );
   const proofCount = proofs?.length || 0;
   const myBet = betsMap.get(user.id);
 
@@ -278,6 +296,20 @@ export default async function Dashboard() {
           )}
         </div>
 
+        {/* ═══ SEES-YOU TOASTS (stares received this week) ═══ */}
+        {staresReceived.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {staresReceived.map((name, i) => (
+              <div
+                key={i}
+                className="bg-pink rounded-xl border-2 border-stroke shadow-[3px_3px_0_#1A1A1A] px-3.5 py-2 font-b text-[13px] font-bold text-pink-t"
+              >
+                {name} sees you.
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ═══ BENTO GRID ═══ */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Brief — yellow, spans 2 on lg */}
@@ -295,7 +327,7 @@ export default async function Dashboard() {
                     ? "Today is the Drop. Sunset's coming."
                     : daysLeft === 1
                       ? "Tomorrow is the Drop. Are you done?"
-                      : `${daysLeft} days left. Keep moving.`}
+                      : `${daysLeft} days. ${Math.max(1, members.length - 1)} ${members.length - 1 === 1 ? "person is" : "people are"} watching.`}
                 </div>
               </>
             ) : (
@@ -304,7 +336,7 @@ export default async function Dashboard() {
                   No bet placed yet.
                 </div>
                 <div className="font-b text-[13px] text-yellow-t opacity-60 leading-relaxed">
-                  Place your first bet for this week. Direct it at someone.
+                  Your pod is waiting.
                 </div>
               </>
             )}
@@ -360,6 +392,7 @@ export default async function Dashboard() {
               const bet = betsMap.get(m.id);
               const checkin = bet ? checkinsByBet.get(bet.id) : null;
               const isSealed = !!checkin;
+              const isSelf = m.id === user.id;
               return (
                 <div key={m.id}>
                   <div className="flex items-center gap-3 px-4 lg:px-[22px] py-3">
@@ -386,6 +419,13 @@ export default async function Dashboard() {
                       </Pill>
                     ) : (
                       <Pill bg="bg-bg">NO BET</Pill>
+                    )}
+                    {!isSelf && (
+                      <StareButton
+                        toUser={m.id}
+                        podId={pod.id}
+                        alreadySent={staresSentByMe.has(m.id)}
+                      />
                     )}
                   </div>
                   {i < members.length - 1 && (

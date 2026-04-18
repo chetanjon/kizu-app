@@ -121,7 +121,7 @@ export default function CreatePod() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Job Hunt Sprint"
+            placeholder="e.g. Indie Hackers Q2"
             maxLength={30}
             className="w-full rounded-xl border-[2.5px] border-stroke bg-white font-b text-[15px] px-4 py-3.5 shadow-[3px_3px_0_#1A1A1A] outline-none focus:bg-[#FFFDF0] transition-colors placeholder:text-[#CCC] mb-2"
           />

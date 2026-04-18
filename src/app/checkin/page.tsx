@@ -152,7 +152,7 @@ export default function CheckIn() {
   const results = [
     { id: "delivered", label: "Delivered", sub: "Nailed it", activeBg: "bg-lime", activeText: "text-lime-t" },
     { id: "halfway", label: "Halfway", sub: "Partial", activeBg: "bg-yellow", activeText: "text-yellow-t" },
-    { id: "missed", label: "Missed", sub: "Didn\u2019t make it", activeBg: "bg-pink", activeText: "text-pink-t" },
+    { id: "missed", label: "Missed", sub: "Not this week", activeBg: "bg-pink", activeText: "text-pink-t" },
   ];
 
   return (

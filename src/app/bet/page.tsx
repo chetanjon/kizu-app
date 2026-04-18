@@ -25,6 +25,7 @@ export default function PlaceBet() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [alreadyBet, setAlreadyBet] = useState(false);
+  const [isRestart, setIsRestart] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -95,6 +96,29 @@ export default function PlaceBet() {
 
       if (existingBet && existingBet.length > 0) {
         setAlreadyBet(true);
+      } else {
+        // Restart acknowledgement: if their most recent past bet was missed
+        // (or had no check-in), greet the return rather than ignore it.
+        const { data: prevBets } = await supabase
+          .from("bets")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("pod_id", pod.id)
+          .lt("week_start", weekStart)
+          .order("week_start", { ascending: false })
+          .limit(1);
+
+        if (prevBets && prevBets.length > 0) {
+          const { data: prevCheckin } = await supabase
+            .from("checkins")
+            .select("result")
+            .eq("bet_id", prevBets[0].id)
+            .limit(1);
+          const prevResult = prevCheckin?.[0]?.result ?? null;
+          if (prevResult === "missed" || prevResult === null) {
+            setIsRestart(true);
+          }
+        }
       }
 
       setLoading(false);
@@ -162,6 +186,11 @@ export default function PlaceBet() {
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-6">
       <div className="max-w-[640px] w-full py-12">
+        {isRestart && (
+          <div className="bg-pink rounded-xl border-2 border-stroke shadow-[3px_3px_0_#1A1A1A] px-4 py-2.5 mb-4 font-b text-sm text-pink-t">
+            Week {weekNum}. You came back. That&apos;s the whole game.
+          </div>
+        )}
         <Pill bg="bg-yellow">WEEK {weekNum}</Pill>
         <h1 className="font-h text-[clamp(36px,5vw,52px)] font-black tracking-[-0.04em] leading-[0.95] mt-4">
           Call your
@@ -230,7 +259,7 @@ export default function PlaceBet() {
           />
         </div>
         <p className="font-m text-[10px] text-[#AAA] mb-7">
-          This goes on your Receipt Wall. Forever.
+          Your pod will see this all week.
         </p>
 
         {error && (

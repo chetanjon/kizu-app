@@ -49,7 +49,7 @@ export default async function Profile() {
   // Get all bets for Receipt Wall
   const { data: bets } = await supabase
     .from("bets")
-    .select("id, goal_text, week_start, status")
+    .select("id, goal_text, week_start, status, directed_at")
     .eq("user_id", user.id)
     .eq("pod_id", membership.pod_id)
     .order("week_start", { ascending: false })
@@ -63,13 +63,30 @@ export default async function Profile() {
 
   const checkinMap = new Map((checkins || []).map((c) => [c.bet_id, c.result]));
 
+  // Look up names for the witnesses (directed_at targets)
+  const witnessIds = [
+    ...new Set(
+      (bets || []).map((b) => b.directed_at).filter(Boolean) as string[]
+    ),
+  ];
+  const { data: witnessUsers } = witnessIds.length
+    ? await supabase.from("users").select("id, name").in("id", witnessIds)
+    : { data: [] };
+  const witnessNameMap = new Map(
+    (witnessUsers || []).map((u) => [u.id, u.name])
+  );
+
   // Build wall data
   const wall = (bets || []).map((b, i) => {
     const result = checkinMap.get(b.id) || null;
+    const witnessName = b.directed_at
+      ? witnessNameMap.get(b.directed_at) || ""
+      : "";
     return {
       week: (bets || []).length - i,
       goal: b.goal_text,
       result,
+      witness: witnessName ? witnessName.split(" ")[0] : "—",
     };
   });
 
@@ -117,10 +134,11 @@ export default async function Profile() {
         </div>
         <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-[44px_16px_1fr_auto] gap-2.5 items-center px-[22px] py-3 border-b-[2.5px] border-stroke">
+          <div className="grid grid-cols-[44px_16px_1fr_72px_auto] gap-2.5 items-center px-[22px] py-3 border-b-[2.5px] border-stroke">
             <span className="font-m text-[9px] font-bold text-[#888]">WK</span>
             <span />
             <span className="font-m text-[9px] font-bold text-[#888]">GOAL</span>
+            <span className="font-m text-[9px] font-bold text-[#888]">WITNESS</span>
             <span className="font-m text-[9px] font-bold text-[#888]">RESULT</span>
           </div>
 
@@ -131,7 +149,7 @@ export default async function Profile() {
           ) : (
             wall.map((r, i) => (
               <div key={i}>
-                <div className="grid grid-cols-[44px_16px_1fr_auto] gap-2.5 items-center px-[22px] py-3.5">
+                <div className="grid grid-cols-[44px_16px_1fr_72px_auto] gap-2.5 items-center px-[22px] py-3.5">
                   <span className="font-m text-xs font-bold text-[#888]">
                     W{r.week}
                   </span>
@@ -149,6 +167,9 @@ export default async function Profile() {
                   <div className="font-b text-[13px] leading-[1.5]">
                     {r.goal}
                   </div>
+                  <span className="font-m text-[11px] font-bold text-[#5A5A64] truncate">
+                    {r.witness}
+                  </span>
                   {r.result ? (
                     <Pill
                       bg={
