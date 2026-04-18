@@ -22,20 +22,20 @@ export default function Home() {
       <section className="pt-[clamp(60px,10vw,120px)] pb-[clamp(48px,8vw,80px)]">
         <div className="max-w-[1100px] mx-auto px-[clamp(20px,4vw,48px)]">
           <span className="inline-block font-m text-[11px] font-bold px-3 py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-yellow mb-5">
-            WEEKLY ACCOUNTABILITY FOR SMALL GROUPS
+            FIVE WITNESSES. EVERY WEEK.
           </span>
           <h1 className="font-h text-[clamp(42px,6vw,72px)] font-black tracking-[-0.04em] leading-[0.95] mt-5">
-            Make a bet
+            Five people
             <br />
-            <span className="text-[#888]">to a friend.</span>
+            <span className="text-[#888]">who&apos;ll notice</span>
             <br />
-            Keep it, or face the
+            whether you showed up
             <br />
-            consequences.
+            this week.
           </h1>
           <p className="text-[clamp(15px,1.8vw,18px)] text-[#666] mt-6 max-w-[520px] leading-[1.7]">
-            One goal per week. Direct it at someone you trust. If you miss, they
-            set your goal next week. Every Sunday at sunset — everyone finds out.
+            One goal. One person you bet it to. If you miss, they set your next
+            one. No one restarts alone.
           </p>
           <div className="flex gap-3 mt-8 flex-wrap">
             <a
@@ -59,30 +59,76 @@ export default function Home() {
 
       {/* ═══ QUOTE ═══ */}
       <section className="py-[clamp(32px,6vw,60px)] border-t-[2.5px] border-b-[2.5px] border-stroke">
-        <div className="max-w-[1100px] mx-auto px-[clamp(20px,4vw,48px)] flex gap-10 items-center flex-wrap">
-          <div className="flex-1 min-w-[260px]">
-            <p className="text-[clamp(18px,2.5vw,24px)] italic font-medium leading-[1.5]">
-              &ldquo;Most apps remind you.
-              <br />
-              <span className="font-bold">
-                Kizu makes you answer to someone.
+        <div className="max-w-[1100px] mx-auto px-[clamp(20px,4vw,48px)]">
+          <div className="flex gap-10 items-center flex-wrap">
+            <div className="flex-1 min-w-[260px]">
+              <p className="text-[clamp(18px,2.5vw,24px)] italic font-medium leading-[1.5]">
+                &ldquo;Most apps remind you.
+                <br />
+                <span className="font-bold">
+                  Kizu makes you answer to someone.
+                </span>
+                &rdquo;
+              </p>
+            </div>
+            <div className="flex gap-2.5 flex-wrap">
+              <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-yellow">
+                THE BET
               </span>
-              &rdquo;
-            </p>
+              <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-lime">
+                THE SEAL
+              </span>
+              <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-pink">
+                THE DROP
+              </span>
+              <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-orange">
+                THE FORFEIT
+              </span>
+            </div>
           </div>
-          <div className="flex gap-2.5 flex-wrap">
-            <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-yellow">
-              THE BET
-            </span>
-            <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-lime">
-              THE SEAL
-            </span>
-            <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-pink">
-              THE DROP
-            </span>
-            <span className="inline-block font-m text-[11px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-orange">
-              THE FORFEIT
-            </span>
+
+          {/* Verbatim user voices (from research) */}
+          <div className="mt-10">
+            <div className="font-m text-[10px] font-bold text-[#888] tracking-[0.1em] mb-4">
+              WHY WE BUILT THIS
+            </div>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3.5">
+              <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[4px_4px_0_#1A1A1A] p-5">
+                <p className="text-[13px] italic leading-[1.5] text-[#333]">
+                  &ldquo;Just me, my laptop, and a ridiculous amount of
+                  overthinking.&rdquo;
+                </p>
+                <div className="font-m text-[10px] font-bold text-[#999] mt-3">
+                  r/SaaS · solo founder
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[4px_4px_0_#1A1A1A] p-5">
+                <p className="text-[13px] italic leading-[1.5] text-[#333]">
+                  &ldquo;Celebrating achievements feels strange. Who do you
+                  share it with? Your reflection?&rdquo;
+                </p>
+                <div className="font-m text-[10px] font-bold text-[#999] mt-3">
+                  r/indiehackers
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[4px_4px_0_#1A1A1A] p-5">
+                <p className="text-[13px] italic leading-[1.5] text-[#333]">
+                  &ldquo;Being the only person in the world who has read
+                  it.&rdquo;
+                </p>
+                <div className="font-m text-[10px] font-bold text-[#999] mt-3">
+                  r/writing
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[4px_4px_0_#1A1A1A] p-5">
+                <p className="text-[13px] italic leading-[1.5] text-[#333]">
+                  &ldquo;No one who cares if you applied today or not.&rdquo;
+                </p>
+                <div className="font-m text-[10px] font-bold text-[#999] mt-3">
+                  r/jobhunting
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -98,37 +144,45 @@ export default function Home() {
             <br />
             actually want to change.
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3.5">
-            {/* Job seekers */}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3.5">
+            {/* Indie hackers / side project builders — primary launch wedge */}
+            <div className="bg-purple rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+              <div className="font-h text-xl font-extrabold text-purple-t mb-2">
+                Indie hackers
+              </div>
+              <p className="text-sm text-purple-t opacity-70 leading-relaxed">
+                Building at 11pm after your day job. Nobody knows, nobody asks.
+                Pod of 5 changes that.
+              </p>
+            </div>
+            {/* Writers & creators */}
+            <div className="bg-blue rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+              <div className="font-h text-xl font-extrabold text-blue-t mb-2">
+                Writers
+              </div>
+              <p className="text-sm text-blue-t opacity-70 leading-relaxed">
+                You&apos;ve been the only person in the world who&apos;s read
+                it. Now 4 others care whether you wrote this week.
+              </p>
+            </div>
+            {/* Job seekers / career pivots */}
             <div className="bg-yellow rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
               <div className="font-h text-xl font-extrabold text-yellow-t mb-2">
                 Job seekers
               </div>
               <p className="text-sm text-yellow-t opacity-70 leading-relaxed">
-                &ldquo;Apply to 10 roles this week.&rdquo; Your pod sees if you
-                did. Priya&apos;s already sent 5 cold emails. You haven&apos;t
-                started.
+                3,000 applications in and nobody checking on you. Bet it to
+                someone. They&apos;ll notice.
               </p>
             </div>
-            {/* Grad students */}
-            <div className="bg-lime rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
-              <div className="font-h text-xl font-extrabold text-lime-t mb-2">
-                Grad students
+            {/* Niche fitness — return-after-stopping */}
+            <div className="bg-orange rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
+              <div className="font-h text-xl font-extrabold text-orange-t mb-2">
+                Coming back
               </div>
-              <p className="text-sm text-lime-t opacity-70 leading-relaxed">
-                &ldquo;Write 2,000 words of my thesis.&rdquo; Your advisor
-                doesn&apos;t check. Your pod does. Every Sunday at sunset.
-              </p>
-            </div>
-            {/* Side project builders */}
-            <div className="bg-purple rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
-              <div className="font-h text-xl font-extrabold text-purple-t mb-2">
-                Side project builders
-              </div>
-              <p className="text-sm text-purple-t opacity-70 leading-relaxed">
-                &ldquo;Ship the landing page.&rdquo; No one cares about your
-                project except your pod. And they&apos;ll know if you
-                didn&apos;t.
+              <p className="text-sm text-orange-t opacity-70 leading-relaxed">
+                6 months off. Starting again and stopping again. Nobody&apos;s
+                expecting you at the gym anymore. Pod of 5 expects you.
               </p>
             </div>
           </div>
@@ -142,7 +196,7 @@ export default function Home() {
             HOW IT WORKS
           </span>
           <h2 className="font-h text-[clamp(28px,4vw,42px)] font-black tracking-[-0.03em] mt-4 mb-8">
-            One week. Five moves.
+            One week. Four moves.
           </h2>
 
           <div className="flex flex-col gap-3.5">
@@ -159,37 +213,17 @@ export default function Home() {
                   </span>
                 </div>
                 <p className="text-sm text-yellow-t opacity-70 leading-relaxed mt-1.5">
-                  Write one goal for the week. Direct it at a specific friend in
-                  your pod. &ldquo;I bet you I&apos;ll send 5 cold
-                  emails.&rdquo; It goes on your Receipt Wall. Forever.
+                  Write one goal. Direct it at the person in your pod whose
+                  opinion you actually care about. &ldquo;I bet you I&apos;ll
+                  send 5 cold emails.&rdquo; Your pod sees it all week.
                 </p>
               </div>
             </div>
 
-            {/* Step 2 — The Dare */}
-            <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 flex gap-5 items-start transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
-              <div className="font-h text-4xl font-black text-[#CCC] shrink-0">
-                02
-              </div>
-              <div>
-                <div className="font-h text-xl font-extrabold">
-                  The Dare{" "}
-                  <span className="font-m text-[10px] font-bold text-[#AAA]">
-                    MONDAY
-                  </span>
-                </div>
-                <p className="text-sm text-[#666] leading-relaxed mt-1.5">
-                  The person you bet to can accept — or dare you to go bigger.
-                  &ldquo;5 emails? Make it 10.&rdquo; Accept the dare or stick
-                  to your original.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 — The Work */}
+            {/* Step 2 — The Work */}
             <div className="bg-blue rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 flex gap-5 items-start transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
               <div className="font-h text-4xl font-black text-blue-t opacity-30 shrink-0">
-                03
+                02
               </div>
               <div>
                 <div className="font-h text-xl font-extrabold text-blue-t">
@@ -201,16 +235,15 @@ export default function Home() {
                 <p className="text-sm text-blue-t opacity-70 leading-relaxed mt-1.5">
                   Every morning at 7am, The Brief lands — your AI-generated
                   daily action step plus what your pod is doing. Drop proof. See
-                  who&apos;s sealed. Send a Stare: &ldquo;[Name] is
-                  watching.&rdquo;
+                  who&apos;s sealed. Send presence: &ldquo;[Name] sees you.&rdquo;
                 </p>
               </div>
             </div>
 
-            {/* Step 4 — The Drop */}
+            {/* Step 3 — The Drop */}
             <div className="bg-stroke rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 flex gap-5 items-start transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
               <div className="font-h text-4xl font-black text-[#444] shrink-0">
-                04
+                03
               </div>
               <div>
                 <div className="font-h text-xl font-extrabold text-white">
@@ -220,17 +253,17 @@ export default function Home() {
                   </span>
                 </div>
                 <p className="text-sm text-[#888] leading-relaxed mt-1.5">
-                  At sunset, results reveal one by one. Delivered or missed.
-                  Voice confessions play. Everyone sees. Your record updates:
+                  At sunset, results reveal one by one. The wins get as much air
+                  as the misses. Everyone finally sees. Your record updates:
                   14–4.
                 </p>
               </div>
             </div>
 
-            {/* Step 5 — The Forfeit */}
+            {/* Step 4 — The Forfeit */}
             <div className="bg-pink rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 flex gap-5 items-start transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[7px_7px_0_#1A1A1A]">
               <div className="font-h text-4xl font-black text-pink-t opacity-30 shrink-0">
-                05
+                04
               </div>
               <div>
                 <div className="font-h text-xl font-extrabold text-pink-t">
@@ -240,9 +273,9 @@ export default function Home() {
                   </span>
                 </div>
                 <p className="text-sm text-pink-t opacity-70 leading-relaxed mt-1.5">
-                  If you missed, the person you bet to sets YOUR goal for next
-                  week. Their creativity. Their rules. You don&apos;t get to
-                  choose.
+                  If you missed, the person you bet to sets next week&apos;s
+                  goal. Not punishment. Continuation. You don&apos;t restart
+                  alone.
                 </p>
               </div>
             </div>
@@ -372,6 +405,27 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══ MISSION COMMITMENT ═══ */}
+      <section className="py-[clamp(32px,5vw,64px)]">
+        <div className="max-w-[1100px] mx-auto px-[clamp(20px,4vw,48px)]">
+          <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-7 max-w-[760px]">
+            <span className="inline-block font-m text-[10px] font-bold px-[10px] py-1 rounded-lg border-2 border-stroke shadow-[2px_2px_0_#1A1A1A] bg-pink mb-4">
+              WHERE WE&apos;RE HEADED
+            </span>
+            <div className="font-h text-xl font-extrabold tracking-[-0.02em] mb-2">
+              Built for founders first. Recovery communities next.
+            </div>
+            <p className="text-sm text-[#555] leading-relaxed">
+              Kizu launches with indie hackers and solo builders because
+              that&apos;s where we can survive long enough to help others. The
+              people who need this most — people rebuilding after addiction,
+              after a fall — are who we&apos;re building toward. Nothing we
+              ship is designed to exclude them.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ CTA ═══ */}
       <section
         id="start"
@@ -406,7 +460,7 @@ export default function Home() {
           <div>
             <span className="font-h text-lg font-black">Kizu</span>
             <span className="font-m text-[10px] text-[#AAA] ml-2">
-              Scars don&apos;t lie.
+              Someone&apos;s watching. That&apos;s the whole point.
             </span>
           </div>
           <div className="font-m text-[10px] text-[#AAA]">
