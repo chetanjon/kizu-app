@@ -21,9 +21,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kizu — Scars don't lie",
+  title: "kizu — witness what you're witnessing",
   description:
-    "Weekly accountability for small groups. Make a bet to a friend. Keep it, or face the consequences.",
+    "A private place for 5–20 friends. One back-camera photo a day. One wall, building slowly across the year.",
 };
 
 export default function RootLayout({

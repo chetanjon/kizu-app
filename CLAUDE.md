@@ -3,7 +3,9 @@
 You are helping me build **kizu**, a private social layer for friend groups (5-20 people). This file is your context. The full design vision lives in `KIZU-DESIGN-DOC.md` — read it before making any architectural decisions. Also read `AGENTS.md` for Next.js 15-specific rules — Next.js 15 has breaking changes that older training data may not cover.
 ---
 
-## What kizu is, in one paragraph
+#
+
+# What kizu is, in one paragraph
 
 kizu is a web-first PWA where small groups of friends ("packs") witness each other daily through what they're looking at. The core philosophy is "witness what i'm witnessing" — the camera points outward, never at the user. Photos are back-camera-only, no filters, no edits, no retakes. Posts accumulate into a year-end "wall" — a kintsugi-styled artifact. There is also a "city" view that shows all kizu pods as ambient lights, and an introduction mechanic that lets pack members introduce friends across packs. Brand: neo-brutalist, dark, deliberate, anti-doomscroll.
 
@@ -65,6 +67,23 @@ If you generate copy that sounds like a typical SaaS app, you have failed.
 
 ---
 
+## Comments — constrained, not free-form
+
+Comments exist on kizu, but only inside hard rails. This is a deliberate override of the original design doc's blanket exclusion of comments — the override only holds if these constraints hold:
+
+- **One comment per user per post.** Enforced in the database (`UNIQUE (post_id, author_id)`). Editable, deletable, but never duplicable.
+- **200-char hard cap.** Enforced in the DB (`CHECK`) and the API.
+- **No line breaks.** Stripped client-side and again server-side.
+- **No threading.** No replies-to-comments. No quote-comments. No @mentions. The pack is small enough that none of these are needed.
+- **No likes on comments. No reactions to comments.** No second-order engagement metrics anywhere.
+- **No edit history rendered.** A comment shows its current state. `updated_at` is internal, never user-facing.
+- **Pack-visible only.** No public comments. No DM-by-stealth.
+- **No notifications outside the (eventual) sunset email digest.** No "X commented on your post" pings.
+
+If a future feature request would relax any of these, treat it as a load-bearing change and push back: comments work because of the constraints, not despite them.
+
+---
+
 ## What kizu is NOT — these are LOAD-BEARING exclusions
 
 If I ask you to add any of the following, push back hard before implementing:
@@ -80,7 +99,6 @@ If I ask you to add any of the following, push back hard before implementing:
 - ❌ Accountability framing (no bets, no forfeits, no W-L records)
 - ❌ Push notifications (sunset email only)
 - ❌ Marketing emails (the sunset email is the ONLY scheduled email)
-- ❌ Comments (8 fixed emoji reactions only)
 - ❌ Direct messages between users
 - ❌ Native app (web-first PWA only for v1 and v2)
 - ❌ Monetization of any kind (legal constraint — F-1 visa)

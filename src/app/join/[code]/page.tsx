@@ -4,7 +4,15 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pill } from "@/components/ui";
 
-export default function JoinPod({
+type Pack = {
+  id: string;
+  name: string;
+  color_a: string;
+  color_b: string;
+  icon: string;
+};
+
+export default function JoinPack({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -12,69 +20,72 @@ export default function JoinPod({
   const { code } = use(params);
   const router = useRouter();
 
-  const [state, setState] = useState<"loading" | "confirm" | "error" | "joining" | "done">("loading");
-  const [pod, setPod] = useState<{ id: string; name: string } | null>(null);
+  const [state, setState] = useState<
+    "loading" | "confirm" | "error" | "joining" | "done"
+  >("loading");
+  const [pack, setPack] = useState<Pack | null>(null);
   const [memberCount, setMemberCount] = useState(0);
+  const [setHome, setSetHome] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function lookupPod() {
-      const res = await fetch(`/api/pods/join?code=${code}`);
+    async function lookupPack() {
+      const res = await fetch(`/api/packs/join?code=${code}`);
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Pod not found");
+        setError(data.error || "pack not found");
         setState("error");
         return;
       }
 
       if (data.alreadyMember) {
-        router.push("/dashboard");
+        router.push("/wall");
         return;
       }
 
-      setPod(data.pod);
+      setPack(data.pack);
       setMemberCount(data.memberCount);
       setState("confirm");
     }
 
-    lookupPod();
+    lookupPack();
   }, [code, router]);
 
   const handleJoin = async () => {
     setState("joining");
 
-    const res = await fetch("/api/pods/join", {
+    const res = await fetch("/api/packs/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, set_home: setHome }),
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error || "Failed to join");
+      setError(data.error || "failed to join.");
       setState("error");
       return;
     }
 
     setState("done");
-    setTimeout(() => router.push("/dashboard"), 1000);
+    setTimeout(() => router.push("/wall"), 1000);
   };
 
-  // Loading
   if (state === "loading") {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="font-h text-2xl font-black mb-2">Looking up pod...</div>
-          <div className="font-m text-[11px] text-[#AAA]">CODE: {code.toUpperCase()}</div>
+          <div className="font-h text-2xl font-black mb-2">looking up pack…</div>
+          <div className="font-m text-[11px] text-[#AAA]">
+            CODE: {code.toUpperCase()}
+          </div>
         </div>
       </div>
     );
   }
 
-  // Error
   if (state === "error") {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center px-6">
@@ -84,13 +95,13 @@ export default function JoinPod({
               {error}
             </div>
             <p className="font-b text-sm text-pink-t opacity-60 mb-6">
-              Check the invite link and try again.
+              the link may be wrong, or the pack is full.
             </p>
             <button
               onClick={() => router.push("/")}
               className="rounded-xl border-[2.5px] border-stroke bg-white font-b font-bold text-sm px-6 py-3 shadow-[4px_4px_0_#1A1A1A] transition-all duration-[120ms] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#1A1A1A] cursor-pointer"
             >
-              Go Home
+              go home
             </button>
           </div>
         </div>
@@ -98,43 +109,66 @@ export default function JoinPod({
     );
   }
 
-  // Done
   if (state === "done") {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="bg-lime rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-8 text-center">
           <div className="font-h text-3xl font-black text-lime-t">
-            You&apos;re in.
+            you&apos;re in.
           </div>
           <div className="font-b text-sm text-lime-t opacity-60 mt-2">
-            Redirecting to dashboard...
+            taking you to the wall…
           </div>
         </div>
       </div>
     );
   }
 
-  // Confirm join
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-6">
       <div className="w-full max-w-[420px]">
         <div className="text-center mb-10">
-          <h1 className="font-h text-5xl font-black tracking-[-0.04em]">
-            Kizu
-          </h1>
+          <h1 className="font-h text-5xl font-black tracking-[-0.04em]">kizu</h1>
         </div>
 
         <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-8 text-center">
           <Pill bg="bg-yellow">INVITE</Pill>
-          <h2 className="font-h text-2xl font-black tracking-[-0.03em] mt-4 mb-1">
-            Join {pod?.name}?
+
+          {pack && (
+            <div className="flex items-center justify-center gap-2 mt-5 mb-1">
+              <span
+                className="inline-block w-6 h-6 rounded-md border-2 border-stroke"
+                style={{ backgroundColor: pack.color_a }}
+              />
+              <span className="font-h text-3xl font-black tracking-[-0.03em]">
+                {pack.icon}
+              </span>
+              <span
+                className="inline-block w-6 h-6 rounded-md border-2 border-stroke"
+                style={{ backgroundColor: pack.color_b }}
+              />
+            </div>
+          )}
+
+          <h2 className="font-h text-2xl font-black tracking-[-0.03em] mb-1">
+            join {pack?.name}?
           </h2>
-          <p className="font-b text-sm text-[#888] mb-2">
-            {memberCount}/5 members
+          <p className="font-b text-sm text-[#888] mb-6">
+            {memberCount}/20 members
           </p>
-          <p className="font-b text-xs text-[#AAA] mb-8 leading-relaxed">
-            One goal per week. Direct it at someone. If you miss, they set your goal next week.
-          </p>
+
+          <label className="flex items-start gap-3 text-left mb-6 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={setHome}
+              onChange={(e) => setSetHome(e.target.checked)}
+              className="mt-1 w-5 h-5 border-2 border-stroke cursor-pointer"
+            />
+            <span className="font-b text-xs text-[#555] leading-relaxed">
+              make this my home pack. only one home pack at a time — this will
+              demote your current one.
+            </span>
+          </label>
 
           <button
             onClick={handleJoin}
@@ -145,7 +179,7 @@ export default function JoinPod({
                 : "bg-lime text-lime-t shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#1A1A1A]"
             }`}
           >
-            {state === "joining" ? "Joining..." : "Join Pod →"}
+            {state === "joining" ? "joining…" : "join pack →"}
           </button>
         </div>
       </div>

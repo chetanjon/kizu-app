@@ -6,38 +6,41 @@ import { createClient } from "@/lib/supabase-browser";
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  const next = searchParams.get("next") || "/wall";
 
   const handleGoogleLogin = async () => {
     const supabase = createClient();
+    let tz = "Etc/UTC";
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz;
+    } catch {}
+    const callback = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+      next
+    )}&tz=${encodeURIComponent(tz)}`;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
+      options: { redirectTo: callback },
     });
   };
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-6">
       <div className="w-full max-w-[400px]">
-        {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="font-h text-5xl font-black tracking-[-0.04em]">
-            Kizu
+            kizu
           </h1>
           <p className="font-m text-[11px] text-[#AAA] mt-2">
-            Someone&apos;s watching.
+            witness what i&apos;m witnessing.
           </p>
         </div>
 
-        {/* Login card */}
         <div className="bg-white rounded-2xl border-[2.5px] border-stroke shadow-[5px_5px_0_#1A1A1A] p-8">
           <h2 className="font-h text-2xl font-black tracking-[-0.03em] mb-2">
-            Sign in
+            sign in
           </h2>
           <p className="font-b text-sm text-[#888] mb-8 leading-relaxed">
-            Join your pod. Five people who&apos;ll actually notice.
+            your pack is waiting. sunset&apos;s coming.
           </p>
 
           <button
@@ -62,12 +65,12 @@ function LoginContent() {
                 fill="#EA4335"
               />
             </svg>
-            Continue with Google
+            continue with google
           </button>
         </div>
 
         <p className="font-m text-[10px] text-[#AAA] text-center mt-6">
-          No download · No credit card · Works in your browser
+          no download · works in your browser
         </p>
       </div>
     </div>

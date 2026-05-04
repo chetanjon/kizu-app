@@ -17,7 +17,7 @@ export function InviteButton({ inviteCode }: { inviteCode: string }) {
       onClick={handleCopy}
       className="w-full mt-2.5 rounded-lg border-2 border-stroke bg-yellow font-b font-bold text-[11px] px-3 py-2 shadow-[2px_2px_0_#1A1A1A] transition-all duration-[120ms] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_#1A1A1A] cursor-pointer text-yellow-t"
     >
-      {copied ? "Link copied!" : "Invite friends →"}
+      {copied ? "link copied." : "invite friends →"}
     </button>
   );
 }
