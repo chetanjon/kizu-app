@@ -21,9 +21,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "kizu — witness what you're witnessing",
+  title: "kizu — good taste runs in the group",
   description:
-    "A private place for 5–20 friends. One back-camera photo a day. One wall, building slowly across the year.",
+    "A private taste space for you and your people. Drop the movies, music, and places you love — and let an AI read your group's vibe back to you.",
 };
 
 export default function RootLayout({
