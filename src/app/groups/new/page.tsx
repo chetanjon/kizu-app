@@ -17,27 +17,39 @@ export default function NewGroup() {
   async function create() {
     if (!name.trim() || busy) return;
     setBusy(true); setErr("");
-    const res = await fetch("/api/groups", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, color }),
-    });
-    const j = await res.json();
-    if (!res.ok) { setErr(j.error || "couldn't create"); setBusy(false); return; }
-    router.push("/feed");
+    try {
+      const res = await fetch("/api/groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, color }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { setErr(j.error || `error ${res.status} — check server env vars`); return; }
+      router.push("/feed");
+    } catch {
+      setErr("network error — try again");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function join() {
     if (!code.trim() || busy) return;
     setBusy(true); setErr("");
-    const res = await fetch("/api/groups/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
-    const j = await res.json();
-    if (!res.ok) { setErr(j.error || "couldn't join"); setBusy(false); return; }
-    router.push("/feed");
+    try {
+      const res = await fetch("/api/groups/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { setErr(j.error || `error ${res.status}`); return; }
+      router.push("/feed");
+    } catch {
+      setErr("network error — try again");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
