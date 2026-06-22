@@ -1,0 +1,64 @@
+import { createClient } from "@/lib/supabase-server";
+import { createAdminClient } from "@/lib/supabase-admin";
+import { NextResponse } from "next/server";
+
+// Create a drop. Authorize via getUser, verify group membership, write via admin.
+export async function POST(req: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const b = await req.json().catch(() => ({}));
+  const group_id = String(b.group_id ?? "");
+  const type = String(b.type ?? "");
+  if (!group_id) return NextResponse.json({ error: "group_id required" }, { status: 400 });
+  if (!["watch", "listen", "go_out"].includes(type)) {
+    return NextResponse.json({ error: "bad type" }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  const { data: mem } = await admin
+    .from("group_members").select("group_id")
+    .eq("group_id", group_id).eq("user_id", user.id).maybeSingle();
+  if (!mem) return NextResponse.json({ error: "not a member of that group" }, { status: 403 });
+
+  const rating_style = ["number", "stars", "word"].includes(b.rating_style) ? b.rating_style : null;
+  const note = b.note ? String(b.note).slice(0, 200) : null;
+  const rating_value = b.rating_value ? String(b.rating_value).slice(0, 40) : null;
+
+  const { data: item, error } = await admin
+    .from("items")
+    .insert({
+      group_id,
+      created_by: user.id,
+      type,
+      rating_value,
+      rating_style,
+      note,
+      data: (b.data && typeof b.data === "object") ? b.data : {},
+    })
+    .select("id")
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  return NextResponse.json({ id: item.id });
+}
+
+// Delete your own drop.
+export async function DELETE(req: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const b = await req.json().catch(() => ({}));
+  const id = String(b.id ?? "");
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const admin = createAdminClient();
+  const { data: item } = await admin.from("items").select("created_by").eq("id", id).maybeSingle();
+  if (!item) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (item.created_by !== user.id) return NextResponse.json({ error: "not yours" }, { status: 403 });
+
+  await admin.from("items").delete().eq("id", id);
+  return NextResponse.json({ ok: true });
+}

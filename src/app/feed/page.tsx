@@ -1,0 +1,130 @@
+import { createClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { SignOutButton } from "@/components/sign-out-button";
+import VibeRead from "@/components/vibe-read";
+import Reactions from "@/components/reactions";
+import DeleteDrop from "@/components/delete-drop";
+import NameSetter from "@/components/name-setter";
+
+type Membership = {
+  group_id: string;
+  is_home: boolean;
+  groups: { id: string; name: string; color: string; invite_code: string } | null;
+};
+type Item = {
+  id: string;
+  type: "watch" | "listen" | "go_out";
+  rating_value: string | null;
+  note: string | null;
+  data: Record<string, any>;
+  created_by: string;
+  users: { name: string | null } | null;
+  reactions: { emoji: string; user_id: string }[];
+};
+
+const TYPE = {
+  watch: { label: "MOVIES", color: "#2F6FE0" },
+  listen: { label: "MUSIC", color: "#E0567E" },
+  go_out: { label: "OUTSIDE", color: "#1B8A6B" },
+} as const;
+
+function img(it: Item): string | null {
+  return it.data?.poster_url || it.data?.artwork_url || it.data?.photo_url || null;
+}
+function title(it: Item): string {
+  return it.data?.title || it.data?.place_name || "untitled";
+}
+function sub(it: Item): string {
+  if (it.type === "watch") return [it.data?.year, it.data?.media_type].filter(Boolean).join(" · ").toUpperCase();
+  if (it.type === "listen") return (it.data?.artist || "").toUpperCase();
+  return [it.data?.subtype, it.data?.music_note].filter(Boolean).join(" · ");
+}
+
+export default async function Feed() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: mRaw } = await supabase
+    .from("group_members")
+    .select("group_id, is_home, groups(id, name, color, invite_code)")
+    .eq("user_id", user.id);
+  const memberships = (mRaw ?? []) as unknown as Membership[];
+  if (memberships.length === 0) redirect("/groups/new");
+
+  const active = memberships.find((m) => m.is_home) ?? memberships[0];
+  const g = active.groups!;
+
+  const { data: iRaw } = await supabase
+    .from("items")
+    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
+    .eq("group_id", g.id)
+    .order("created_at", { ascending: false });
+  const items = (iRaw ?? []) as unknown as Item[];
+
+  const { data: me } = await supabase.from("users").select("name").eq("id", user.id).maybeSingle();
+  const myName = me?.name ?? null;
+
+  return (
+    <div className="min-h-screen bg-paper">
+      <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 border-b-[2px] border-ink bg-paper/85 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
+          <span className="flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
+            {g.name.toLowerCase()}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/drop" className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2 shadow-[3px_3px_0_#14110F]">＋ drop</Link>
+          <SignOutButton />
+        </div>
+      </header>
+
+      <main className="max-w-[1100px] mx-auto px-6 py-8">
+        <div className="font-m text-[11px] tracking-widest uppercase text-muted">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
+        <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">what your <span className="text-vibe">people love</span></h1>
+        <div className="mt-4"><VibeRead groupId={g.id} /></div>
+        {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
+
+        {items.length === 0 ? (
+          <div className="mt-8 border-[2px] border-dashed border-ink rounded-2xl p-14 text-center">
+            <div className="font-h text-xl font-bold">nothing here yet.</div>
+            <p className="text-muted text-sm mt-1">drop the first movie, song, or place you love.</p>
+            <Link href="/drop" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">＋ drop something</Link>
+            <p className="text-muted text-xs mt-6 font-m">share to invite: send <b>/join/{g.invite_code}</b></p>
+          </div>
+        ) : (
+          <div className="mt-7 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-5">
+            {items.map((it) => {
+              const t = TYPE[it.type];
+              const cover = img(it);
+              return (
+                <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_5px_0_#14110F]">
+                  <div className="aspect-[4/3] relative border-b-[2.5px] border-ink" style={{ background: cover ? undefined : t.color }}>
+                    {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
+                    {it.rating_value && <span className="absolute left-2.5 bottom-2.5 bg-ink text-white font-m text-xs font-bold rounded-md px-2 py-0.5">{it.rating_value}</span>}
+                  </div>
+                  <div className="p-3.5">
+                    <span className="inline-block font-m text-[9px] font-bold tracking-wide border-[2px] border-ink rounded-md px-2 py-0.5" style={{ background: t.color, color: "#fff" }}>{t.label}</span>
+                    <div className="font-h font-extrabold text-lg tracking-[-0.02em] mt-2 leading-tight">{title(it)}</div>
+                    {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
+                    {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
+                    <div className="mt-3 pt-3 border-t-[2px] border-hair">
+                      <div className="flex items-center justify-between">
+                        <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
+                        {it.created_by === user.id && <DeleteDrop itemId={it.id} />}
+                      </div>
+                      <div className="mt-2"><Reactions itemId={it.id} initial={it.reactions} userId={user.id} /></div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

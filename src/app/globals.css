@@ -1,40 +1,55 @@
 @import "tailwindcss";
 
+/* kizu — taste-space design tokens (locked direction: neo-brutal, edited down,
+   purple accent, the red dot is precious). Fonts come from layout.tsx. */
 @theme inline {
   /* Fonts */
-  --font-h: var(--font-archivo);
-  --font-b: var(--font-plus-jakarta);
-  --font-m: var(--font-space-mono);
+  --font-h: var(--font-archivo);          /* headlines / numbers / titles / logo */
+  --font-b: var(--font-plus-jakarta);     /* body */
+  --font-m: var(--font-space-mono);       /* labels / ratings / tags */
 
-  /* Colors */
-  --color-bg: #F2F0E6;
-  --color-white: #FFFFFF;
-  --color-stroke: #1A1A1A;
-  --color-yellow: #FFE15D;
-  --color-yellow-t: #3D3408;
-  --color-lime: #C8F05A;
-  --color-lime-t: #2A3808;
-  --color-pink: #FF8FAB;
-  --color-pink-t: #3A1018;
-  --color-blue: #7EB8FF;
-  --color-blue-t: #0E2040;
-  --color-orange: #FFA052;
-  --color-orange-t: #3A2008;
-  --color-purple: #B89AFF;
-  --color-purple-t: #1E1640;
-  --color-red: #FF6B6B;
-  --color-green: #5ADB8A;
+  /* Surfaces + ink */
+  --color-paper: #EDE3CE;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F7EFDD;
+  --color-ink: #14110F;
+  --color-ink-2: #46423A;
+  --color-muted: #8C8675;
+  --color-hair: #E2D8C2;
+
+  /* RED is PRECIOUS — only the kizu. dot. Never buttons/links/fills. */
+  --color-red: #FF2E4D;
+
+  /* Signature accent + the one gradient hero (vibe) */
+  --color-vibe: #6B4BD6;
+
+  /* Type colors (small functional tags) */
+  --color-watch: #2F6FE0;   /* movies — cobalt */
+  --color-listen: #E0567E;  /* music  — rose   */
+  --color-go: #1B8A6B;      /* outside — teal  */
+
+  /* Extended accent set (cards / marquee / vibe gradient) */
+  --color-indigo: #4035B8;
+  --color-grape: #6B4BD6;
+  --color-cobalt: #2F6FE0;
+  --color-clay: #D8552F;
+  --color-teal: #1B8A6B;
+  --color-rose: #E0567E;
+  --color-mustard: #F0B429;
+  --color-chartreuse: #C2D24A;
+  --color-amber: #F0A23C;
 }
 
 ::selection {
-  background: #FFE15D;
-  color: #000;
+  background: #14110F;
+  color: #EDE3CE;
 }
 
 body {
-  background: #F2F0E6;
-  color: #1A1A1A;
+  background: #EDE3CE;
+  color: #14110F;
   font-family: var(--font-plus-jakarta), sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {

@@ -169,3 +169,4 @@ The first task in this rebuild is to design the new Supabase schema. Wait for me
 ---
 
 *kizu has no deadline. build slowly. build well. honor the empty space.*
+        

@@ -7,183 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
-      comments: {
-        Row: {
-          author_id: string
-          body: string
-          created_at: string
-          id: string
-          post_id: string
-          updated_at: string
-        }
-        Insert: {
-          author_id: string
-          body: string
-          created_at?: string
-          id?: string
-          post_id: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string
-          body?: string
-          created_at?: string
-          id?: string
-          post_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pack_members: {
-        Row: {
-          id: string
-          is_home: boolean
-          joined_at: string
-          pack_id: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          is_home?: boolean
-          joined_at?: string
-          pack_id: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          is_home?: boolean
-          joined_at?: string
-          pack_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pack_members_pack_id_fkey"
-            columns: ["pack_id"]
-            isOneToOne: false
-            referencedRelation: "packs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pack_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      packs: {
-        Row: {
-          color_a: string
-          color_b: string
-          created_at: string
-          created_by: string
-          founding_date: string
-          icon: string
-          id: string
-          invite_code: string
-          name: string
-        }
-        Insert: {
-          color_a: string
-          color_b: string
-          created_at?: string
-          created_by: string
-          founding_date: string
-          icon: string
-          id?: string
-          invite_code: string
-          name: string
-        }
-        Update: {
-          color_a?: string
-          color_b?: string
-          created_at?: string
-          created_by?: string
-          founding_date?: string
-          icon?: string
-          id?: string
-          invite_code?: string
-          name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "packs_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      posts: {
-        Row: {
-          author_id: string
-          created_at: string
-          id: string
-          image_url: string
-          kind: string
-          local_date: string
-          pack_id: string
-        }
-        Insert: {
-          author_id: string
-          created_at?: string
-          id?: string
-          image_url: string
-          kind: string
-          local_date: string
-          pack_id: string
-        }
-        Update: {
-          author_id?: string
-          created_at?: string
-          id?: string
-          image_url?: string
-          kind?: string
-          local_date?: string
-          pack_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "posts_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_pack_id_fkey"
-            columns: ["pack_id"]
-            isOneToOne: false
-            referencedRelation: "packs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users: {
         Row: {
           avatar_url: string | null
@@ -217,13 +45,203 @@ export type Database = {
         }
         Relationships: []
       }
+      groups: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          is_home: boolean
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          is_home?: boolean
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          is_home?: boolean
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          created_at: string
+          created_by: string
+          data: Json
+          group_id: string
+          id: string
+          note: string | null
+          rating_style: string | null
+          rating_value: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          data?: Json
+          group_id: string
+          id?: string
+          note?: string | null
+          rating_style?: string | null
+          rating_value?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          data?: Json
+          group_id?: string
+          id?: string
+          note?: string | null
+          rating_style?: string | null
+          rating_value?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vibe_reads: {
+        Row: {
+          card_data: Json
+          generated_at: string
+          group_id: string
+          id: string
+          summary: string
+        }
+        Insert: {
+          card_data?: Json
+          generated_at?: string
+          group_id: string
+          id?: string
+          summary: string
+        }
+        Update: {
+          card_data?: Json
+          generated_at?: string
+          group_id?: string
+          id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vibe_reads_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       generate_invite_code: { Args: never; Returns: string }
-      is_pack_member: { Args: { p_pack_id: string }; Returns: boolean }
+      is_group_member: { Args: { p_group_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
