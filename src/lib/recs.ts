@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { notify } from "@/lib/notify";
 
 // Create a rec: <fromUser> recommends <itemId> to <toUser?>. If toUser is a
 // member who shares a group, it also lands in their queue (source='rec').
@@ -25,6 +26,8 @@ export async function createRec(
       source: "rec",
       source_rec_id: rec.id,
     });
+    // cryptic nudge — earned, doesn't name the sender.
+    await notify(admin, toUser, "rec_for_you", "someone left something for you.", "/queue");
   }
   return { token: rec.token, recId: rec.id };
 }

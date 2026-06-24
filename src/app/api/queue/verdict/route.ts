@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { notify } from "@/lib/notify";
 import { NextResponse } from "next/server";
 
 // Mark a queued thing done with a verdict (loved/liked/meh). Target is either a
@@ -44,10 +45,14 @@ export async function POST(req: Request) {
     const { data: item } = await admin.from("items").select("created_by").eq("id", item_id).maybeSingle();
     landed = !!item && item.created_by !== user.id;
 
-    // if this came from a rec, mark it landed (the north-star event).
+    // if this came from a rec, mark it landed + nudge the sender (north-star event).
     if (row.source_rec_id) {
-      await admin.from("recs").update({ landed_at: new Date().toISOString() })
-        .eq("id", row.source_rec_id).is("landed_at", null);
+      const { data: rec } = await admin
+        .from("recs").select("from_user, landed_at").eq("id", row.source_rec_id).maybeSingle();
+      if (rec && !rec.landed_at) {
+        await admin.from("recs").update({ landed_at: new Date().toISOString() }).eq("id", row.source_rec_id);
+        await notify(admin, rec.from_user, "it_landed", "it landed. they loved what you sent.", "/queue");
+      }
     }
   }
 

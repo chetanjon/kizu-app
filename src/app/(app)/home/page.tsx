@@ -6,6 +6,7 @@ import Reactions from "@/components/reactions";
 import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
 import QueueButton from "@/components/queue-button";
+import NotificationsBell from "@/components/notifications-bell";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
@@ -84,6 +85,7 @@ export default async function Home() {
             {g.name.toLowerCase()}
           </span>
         </div>
+        <NotificationsBell />
       </header>
 
       <main className="max-w-[1100px] mx-auto px-6 py-8">
