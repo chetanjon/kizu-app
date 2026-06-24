@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase-server";
+import { getCurrentUser } from "@/lib/auth";
 import { SignOutButton } from "@/components/sign-out-button";
 
 // Phase 6 builds the real "taste read" here (behavioral read + recs-that-landed
 // + signature picks). Placeholder for now, but it owns sign-out.
 export default async function You() {
+  const user = await getCurrentUser();
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
   const { data: me } = user
     ? await supabase.from("users").select("name").eq("id", user.id).maybeSingle()
     : { data: null };

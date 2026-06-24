@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
+import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import VibeRead from "@/components/vibe-read";
@@ -12,11 +13,6 @@ import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
 const RIVER_PAGE = 12;
 
-type Membership = {
-  group_id: string;
-  is_home: boolean;
-  groups: { id: string; name: string; color: string; invite_code: string } | null;
-};
 type Item = {
   id: string;
   type: DropType;
@@ -29,20 +25,32 @@ type Item = {
 };
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const supabase = await createClient();
 
-  const { data: mRaw } = await supabase
-    .from("group_members")
-    .select("group_id, is_home, groups(id, name, color, invite_code)")
-    .eq("user_id", user.id);
-  const memberships = (mRaw ?? []) as unknown as Membership[];
+  // everything that doesn't need the active group → fire together.
+  // (getMemberships is request-memoized, so this reuses the layout's call.)
+  const [memberships, meRes, cRes, cqRes] = await Promise.all([
+    getMemberships(user.id),
+    supabase.from("users").select("name").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("curate_drops")
+      .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+      .range(0, RIVER_PAGE - 1),
+    supabase.from("queue_items").select("curate_drop_id").eq("user_id", user.id).not("curate_drop_id", "is", null),
+  ]);
+
   if (memberships.length === 0) redirect("/groups/new");
-
   const active = memberships.find((m) => m.is_home) ?? memberships[0];
   const g = active.groups!;
+  const myName = meRes.data?.name ?? null;
+  const curate = ((cRes.data ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
+  const queuedCurate = (cqRes.data ?? []).map((r) => r.curate_drop_id as string);
 
+  // group items, then which of them I've already queued.
   const { data: iRaw } = await supabase
     .from("items")
     .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
@@ -50,7 +58,6 @@ export default async function Home() {
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
 
-  // which of these have I already queued?
   const ids = items.map((i) => i.id);
   const { data: qRaw } = await supabase
     .from("queue_items")
@@ -58,22 +65,6 @@ export default async function Home() {
     .eq("user_id", user.id)
     .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
   const queued = new Set((qRaw ?? []).map((q) => q.item_id));
-
-  const { data: me } = await supabase.from("users").select("name").eq("id", user.id).maybeSingle();
-  const myName = me?.name ?? null;
-
-  // Curate river: published picks by consented people (RLS hides non-consented).
-  const { data: cRaw } = await supabase
-    .from("curate_drops")
-    .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
-    .eq("published", true)
-    .order("created_at", { ascending: false })
-    .range(0, RIVER_PAGE - 1);
-  const curate = ((cRaw ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
-
-  const { data: cq } = await supabase
-    .from("queue_items").select("curate_drop_id").eq("user_id", user.id).not("curate_drop_id", "is", null);
-  const queuedCurate = (cq ?? []).map((r) => r.curate_drop_id as string);
 
   return (
     <div className="min-h-screen bg-paper">
