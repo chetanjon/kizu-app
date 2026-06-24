@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kizu · app shell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE3CE; --surface:#FFFFFF; --surface2:#F7EFDD;
+    --ink:#14110F; --ink2:#46423A; --muted:#8C8675; --hair:#E2D8C2;
+    --red:#FF2E4D; --vibe:#6B4BD6;
+    --watch:#2F6FE0; --listen:#E0567E; --go:#1B8A6B;
+    --indigo:#4035B8; --clay:#D8552F; --teal:#1B8A6B; --rose:#E0567E;
+    --mustard:#F0B429; --chartreuse:#C2D24A; --amber:#F0A23C;
+    --h:'Archivo',sans-serif; --b:'Plus Jakarta Sans',sans-serif; --m:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--b); -webkit-font-smoothing:antialiased; padding:34px 16px 70px;}
+  ::selection{background:var(--ink); color:var(--paper);}
+  .wordmark{font-family:var(--h); font-weight:900; letter-spacing:-.05em;}
+  .dot{color:var(--red);}
+
+  .top{text-align:center; margin-bottom:26px;}
+  .top h1{font-family:var(--h); font-weight:900; font-size:38px; letter-spacing:-.05em;}
+  .top p{color:var(--ink2); margin-top:6px; font-size:15px;}
+  .top .hint{font-family:var(--m); font-size:12px; color:var(--vibe); margin-top:10px;}
+
+  .stage{display:flex; gap:42px; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+
+  /* phone */
+  .phone{width:390px; height:812px; background:var(--paper); border:3px solid var(--ink); border-radius:44px;
+         box-shadow:12px 14px 0 var(--ink); padding:13px; flex:none;}
+  .scr{width:100%; height:100%; background:var(--paper); border-radius:32px; overflow:hidden; position:relative; display:flex; flex-direction:column;}
+  .sbar{display:flex; justify-content:space-between; align-items:center; padding:14px 24px 4px; font-family:var(--m); font-size:12px; color:var(--ink2); flex:none;}
+  .body{flex:1; overflow:auto; padding:6px 18px 22px;}
+  .body::-webkit-scrollbar{width:0;}
+  .dest{display:none;} .dest.on{display:block; animation:fade .22s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  .ghead{display:flex; align-items:center; justify-content:space-between; padding:4px 0 2px;}
+  .gchip{display:inline-flex; align-items:center; gap:8px; font-family:var(--m); font-size:11px; font-weight:700; border:2px solid var(--ink); border-radius:999px; padding:6px 12px; background:var(--surface);}
+  .gdot{width:10px; height:10px; border-radius:50%; background:var(--vibe);}
+  .av{width:30px; height:30px; border-radius:50%; border:2px solid var(--ink); background:var(--mustard);}
+  .eyebrow{font-family:var(--m); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:9px;}
+  .feedh{font-family:var(--h); font-weight:900; font-size:27px; letter-spacing:-.04em; line-height:1.02; margin-top:6px;}
+
+  .cov{border:2.5px solid var(--ink); border-radius:14px; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; padding:12px;}
+  .cov .ct{font-family:var(--h); font-weight:900; letter-spacing:-.03em; line-height:.96; color:#fff;}
+  .cov .cm{font-family:var(--m); font-size:9.5px; font-weight:700; color:rgba(255,255,255,.82); margin-top:5px;}
+  .toptag{position:absolute; top:9px; left:9px; font-family:var(--m); font-size:8.5px; font-weight:700; color:#fff; border:2px solid #fff; border-radius:6px; padding:2px 7px;}
+  .rate{position:absolute; left:9px; bottom:9px; font-family:var(--m); font-size:10px; font-weight:700; background:var(--ink); color:#fff; border-radius:6px; padding:2px 7px;}
+  .btn{font-family:var(--h); font-weight:800; font-size:14px; border:2.5px solid var(--ink); border-radius:999px; padding:11px 16px; text-align:center;}
+  .bv{background:var(--vibe); color:#fff; box-shadow:3px 3px 0 var(--ink);}
+  .bo{background:var(--surface); color:var(--ink);}
+  .aurora{background:radial-gradient(120% 90% at 12% 8%,#8E6BF0 0%,transparent 55%),radial-gradient(120% 100% at 92% 18%,#E0567E 0%,transparent 52%),radial-gradient(140% 120% at 70% 100%,#2F6FE0 0%,transparent 60%),linear-gradient(135deg,#5B3FC4,#6B4BD6);}
+
+  /* HOME merged */
+  .compact{display:flex; gap:11px; align-items:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:14px; padding:9px; box-shadow:3px 4px 0 var(--ink); margin-top:10px;}
+  .compact .mini{width:50px; height:50px; flex:none; border:2px solid var(--ink); border-radius:9px;}
+  .compact .ct2{font-family:var(--h); font-weight:800; font-size:14px; line-height:1.05;}
+  .compact .w2{font-family:var(--m); font-size:9.5px; color:var(--muted); margin-top:3px;}
+  .compact .q{margin-left:auto; font-family:var(--h); font-weight:800; font-size:11px; border:2px solid var(--ink); border-radius:999px; padding:6px 11px; background:var(--surface2);}
+  .thresh{margin:22px -4px 4px; text-align:center;}
+  .thresh .line{border-top:2.5px dashed var(--ink); margin:0 0 -10px;}
+  .thresh .lab{display:inline-block; background:var(--paper); padding:0 12px; font-family:var(--m); font-size:10.5px; color:var(--ink2);}
+  .thresh .lab b{font-family:var(--h); font-weight:900; color:var(--ink);}
+  .mchips{display:flex; gap:8px; overflow:auto; margin:14px -18px 4px; padding:2px 18px 8px;}
+  .mchips::-webkit-scrollbar{height:0;}
+  .mc{flex:none; font-family:var(--m); font-size:11px; font-weight:700; border:2px solid var(--ink); border-radius:999px; padding:7px 12px; background:var(--surface); white-space:nowrap;}
+  .mc.on{background:var(--ink); color:var(--paper);}
+  .person{background:var(--surface); border:2.5px solid var(--ink); border-radius:18px; box-shadow:5px 6px 0 var(--ink); overflow:hidden; margin-top:15px;}
+  .phdr{display:flex; gap:11px; align-items:center; padding:12px 13px;}
+  .portrait{width:50px; height:50px; flex:none; border:2.5px solid var(--ink); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--h); font-weight:900; font-size:20px; color:#fff;}
+  .pn{font-family:var(--h); font-weight:800; font-size:15px;}
+  .pw{font-family:var(--m); font-size:9.5px; color:var(--muted); margin-top:2px;}
+  .pmoment{margin-left:auto; font-family:var(--m); font-size:9px; font-weight:700; text-align:right; color:var(--vibe); max-width:96px; line-height:1.25;}
+  .pquote{padding:0 14px 12px; font-size:14.5px; line-height:1.45; font-style:italic;}
+  .ppick{display:flex; align-items:center; gap:11px; margin:0 11px 12px; background:var(--surface2); border:2px solid var(--ink); border-radius:12px; padding:9px;}
+  .ppick .mini{width:42px; height:54px; flex:none; border:2px solid var(--ink); border-radius:7px;}
+  .ppick .pt{font-family:var(--h); font-weight:800; font-size:13px; line-height:1.05;}
+  .ppick .ps{font-family:var(--m); font-size:9px; color:var(--muted); margin-top:3px;}
+  .ppick .add{margin-left:auto; font-family:var(--h); font-weight:800; font-size:11px; color:#fff; background:var(--vibe); border:2px solid var(--ink); border-radius:999px; padding:6px 11px;}
+  .curatedby{font-family:var(--m); font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:0 14px 12px;}
+  .keepgoing{text-align:center; font-family:var(--m); font-size:10px; color:var(--muted); margin-top:18px; opacity:.7; line-height:1.5;}
+
+  /* TONIGHT */
+  .mood{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:14px;}
+  .mp{font-family:var(--h); font-weight:800; font-size:14px; border:2.5px solid var(--ink); border-radius:14px; padding:13px 12px; background:var(--surface); display:flex; align-items:center; gap:9px;}
+  .mp.sel{background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--vibe);}
+  .env{display:flex; align-items:center; gap:11px; margin-top:16px; background:var(--surface2); border:2.5px dashed var(--ink); border-radius:14px; padding:12px 14px;}
+  .env b{font-family:var(--h); font-weight:800;} .env span{color:var(--ink2); font-size:13px;}
+  .arrow{margin-left:auto; font-family:var(--h); font-weight:900;}
+  .dealt{margin-top:16px; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 7px 0 var(--ink); overflow:hidden;}
+  .progress{display:flex; gap:7px; justify-content:center; align-items:center; margin-top:16px; font-family:var(--m); font-size:11px; color:var(--muted);}
+  .pdot{width:8px; height:8px; border-radius:50%; background:var(--hair); border:1.5px solid var(--ink);}
+  .pdot.on{background:var(--vibe);}
+
+  /* QUEUE */
+  .landed{background:var(--ink); color:var(--paper); border:2.5px solid var(--ink); border-radius:16px; padding:14px 15px; margin-top:14px; box-shadow:4px 5px 0 var(--vibe);}
+  .landed .k{font-family:var(--m); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--chartreuse);}
+  .landed .t{font-family:var(--h); font-weight:800; font-size:16px; margin-top:5px; line-height:1.2;}
+  .qsec{font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:20px 0 4px;}
+  .qrow{display:flex; gap:11px; align-items:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:13px; padding:9px; box-shadow:3px 3px 0 var(--ink); margin-top:9px;}
+  .qrow .mini{width:42px; height:42px; flex:none; border:2px solid var(--ink); border-radius:8px;}
+  .qrow .qt{font-family:var(--h); font-weight:800; font-size:14px; line-height:1.05;}
+  .qrow .qm{font-family:var(--m); font-size:9px; color:var(--muted); margin-top:3px;}
+  .qrow .done{margin-left:auto; font-family:var(--h); font-weight:800; font-size:10px; border:2px solid var(--ink); border-radius:999px; padding:6px 10px; background:var(--surface2);}
+  .verdict{margin-left:auto; font-family:var(--m); font-size:10px; font-weight:700; color:var(--go);}
+  .ttag{display:inline-block; font-family:var(--m); font-size:8px; font-weight:700; color:#fff; border:1.5px solid var(--ink); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+
+  /* YOU / CANON */
+  .youhead{display:flex; gap:14px; align-items:center; margin-top:12px;}
+  .bigav{width:64px; height:64px; border-radius:50%; border:3px solid var(--ink); background:var(--mustard); box-shadow:3px 4px 0 var(--ink);}
+  .stat{display:flex; gap:9px; margin-top:14px; flex-wrap:wrap;}
+  .stat .s{font-family:var(--m); font-size:11px; font-weight:700; border:2px solid var(--ink); border-radius:8px; padding:6px 11px; background:var(--surface);}
+  .stat .s b{font-family:var(--h); font-size:14px;}
+  .canon{display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-top:16px; background:var(--mustard); padding:4px; border:2.5px solid var(--ink); border-radius:16px;}
+  .canon .t{border-radius:5px; overflow:hidden; min-height:52px; display:flex; align-items:flex-end; padding:7px;}
+  .canon .t .tt{font-family:var(--h); font-weight:800; font-size:10.5px; color:#fff; line-height:.95;}
+
+  /* bottom nav */
+  .nav{flex:none; display:flex; align-items:flex-end; justify-content:space-around; border-top:2.5px solid var(--ink); background:var(--surface); padding:9px 8px 14px; position:relative;}
+  .ni{display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; width:62px; padding-top:4px;}
+  .ni .ic{font-size:19px; line-height:1;}
+  .ni .lb{font-family:var(--m); font-size:9px; font-weight:700; color:var(--muted);}
+  .ni.on .lb{color:var(--ink);}
+  .ni.on .ic{transform:translateY(-1px);}
+  .ni.on{position:relative;}
+  .ni.on::after{content:""; position:absolute; top:-9px; width:22px; height:4px; border-radius:3px; background:var(--vibe);}
+  .drop{width:56px; height:56px; border-radius:50%; background:var(--vibe); color:#fff; border:3px solid var(--ink); box-shadow:3px 4px 0 var(--ink); display:flex; align-items:center; justify-content:center; font-family:var(--h); font-weight:900; font-size:26px; margin-top:-26px; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>kizu<span class="dot">.</span> app shell</h1>
+  <p>nothing thrown away — your ideas became the navigation. each tab = one job.</p>
+  <p class="hint">tap the bottom nav: Home (②→⑤) · Tonight (①) · ＋drop · Queue · You (③)</p>
+</div>
+
+<div class="stage">
+  <div class="phone"><div class="scr">
+    <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+
+    <div class="body">
+
+      <!-- ===== HOME (②→⑤) ===== -->
+      <div class="dest on" id="home">
+        <div class="ghead"><div class="gchip"><span class="gdot"></span> the boys</div><div class="av"></div></div>
+        <div class="eyebrow">your people · 3 new since tuesday</div>
+        <div class="compact">
+          <div class="mini" style="background:linear-gradient(150deg,#2F6FE0,#4035B8)"></div>
+          <div><div class="ct2">Past Lives</div><div class="w2">ben · “cried on a plane”</div></div>
+          <div class="q">＋ queue</div>
+        </div>
+        <div class="compact">
+          <div class="mini" style="background:linear-gradient(150deg,#1B8A6B,#14110F)"></div>
+          <div><div class="ct2">Café Mogador</div><div class="w2">sana · st marks brunch</div></div>
+          <div class="q">＋ queue</div>
+        </div>
+        <div class="compact">
+          <div class="mini" style="background:linear-gradient(150deg,#E0567E,#6B4BD6)"></div>
+          <div><div class="ct2">Blonde</div><div class="w2">maya · on repeat</div></div>
+          <div class="q">＋ queue</div>
+        </div>
+
+        <div class="thresh"><div class="line"></div><span class="lab">✦ <b>you’re caught up.</b> here’s what the world’s loving</span></div>
+
+        <div class="mchips">
+          <div class="mc on">sunday melancholy</div><div class="mc">3am, can’t sleep</div>
+          <div class="mc">post-breakup</div><div class="mc">first warm day</div><div class="mc">need to cry</div>
+        </div>
+
+        <div class="person">
+          <div class="phdr">
+            <div class="portrait" style="background:linear-gradient(150deg,#D8552F,#14110F)">R</div>
+            <div><div class="pn">Rui, 34</div><div class="pw">met at a roastery · lisbon</div></div>
+            <div class="pmoment">for: sunday<br>melancholy</div>
+          </div>
+          <div class="pquote">“the only film i rewatch every single winter. it knows something.”</div>
+          <div class="ppick">
+            <div class="mini" style="background:linear-gradient(150deg,#2F6FE0,#4035B8)"></div>
+            <div><div class="pt">In the Mood for Love</div><div class="ps">2000 · wong kar-wai</div></div>
+            <div class="add">＋ queue</div>
+          </div>
+          <div class="curatedby">✦ kizu curate · real person · photographed with consent</div>
+        </div>
+
+        <div class="person">
+          <div class="phdr">
+            <div class="portrait" style="background:linear-gradient(150deg,#6B4BD6,#E0567E)">A</div>
+            <div><div class="pn">Amara, 27</div><div class="pw">record shop clerk · oakland</div></div>
+            <div class="pmoment">for: sunday<br>melancholy</div>
+          </div>
+          <div class="pquote">“put this on, make coffee, let the morning be slow. that’s the whole instruction.”</div>
+          <div class="ppick">
+            <div class="mini" style="background:linear-gradient(150deg,#E0567E,#6B4BD6); width:54px; height:54px; border-radius:7px;"></div>
+            <div><div class="pt">Alabaster DePlume</div><div class="ps">— Visit Croatia</div></div>
+            <div class="add">＋ queue</div>
+          </div>
+          <div class="curatedby">✦ kizu curate · real person · photographed with consent</div>
+        </div>
+
+        <div class="keepgoing">↓ keeps going · curated, never random<br>you leave when life calls, not when it’s empty</div>
+      </div>
+
+      <!-- ===== TONIGHT (①) ===== -->
+      <div class="dest" id="tonight">
+        <div class="eyebrow">tuesday · 9:41pm</div>
+        <h2 class="feedh">what are you<br>up for tonight?</h2>
+        <div class="mood">
+          <div class="mp sel">🎬 watch</div><div class="mp">🎧 listen</div>
+          <div class="mp">🌅 outside</div><div class="mp">🎲 surprise me</div>
+        </div>
+        <div class="mchips" style="margin-top:12px">
+          <div class="mc on">…or pick a moment</div><div class="mc">need to cry</div>
+          <div class="mc">low energy</div><div class="mc">with someone</div>
+        </div>
+        <div class="env">
+          <span style="font-size:18px">✉</span>
+          <div><b>maya left this for you</b><br><span>“this one’s so you it hurts”</span></div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="dealt">
+          <div class="cov" style="height:230px; border:none; border-bottom:2.5px solid var(--ink); border-radius:0; background:linear-gradient(150deg,#2F6FE0,#4035B8)">
+            <span class="toptag">MOVIES</span><span class="rate">9/10</span>
+            <div class="ct" style="font-size:38px">PAST<br>LIVES</div><div class="cm">2023 · A24 · drama</div>
+          </div>
+          <div style="padding:14px 15px 16px">
+            <div style="font-family:var(--m); font-size:11px; color:var(--muted)">ben dropped this · 2 in your group queued it</div>
+            <p style="font-size:15px; margin-top:6px; line-height:1.4">“cried on a plane. twice. then again at home.”</p>
+            <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:10px; margin-top:14px">
+              <div class="btn bv">＋ queue it</div><div class="btn bo">pass</div>
+            </div>
+          </div>
+        </div>
+        <div class="progress"><span class="pdot on"></span><span class="pdot"></span><span class="pdot"></span><span class="pdot"></span> &nbsp; 1 of 4 picked for you tonight</div>
+      </div>
+
+      <!-- ===== QUEUE ===== -->
+      <div class="dest" id="queue">
+        <div class="eyebrow">things you’re meaning to get to</div>
+        <h2 class="feedh">your queue</h2>
+        <div class="landed">
+          <div class="k">✦ it landed</div>
+          <div class="t">ben loved “Aftersun” — the thing you sent him last week.</div>
+        </div>
+        <div class="qsec">want to · 3</div>
+        <div class="qrow">
+          <div class="mini" style="background:linear-gradient(150deg,#2F6FE0,#4035B8)"></div>
+          <div><span class="ttag" style="background:var(--watch)">MOVIES</span><div class="qt">In the Mood for Love</div><div class="qm">via kizu curate · Rui</div></div>
+          <div class="done">✓ done</div>
+        </div>
+        <div class="qrow">
+          <div class="mini" style="background:linear-gradient(150deg,#1B8A6B,#14110F)"></div>
+          <div><span class="ttag" style="background:var(--go)">OUTSIDE</span><div class="qt">Café Mogador</div><div class="qm">sana</div></div>
+          <div class="done">✓ done</div>
+        </div>
+        <div class="qrow">
+          <div class="mini" style="background:linear-gradient(150deg,#E0567E,#6B4BD6)"></div>
+          <div><span class="ttag" style="background:var(--listen)">MUSIC</span><div class="qt">Blonde</div><div class="qm">maya</div></div>
+          <div class="done">✓ done</div>
+        </div>
+        <div class="qsec">done · loved</div>
+        <div class="qrow">
+          <div class="mini" style="background:linear-gradient(150deg,#F0B429,#D8552F)"></div>
+          <div><span class="ttag" style="background:var(--watch)">MOVIES</span><div class="qt">Aftersun</div><div class="qm">dev · you sent it on to ben</div></div>
+          <div class="verdict">♥ loved</div>
+        </div>
+      </div>
+
+      <!-- ===== YOU / CANON (③) ===== -->
+      <div class="dest" id="you">
+        <div class="youhead">
+          <div class="bigav"></div>
+          <div>
+            <div style="font-family:var(--h); font-weight:900; font-size:24px; letter-spacing:-.03em">you</div>
+            <div style="font-family:var(--m); font-size:11px; color:var(--ink2); margin-top:3px">slow · tender · end-of-day</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="s"><b>23</b> dropped</div><div class="s"><b>7</b> recs landed</div><div class="s"><b>2</b> groups</div>
+        </div>
+        <div class="eyebrow" style="margin-top:18px">your canon</div>
+        <div class="canon">
+          <div class="t" style="grid-column:span 2; grid-row:span 2; background:linear-gradient(150deg,#2F6FE0,#4035B8)"><div class="tt">In the Mood<br>for Love</div></div>
+          <div class="t" style="background:#E0567E"><div class="tt">Blonde</div></div>
+          <div class="t" style="background:#1B8A6B"><div class="tt">Mogador</div></div>
+          <div class="t" style="grid-column:span 2; background:#F0B429"><div class="tt" style="color:#14110F">Aftersun</div></div>
+          <div class="t" style="background:#D8552F"><div class="tt">Perfect Days</div></div>
+          <div class="t" style="grid-column:span 2; background:linear-gradient(120deg,#6B4BD6,#E0567E)"><div class="tt">Hyperballad</div></div>
+          <div class="t" style="background:#4035B8"><div class="tt">Paterson</div></div>
+          <div class="t" style="background:#C2D24A"><div class="tt" style="color:#14110F">Polachek</div></div>
+        </div>
+        <p style="font-size:14px; color:var(--ink2); margin-top:14px; line-height:1.5">
+          you drop <b>wong kar-wai light, frank ocean blue</b>, and places you stay till they close. <span style="color:var(--vibe)">93% taste-match with maya.</span></p>
+      </div>
+
+    </div><!-- /body -->
+
+    <!-- bottom nav -->
+    <div class="nav">
+      <div class="ni on" data-d="home"><span class="ic">🏠</span><span class="lb">home</span></div>
+      <div class="ni" data-d="tonight"><span class="ic">🌙</span><span class="lb">tonight</span></div>
+      <div class="drop">＋</div>
+      <div class="ni" data-d="queue"><span class="ic">📑</span><span class="lb">queue</span></div>
+      <div class="ni" data-d="you"><span class="ic">✦</span><span class="lb">you</span></div>
+    </div>
+
+  </div></div>
+
+  <!-- caption -->
+  <div style="width:330px; align-self:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:22px;">
+    <div style="font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)">the shell holds everything</div>
+    <h3 style="font-family:var(--h); font-weight:900; font-size:25px; letter-spacing:-.03em; margin:7px 0 13px">one app, five jobs</h3>
+    <p style="font-size:14.5px; line-height:1.5; color:var(--ink2); margin-bottom:11px"><b>🏠 Home</b> — your people (finite, “caught up”) → the curate river (infinite, by moment). ②→⑤ in one scroll.</p>
+    <p style="font-size:14.5px; line-height:1.5; color:var(--ink2); margin-bottom:11px"><b>🌙 Tonight</b> — ① decide-now mode. “what are you up for?” → a dealt hand → queue/pass.</p>
+    <p style="font-size:14.5px; line-height:1.5; color:var(--ink2); margin-bottom:11px"><b>＋ Drop</b> — smart-paste a movie / song / place, or send one <i>for</i> someone.</p>
+    <p style="font-size:14.5px; line-height:1.5; color:var(--ink2); margin-bottom:11px"><b>📑 Queue</b> — the spine: what you’re meaning to get to + “it landed” when a rec hits.</p>
+    <p style="font-size:14.5px; line-height:1.5; color:var(--ink2); margin-bottom:0"><b>✦ You</b> — ③ the Canon. your taste portrait + match %. the part that grows.</p>
+  </div>
+</div>
+
+<script>
+  const items=[...document.querySelectorAll('.ni')];
+  items.forEach(n=>n.addEventListener('click',()=>{
+    items.forEach(x=>x.classList.remove('on')); n.classList.add('on');
+    document.querySelectorAll('.dest').forEach(d=>d.classList.remove('on'));
+    document.getElementById(n.dataset.d).classList.add('on');
+    document.querySelector('.body').scrollTo({top:0});
+  }));
+  document.querySelector('.drop').addEventListener('click',()=>alert('drop composer: smart-paste a link, or send it ✉ for someone'));
+</script>
+</body>
+</html>

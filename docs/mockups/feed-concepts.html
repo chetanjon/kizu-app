@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kizu · feed concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE3CE; --surface:#FFFFFF; --surface2:#F7EFDD;
+    --ink:#14110F; --ink2:#46423A; --muted:#8C8675; --hair:#E2D8C2;
+    --red:#FF2E4D; --vibe:#6B4BD6;
+    --watch:#2F6FE0; --listen:#E0567E; --go:#1B8A6B;
+    --indigo:#4035B8; --grape:#6B4BD6; --clay:#D8552F; --teal:#1B8A6B;
+    --rose:#E0567E; --mustard:#F0B429; --chartreuse:#C2D24A; --amber:#F0A23C;
+    --h:'Archivo',sans-serif; --b:'Plus Jakarta Sans',sans-serif; --m:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--b); -webkit-font-smoothing:antialiased; padding:34px 16px 90px;}
+  ::selection{background:var(--ink); color:var(--paper);}
+
+  .wordmark{font-family:var(--h); font-weight:900; letter-spacing:-.05em;}
+  .dot{color:var(--red);}
+
+  /* ---- page chrome ---- */
+  .top{max-width:1180px; margin:0 auto 26px; text-align:center;}
+  .top h1{font-family:var(--h); font-weight:900; font-size:40px; letter-spacing:-.05em;}
+  .top p{color:var(--ink2); margin-top:6px; font-size:15px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:22px auto 0; max-width:760px;}
+  .tab{font-family:var(--h); font-weight:800; font-size:14px; cursor:pointer;
+       background:var(--surface); color:var(--ink); border:2.5px solid var(--ink);
+       border-radius:999px; padding:10px 18px; box-shadow:3px 3px 0 var(--ink); transition:transform .12s, box-shadow .12s;}
+  .tab:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink);}
+  .tab.on{background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--vibe);}
+
+  .stage{max-width:1180px; margin:30px auto 0; display:flex; gap:40px; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+  .screen{display:none;}
+  .screen.on{display:flex; gap:44px; align-items:flex-start; flex-wrap:wrap; justify-content:center;}
+
+  /* caption card */
+  .note{width:330px; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:22px 22px 24px; align-self:center;}
+  .note .kik{font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);}
+  .note h3{font-family:var(--h); font-weight:900; font-size:25px; letter-spacing:-.03em; margin:7px 0 12px; line-height:1.05;}
+  .note p{font-size:14.5px; line-height:1.5; color:var(--ink2); margin-bottom:11px;}
+  .note .tag{display:inline-block; font-family:var(--m); font-size:11px; font-weight:700; border:2px solid var(--ink); border-radius:7px; padding:3px 9px; margin:2px 5px 2px 0;}
+  .good{background:var(--chartreuse);} .bad{background:#F4D4CE;}
+
+  /* ---- phone ---- */
+  .phone{width:382px; height:792px; background:var(--paper); border:3px solid var(--ink); border-radius:42px;
+         box-shadow:10px 12px 0 var(--ink); padding:13px; flex:none;}
+  .scr{width:100%; height:100%; background:var(--paper); border-radius:30px; overflow:hidden; position:relative; display:flex; flex-direction:column;}
+  .sbar{display:flex; justify-content:space-between; align-items:center; padding:14px 22px 6px; font-family:var(--m); font-size:12px; color:var(--ink2);}
+  .pad{padding:6px 18px 22px; overflow:auto; flex:1;}
+  .pad::-webkit-scrollbar{width:0;}
+
+  .ghead{display:flex; align-items:center; justify-content:space-between; padding:6px 0 2px;}
+  .gchip{display:inline-flex; align-items:center; gap:8px; font-family:var(--m); font-size:11px; font-weight:700;
+         border:2px solid var(--ink); border-radius:999px; padding:6px 12px; background:var(--surface);}
+  .gdot{width:10px; height:10px; border-radius:50%; background:var(--grape);}
+  .av{width:30px; height:30px; border-radius:50%; border:2px solid var(--ink); background:var(--mustard);}
+
+  /* generative covers */
+  .cov{border:2.5px solid var(--ink); border-radius:14px; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; padding:12px;}
+  .cov .ct{font-family:var(--h); font-weight:900; letter-spacing:-.03em; line-height:.96; color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.18);}
+  .cov .cm{font-family:var(--m); font-size:9.5px; font-weight:700; color:rgba(255,255,255,.82); margin-top:5px; letter-spacing:.06em;}
+  .toptag{position:absolute; top:9px; left:9px; font-family:var(--m); font-size:8.5px; font-weight:700; color:#fff; border:2px solid #fff; border-radius:6px; padding:2px 7px; letter-spacing:.05em;}
+  .rate{position:absolute; left:9px; bottom:9px; font-family:var(--m); font-size:10px; font-weight:700; background:var(--ink); color:#fff; border-radius:6px; padding:2px 7px;}
+
+  .btn{font-family:var(--h); font-weight:800; font-size:14px; border:2.5px solid var(--ink); border-radius:999px; padding:11px 16px; cursor:pointer; text-align:center;}
+  .bv{background:var(--vibe); color:#fff; box-shadow:3px 3px 0 var(--ink);}
+  .bo{background:var(--surface); color:var(--ink);}
+
+  /* aurora (vibe / curate hero) */
+  .aurora{background:
+      radial-gradient(120% 90% at 12% 8%, #8E6BF0 0%, transparent 55%),
+      radial-gradient(120% 100% at 92% 18%, #E0567E 0%, transparent 52%),
+      radial-gradient(140% 120% at 70% 100%, #2F6FE0 0%, transparent 60%),
+      linear-gradient(135deg,#5B3FC4,#6B4BD6);}
+
+  /* ===== ① TONIGHT ===== */
+  .mood{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:14px;}
+  .mp{font-family:var(--h); font-weight:800; font-size:14px; border:2.5px solid var(--ink); border-radius:14px; padding:13px 12px; background:var(--surface); display:flex; align-items:center; gap:9px;}
+  .mp.sel{background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--vibe);}
+  .mp .e{font-size:17px;}
+  .env{display:flex; align-items:center; gap:11px; margin-top:16px; background:var(--surface2); border:2.5px dashed var(--ink); border-radius:14px; padding:12px 14px;}
+  .env .ico{font-size:18px;} .env b{font-family:var(--h); font-weight:800;} .env span{color:var(--ink2); font-size:13px;}
+  .arrow{margin-left:auto; font-family:var(--h); font-weight:900;}
+  .dealt{margin-top:16px; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 7px 0 var(--ink); overflow:hidden;}
+  .progress{display:flex; gap:7px; justify-content:center; align-items:center; margin-top:16px; font-family:var(--m); font-size:11px; color:var(--muted);}
+  .pdot{width:8px; height:8px; border-radius:50%; background:var(--hair); border:1.5px solid var(--ink);}
+  .pdot.on{background:var(--vibe);}
+
+  /* ===== ② THE TABLE ===== */
+  .table{position:relative; height:560px; margin-top:8px;}
+  .tcard{position:absolute; box-shadow:5px 6px 0 var(--ink);}
+  .caught{text-align:center; margin-top:6px;}
+  .caught .big{font-family:var(--h); font-weight:900; font-size:20px; letter-spacing:-.03em;}
+  .caught .sub{font-family:var(--m); font-size:11px; color:var(--muted); margin-top:4px;}
+  .seal{background:var(--surface2); border:2.5px dashed var(--ink); border-radius:13px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:10px;}
+
+  /* ===== ③ CANON ===== */
+  .canon{display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-top:12px; background:var(--mustard); padding:4px; border:2.5px solid var(--ink); border-radius:16px;}
+  .canon .t{border-radius:5px; overflow:hidden; min-height:54px; display:flex; align-items:flex-end; padding:7px;}
+  .canon .t .tt{font-family:var(--h); font-weight:800; font-size:11px; color:#fff; line-height:.95;}
+  .stat{display:flex; gap:9px; margin-top:13px; flex-wrap:wrap;}
+  .stat .s{font-family:var(--m); font-size:11px; font-weight:700; border:2px solid var(--ink); border-radius:8px; padding:5px 10px; background:var(--surface);}
+
+  /* ===== ④ GRID ===== */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-top:14px;}
+  .gcard{background:var(--surface); border:2.5px solid var(--ink); border-radius:16px; overflow:hidden; box-shadow:4px 5px 0 var(--ink);}
+  .gcard .meta{padding:9px 10px 11px;}
+  .gcard .mt{font-family:var(--h); font-weight:800; font-size:14px; line-height:1.05; margin-top:6px;}
+  .gcard .who{font-family:var(--m); font-size:10px; color:var(--muted); margin-top:7px; padding-top:7px; border-top:2px solid var(--hair);}
+  .ttag{display:inline-block; font-family:var(--m); font-size:8.5px; font-weight:700; color:#fff; border:2px solid var(--ink); border-radius:6px; padding:2px 7px;}
+  .vbar{margin-top:14px; border:2.5px solid var(--ink); border-radius:14px; padding:13px 16px; color:#fff; display:flex; align-items:center; justify-content:space-between; box-shadow:4px 5px 0 var(--ink);}
+  .vbar b{font-family:var(--h); font-weight:800;}
+
+  h2.feedh{font-family:var(--h); font-weight:900; font-size:27px; letter-spacing:-.04em; line-height:1.02; margin-top:10px;}
+  .eyebrow{font-family:var(--m); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:8px;}
+
+  /* ===== ⑤ THE MERGE (group → curate river) ===== */
+  .compact{display:flex; gap:11px; align-items:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:14px; padding:9px; box-shadow:3px 4px 0 var(--ink); margin-top:10px;}
+  .compact .mini{width:50px; height:50px; flex:none; border:2px solid var(--ink); border-radius:9px;}
+  .compact .ct2{font-family:var(--h); font-weight:800; font-size:14px; line-height:1.05;}
+  .compact .w2{font-family:var(--m); font-size:9.5px; color:var(--muted); margin-top:3px;}
+  .compact .q{margin-left:auto; font-family:var(--h); font-weight:800; font-size:11px; border:2px solid var(--ink); border-radius:999px; padding:5px 10px; background:var(--surface2);}
+
+  .thresh{margin:20px -4px 4px; text-align:center; position:relative;}
+  .thresh .line{border-top:2.5px dashed var(--ink); margin:0 0 -10px;}
+  .thresh .lab{display:inline-block; background:var(--paper); padding:0 12px; font-family:var(--m); font-size:10.5px; letter-spacing:.08em; color:var(--ink2); position:relative;}
+  .thresh .lab b{font-family:var(--h); font-weight:900; color:var(--ink);}
+
+  .mchips{display:flex; gap:8px; overflow:auto; margin:14px -18px 4px; padding:2px 18px 8px;}
+  .mchips::-webkit-scrollbar{height:0;}
+  .mc{flex:none; font-family:var(--m); font-size:11px; font-weight:700; border:2px solid var(--ink); border-radius:999px; padding:7px 12px; background:var(--surface); white-space:nowrap;}
+  .mc.on{background:var(--ink); color:var(--paper);}
+
+  .person{background:var(--surface); border:2.5px solid var(--ink); border-radius:18px; box-shadow:5px 6px 0 var(--ink); overflow:hidden; margin-top:15px;}
+  .phdr{display:flex; gap:11px; align-items:center; padding:12px 13px;}
+  .portrait{width:50px; height:50px; flex:none; border:2.5px solid var(--ink); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--h); font-weight:900; font-size:20px; color:#fff;}
+  .pn{font-family:var(--h); font-weight:800; font-size:15px;}
+  .pw{font-family:var(--m); font-size:9.5px; color:var(--muted); margin-top:2px;}
+  .pmoment{margin-left:auto; font-family:var(--m); font-size:9px; font-weight:700; text-align:right; color:var(--vibe); max-width:96px; line-height:1.25;}
+  .pquote{padding:0 14px 12px; font-size:14.5px; line-height:1.45; font-style:italic;}
+  .ppick{display:flex; align-items:center; gap:11px; margin:0 11px 12px; background:var(--surface2); border:2px solid var(--ink); border-radius:12px; padding:9px;}
+  .ppick .mini{width:42px; height:54px; flex:none; border:2px solid var(--ink); border-radius:7px;}
+  .ppick .pt{font-family:var(--h); font-weight:800; font-size:13px; line-height:1.05;}
+  .ppick .ps{font-family:var(--m); font-size:9px; color:var(--muted); margin-top:3px;}
+  .ppick .add{margin-left:auto; font-family:var(--h); font-weight:800; font-size:11px; color:#fff; background:var(--vibe); border:2px solid var(--ink); border-radius:999px; padding:6px 11px;}
+  .curatedby{font-family:var(--m); font-size:8.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:0 14px 12px;}
+  .keepgoing{text-align:center; font-family:var(--m); font-size:10px; color:var(--muted); margin-top:18px; opacity:.7;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>kizu<span class="dot">.</span> feed concepts</h1>
+  <p>four ways the feed could look — built on the locked tokens. flip between them, then tell me which is kizu.</p>
+  <div class="tabs">
+    <div class="tab on" data-t="t1">① Tonight</div>
+    <div class="tab" data-t="t2">② The Table</div>
+    <div class="tab" data-t="t3">③ The Canon</div>
+    <div class="tab" data-t="t4">④ Current grid</div>
+    <div class="tab" data-t="t5">⑤ The Merge ★</div>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- ============ ① TONIGHT ============ -->
+  <section class="screen on" id="t1">
+    <div class="phone"><div class="scr">
+      <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+      <div class="pad">
+        <div class="ghead">
+          <div class="gchip"><span class="gdot"></span> the boys</div>
+          <div class="av"></div>
+        </div>
+        <div class="eyebrow">tuesday · 9:41pm</div>
+        <h2 class="feedh">what are you<br>up for tonight?</h2>
+        <div class="mood">
+          <div class="mp sel"><span class="e">🎬</span> watch</div>
+          <div class="mp"><span class="e">🎧</span> listen</div>
+          <div class="mp"><span class="e">🌅</span> outside</div>
+          <div class="mp"><span class="e">🎲</span> surprise me</div>
+        </div>
+
+        <div class="env">
+          <span class="ico">✉</span>
+          <div><b>maya left this for you</b><br><span>“this one’s so you it hurts”</span></div>
+          <span class="arrow">→</span>
+        </div>
+
+        <div class="dealt">
+          <div class="cov" style="height:240px; border:none; border-bottom:2.5px solid var(--ink); border-radius:0; background:linear-gradient(150deg,#2F6FE0,#4035B8);">
+            <span class="toptag">MOVIES</span>
+            <span class="rate">9/10</span>
+            <div class="ct" style="font-size:40px">PAST<br>LIVES</div>
+            <div class="cm">2023 · A24 · drama</div>
+          </div>
+          <div style="padding:14px 15px 16px">
+            <div style="font-family:var(--m); font-size:11px; color:var(--muted)">ben dropped this</div>
+            <p style="font-size:15px; margin-top:6px; line-height:1.4">“cried on a plane. twice. then again at home.”</p>
+            <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:10px; margin-top:14px">
+              <div class="btn bv">＋ queue it</div>
+              <div class="btn bo">pass</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress">
+          <span class="pdot on"></span><span class="pdot"></span><span class="pdot"></span><span class="pdot"></span>
+          &nbsp; 1 of 4 picked for you tonight
+        </div>
+      </div>
+    </div></div>
+
+    <div class="note">
+      <div class="kik">recommended</div>
+      <h3>① Tonight</h3>
+      <p>The feed is a <b>decision, not a stream</b>. You say what you’re up for; kizu deals a small hand of the best things your trusted people dropped in that lane — one focused card, verb is <b>queue it / pass</b>.</p>
+      <p>Recs made <i>for you</i> arrive as sealed envelopes. Curate is the house card. There is no infinite scroll — only “picked for you tonight.”</p>
+      <span class="tag good">most outcome-aligned</span><span class="tag good">most novel</span><span class="tag bad">least “browsable”</span>
+    </div>
+  </section>
+
+  <!-- ============ ② THE TABLE ============ -->
+  <section class="screen" id="t2">
+    <div class="phone"><div class="scr">
+      <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+      <div class="pad">
+        <div class="ghead"><div class="gchip"><span class="gdot"></span> the boys</div><div class="av"></div></div>
+        <div class="eyebrow">since tuesday · 6 new</div>
+        <h2 class="feedh">what your<br>people love</h2>
+
+        <div class="table">
+          <!-- film -->
+          <div class="cov tcard" style="width:140px; height:200px; transform:rotate(-4deg); left:2px; top:6px; background:linear-gradient(150deg,#D8552F,#14110F)">
+            <span class="toptag">MOVIES</span>
+            <div class="ct" style="font-size:22px">PERFECT<br>DAYS</div><div class="cm">2023 · wenders</div>
+          </div>
+          <!-- for-you envelope -->
+          <div class="seal tcard" style="width:128px; height:118px; transform:rotate(3deg); right:4px; top:0px;">
+            <span style="font-size:20px">✉</span>
+            <b style="font-family:var(--h); font-size:13px; margin-top:4px">for you</b>
+            <span style="font-family:var(--m); font-size:9px; color:var(--muted); margin-top:2px">from sana</span>
+          </div>
+          <!-- song square -->
+          <div class="cov tcard" style="width:128px; height:128px; transform:rotate(2.5deg); right:8px; top:138px; background:linear-gradient(150deg,#E0567E,#6B4BD6)">
+            <span class="toptag">MUSIC</span>
+            <div class="ct" style="font-size:17px">Blonde</div><div class="cm">frank ocean</div>
+          </div>
+          <!-- kizu house card (aurora) -->
+          <div class="cov tcard aurora" style="width:150px; height:120px; transform:rotate(-2deg); left:6px; top:222px;">
+            <span class="toptag" style="border-color:#fff">✦ kizu curate</span>
+            <div class="ct" style="font-size:15px">“now is now.”</div>
+            <div class="cm">today’s pick →</div>
+          </div>
+          <!-- place -->
+          <div class="cov tcard" style="width:178px; height:118px; transform:rotate(3.5deg); right:2px; top:300px; background:linear-gradient(150deg,#1B8A6B,#14110F)">
+            <span class="toptag">OUTSIDE</span>
+            <div class="ct" style="font-size:18px">Café Mogador</div><div class="cm">st marks · brunch</div>
+          </div>
+          <!-- film 2 -->
+          <div class="cov tcard" style="width:118px; height:166px; transform:rotate(-3deg); left:14px; top:360px; background:linear-gradient(150deg,#F0B429,#D8552F)">
+            <span class="toptag">MOVIES</span>
+            <div class="ct" style="font-size:18px; color:#14110F; text-shadow:none">Aftersun</div>
+          </div>
+        </div>
+
+        <div class="caught">
+          <div class="big">that’s everyone.</div>
+          <div class="sub">you’re all caught up · <span class="wordmark" style="font-size:11px">kizu<span class="dot">.</span></span></div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="note">
+      <div class="kik">calm · ritual</div>
+      <h3>② The Table</h3>
+      <p>No scroll. Everything dropped since your last visit is <b>dealt onto paper</b> as a finite spread — slight rotations, physical hard-shadow feel, like a hand laid out for you.</p>
+      <p>Curate is the house card, recs are sealed envelopes, and it <b>ends</b> — “you’re all caught up.” Maximal brand fit; gentler nudge to act than ①.</p>
+      <span class="tag good">most on-brand</span><span class="tag good">anti-doomscroll</span><span class="tag bad">less decision-forcing</span>
+    </div>
+  </section>
+
+  <!-- ============ ③ THE CANON ============ -->
+  <section class="screen" id="t3">
+    <div class="phone"><div class="scr">
+      <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+      <div class="pad">
+        <div class="ghead"><div class="gchip"><span class="gdot"></span> the boys</div><div class="av"></div></div>
+        <div class="eyebrow">the group’s taste, accreting</div>
+        <h2 class="feedh">the canon</h2>
+        <div class="canon">
+          <div class="t" style="grid-column:span 2; grid-row:span 2; background:linear-gradient(150deg,#2F6FE0,#4035B8)"><div class="tt">In the Mood<br>for Love</div></div>
+          <div class="t" style="background:#E0567E"><div class="tt">Blonde</div></div>
+          <div class="t" style="background:#1B8A6B"><div class="tt">Mogador</div></div>
+          <div class="t" style="grid-column:span 2; background:#F0B429"><div class="tt" style="color:#14110F">Aftersun</div></div>
+          <div class="t" style="background:#D8552F"><div class="tt">Perfect Days</div></div>
+          <div class="t" style="grid-column:span 2; background:linear-gradient(120deg,#6B4BD6,#E0567E)"><div class="tt">Hyperballad</div></div>
+          <div class="t" style="background:#4035B8"><div class="tt">Paterson</div></div>
+          <div class="t" style="background:#C2D24A"><div class="tt" style="color:#14110F">Polachek</div></div>
+          <div class="t" style="background:#14110F"><div class="tt">Drive My Car</div></div>
+          <div class="t" style="grid-column:span 2; background:#1B8A6B"><div class="tt">Prospect Pk</div></div>
+          <div class="t" style="background:#D8552F"><div class="tt">DePlume</div></div>
+          <div class="t" style="background:#2F6FE0"><div class="tt">Columbus</div></div>
+        </div>
+        <div class="stat">
+          <div class="s">47 things</div><div class="s">5 people</div><div class="s">since march</div>
+        </div>
+        <p style="font-family:var(--b); font-size:14px; color:var(--ink2); margin-top:14px; line-height:1.5">
+          this group runs <b>slow, tender, end-of-day</b> — wong kar-wai light, frank ocean blue, the kind of place you stay till they close.</p>
+      </div>
+    </div></div>
+
+    <div class="note">
+      <div class="kik">identity · artifact</div>
+      <h3>③ The Canon</h3>
+      <p>Less a feed, more a <b>living mural</b> — every drop becomes a tile in a kintsugi-gold mosaic that is the group’s evolving taste-portrait. Beautiful, ownable, deeply shareable.</p>
+      <p>But it’s a weaker place to <i>decide what to do tonight</i>. My honest take: this is the perfect shape for the <b>Taste-DNA / profile</b> page — not the daily feed.</p>
+      <span class="tag good">gorgeous · shareable</span><span class="tag bad">weak for discovery</span><span class="tag bad">better as profile</span>
+    </div>
+  </section>
+
+  <!-- ============ ④ CURRENT GRID ============ -->
+  <section class="screen" id="t4">
+    <div class="phone"><div class="scr">
+      <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+      <div class="pad">
+        <div class="ghead"><div class="gchip"><span class="gdot"></span> the boys</div><div class="av"></div></div>
+        <div class="eyebrow">the boys · invite code 7KQ2</div>
+        <h2 class="feedh">what your <span style="color:var(--vibe)">people</span> love</h2>
+        <div class="vbar aurora"><b>✦ read the group’s vibe</b><span style="font-family:var(--m); font-size:18px">→</span></div>
+        <div class="grid">
+          <div class="gcard">
+            <div class="cov" style="height:130px; border:none; border-bottom:2.5px solid var(--ink); border-radius:0; background:linear-gradient(150deg,#2F6FE0,#4035B8)"><span class="toptag">MOVIES</span></div>
+            <div class="meta"><span class="ttag" style="background:var(--watch)">MOVIES</span><div class="mt">Past Lives</div><div class="who">ben</div></div>
+          </div>
+          <div class="gcard">
+            <div class="cov" style="height:130px; border:none; border-bottom:2.5px solid var(--ink); border-radius:0; background:linear-gradient(150deg,#E0567E,#6B4BD6)"><span class="toptag">MUSIC</span></div>
+            <div class="meta"><span class="ttag" style="background:var(--listen)">MUSIC</span><div class="mt">Blonde</div><div class="who">maya</div></div>
+          </div>
+          <div class="gcard">
+            <div class="cov" style="height:130px; border:none; border-bottom:2.5px solid var(--ink); border-radius:0; background:linear-gradient(150deg,#1B8A6B,#14110F)"><span class="toptag">OUTSIDE</span></div>
+            <div class="meta"><span class="ttag" style="background:var(--go)">OUTSIDE</span><div class="mt">Café Mogador</div><div class="who">sana</div></div>
+          </div>
+          <div class="gcard">
+            <div class="cov" style="height:130px; border:none; border-bottom:2.5px solid var(--ink); border-radius:0; background:linear-gradient(150deg,#F0B429,#D8552F)"><span class="toptag" style="color:#14110F; border-color:#14110F">MOVIES</span></div>
+            <div class="meta"><span class="ttag" style="background:var(--watch)">MOVIES</span><div class="mt">Aftersun</div><div class="who">dev</div></div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="note">
+      <div class="kik">baseline · what exists today</div>
+      <h3>④ Current grid</h3>
+      <p>Today’s masonry card grid + a vibe-read bar. We’d just bolt queue + filter chips onto it.</p>
+      <p>It works — but it’s <b>the regular way everyone does it</b>: a wall of cards to scroll. The exact thing you said you didn’t want. Shown here as the honest baseline to react against.</p>
+      <span class="tag good">fastest to build</span><span class="tag bad">generic</span><span class="tag bad">scroll-shaped</span>
+    </div>
+  </section>
+
+  <!-- ============ ⑤ THE MERGE ============ -->
+  <section class="screen" id="t5">
+    <div class="phone"><div class="scr">
+      <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+      <div class="pad">
+        <div class="ghead"><div class="gchip"><span class="gdot"></span> the boys</div><div class="av"></div></div>
+
+        <!-- finite group head -->
+        <div class="eyebrow">your people · 3 new since tuesday</div>
+        <div class="compact">
+          <div class="mini" style="background:linear-gradient(150deg,#2F6FE0,#4035B8)"></div>
+          <div><div class="ct2">Past Lives</div><div class="w2">ben · “cried on a plane”</div></div>
+          <div class="q">＋ queue</div>
+        </div>
+        <div class="compact">
+          <div class="mini" style="background:linear-gradient(150deg,#1B8A6B,#14110F)"></div>
+          <div><div class="ct2">Café Mogador</div><div class="w2">sana · st marks</div></div>
+          <div class="q">＋ queue</div>
+        </div>
+
+        <!-- the threshold -->
+        <div class="thresh">
+          <div class="line"></div>
+          <span class="lab">✦ <b>you’re caught up.</b> here’s what the world’s loving</span>
+        </div>
+
+        <!-- moment axis -->
+        <div class="mchips">
+          <div class="mc on">sunday melancholy</div>
+          <div class="mc">3am, can’t sleep</div>
+          <div class="mc">post-breakup</div>
+          <div class="mc">first warm day</div>
+          <div class="mc">need to cry</div>
+        </div>
+
+        <!-- human-curated river -->
+        <div class="person">
+          <div class="phdr">
+            <div class="portrait" style="background:linear-gradient(150deg,#D8552F,#14110F)">R</div>
+            <div><div class="pn">Rui, 34</div><div class="pw">met at a roastery · lisbon</div></div>
+            <div class="pmoment">for: sunday<br>melancholy</div>
+          </div>
+          <div class="pquote">“the only film i rewatch every single winter. it knows something.”</div>
+          <div class="ppick">
+            <div class="mini" style="background:linear-gradient(150deg,#2F6FE0,#4035B8)"></div>
+            <div><div class="pt">In the Mood for Love</div><div class="ps">2000 · wong kar-wai</div></div>
+            <div class="add">＋ queue</div>
+          </div>
+          <div class="curatedby">✦ kizu curate · real person · photographed with consent</div>
+        </div>
+
+        <div class="person">
+          <div class="phdr">
+            <div class="portrait" style="background:linear-gradient(150deg,#6B4BD6,#E0567E)">A</div>
+            <div><div class="pn">Amara, 27</div><div class="pw">record shop clerk · oakland</div></div>
+            <div class="pmoment">for: sunday<br>melancholy</div>
+          </div>
+          <div class="pquote">“put this on, make coffee, let the morning be slow. that’s the whole instruction.”</div>
+          <div class="ppick">
+            <div class="mini" style="background:linear-gradient(150deg,#E0567E,#6B4BD6); width:54px; height:54px; border-radius:7px;"></div>
+            <div><div class="pt">Alabaster DePlume</div><div class="ps">— Visit Croatia</div></div>
+            <div class="add">＋ queue</div>
+          </div>
+          <div class="curatedby">✦ kizu curate · real person · photographed with consent</div>
+        </div>
+
+        <div class="person" style="opacity:.55">
+          <div class="phdr">
+            <div class="portrait" style="background:linear-gradient(150deg,#1B8A6B,#14110F)">T</div>
+            <div><div class="pn">Theo, 41</div><div class="pw">runs a wine bar · lisbon</div></div>
+            <div class="pmoment">for: sunday<br>melancholy</div>
+          </div>
+          <div class="pquote">“go alone. order the thing you can’t pronounce…”</div>
+        </div>
+
+        <div class="keepgoing">↓ keeps going · curated, never random ·<br>you leave when life calls, not when it’s empty</div>
+      </div>
+    </div></div>
+
+    <div class="note">
+      <div class="kik">★ the synthesis of everything you said</div>
+      <h3>⑤ The Merge</h3>
+      <p><b>One feed, two physics.</b> Up top: your group — finite, trusted, ends in “caught up.” That line isn’t a wall — it’s a <b>threshold</b> into Kizu Curate.</p>
+      <p>Below it: an <b>infinite river of real people’s taste</b> — a face, a name, where you met them, their words, their pick. Organized by <b>moment</b> (“sunday melancholy”), not genre. Endless, but every item is hand-curated by a human, so it’s never slop.</p>
+      <p>You’re never bored, never see “nothing here” — but it’s not doomscroll, because it’s all <i>good taste from real people.</i> You leave because life called, not because it went empty.</p>
+      <span class="tag good">infinite ✓ but not slop</span><span class="tag good">human moat</span><span class="tag good">moment-based</span><span class="tag good">①②④ combined</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const tabs=[...document.querySelectorAll('.tab')], scr=id=>document.getElementById(id);
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('on')); t.classList.add('on');
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+    scr(t.dataset.t).classList.add('on');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+</script>
+</body>
+</html>

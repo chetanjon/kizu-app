@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { SignOutButton } from "@/components/sign-out-button";
 import VibeRead from "@/components/vibe-read";
 import Reactions from "@/components/reactions";
 import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
+import QueueButton from "@/components/queue-button";
+import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
 type Membership = {
   group_id: string;
@@ -14,34 +15,16 @@ type Membership = {
 };
 type Item = {
   id: string;
-  type: "watch" | "listen" | "go_out";
+  type: DropType;
   rating_value: string | null;
   note: string | null;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   created_by: string;
   users: { name: string | null } | null;
   reactions: { emoji: string; user_id: string }[];
 };
 
-const TYPE = {
-  watch: { label: "MOVIES", color: "#2F6FE0" },
-  listen: { label: "MUSIC", color: "#E0567E" },
-  go_out: { label: "OUTSIDE", color: "#1B8A6B" },
-} as const;
-
-function img(it: Item): string | null {
-  return it.data?.poster_url || it.data?.artwork_url || it.data?.photo_url || null;
-}
-function title(it: Item): string {
-  return it.data?.title || it.data?.place_name || "untitled";
-}
-function sub(it: Item): string {
-  if (it.type === "watch") return [it.data?.year, it.data?.media_type].filter(Boolean).join(" · ").toUpperCase();
-  if (it.type === "listen") return (it.data?.artist || "").toUpperCase();
-  return [it.data?.subtype, it.data?.music_note].filter(Boolean).join(" · ");
-}
-
-export default async function Feed() {
+export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -63,6 +46,15 @@ export default async function Feed() {
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
 
+  // which of these have I already queued?
+  const ids = items.map((i) => i.id);
+  const { data: qRaw } = await supabase
+    .from("queue_items")
+    .select("item_id")
+    .eq("user_id", user.id)
+    .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+  const queued = new Set((qRaw ?? []).map((q) => q.item_id));
+
   const { data: me } = await supabase.from("users").select("name").eq("id", user.id).maybeSingle();
   const myName = me?.name ?? null;
 
@@ -75,10 +67,6 @@ export default async function Feed() {
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
             {g.name.toLowerCase()}
           </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/drop" className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2 shadow-[3px_3px_0_#14110F]">＋ drop</Link>
-          <SignOutButton />
         </div>
       </header>
 
@@ -96,33 +84,40 @@ export default async function Feed() {
             <p className="text-muted text-xs mt-6 font-m">share to invite: send <b>/join/{g.invite_code}</b></p>
           </div>
         ) : (
-          <div className="mt-7 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-5">
-            {items.map((it) => {
-              const t = TYPE[it.type];
-              const cover = img(it);
-              return (
-                <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_5px_0_#14110F]">
-                  <div className="aspect-[4/3] relative border-b-[2.5px] border-ink" style={{ background: cover ? undefined : t.color }}>
-                    {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
-                    {it.rating_value && <span className="absolute left-2.5 bottom-2.5 bg-ink text-white font-m text-xs font-bold rounded-md px-2 py-0.5">{it.rating_value}</span>}
-                  </div>
-                  <div className="p-3.5">
-                    <span className="inline-block font-m text-[9px] font-bold tracking-wide border-[2px] border-ink rounded-md px-2 py-0.5" style={{ background: t.color, color: "#fff" }}>{t.label}</span>
-                    <div className="font-h font-extrabold text-lg tracking-[-0.02em] mt-2 leading-tight">{title(it)}</div>
-                    {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
-                    {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
-                    <div className="mt-3 pt-3 border-t-[2px] border-hair">
-                      <div className="flex items-center justify-between">
-                        <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
-                        {it.created_by === user.id && <DeleteDrop itemId={it.id} />}
-                      </div>
-                      <div className="mt-2"><Reactions itemId={it.id} initial={it.reactions} userId={user.id} /></div>
+          <>
+            <div className="mt-7 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-5">
+              {items.map((it) => {
+                const t = TYPE[it.type];
+                const cover = img(it);
+                const mine = it.created_by === user.id;
+                return (
+                  <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_5px_0_#14110F]">
+                    <div className="aspect-[4/3] relative border-b-[2.5px] border-ink" style={{ background: cover ? undefined : t.color }}>
+                      {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
+                      {it.rating_value && <span className="absolute left-2.5 bottom-2.5 bg-ink text-white font-m text-xs font-bold rounded-md px-2 py-0.5">{it.rating_value}</span>}
                     </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                    <div className="p-3.5">
+                      <span className="inline-block font-m text-[9px] font-bold tracking-wide border-[2px] border-ink rounded-md px-2 py-0.5" style={{ background: t.color, color: "#fff" }}>{t.label}</span>
+                      <div className="font-h font-extrabold text-lg tracking-[-0.02em] mt-2 leading-tight">{title(it)}</div>
+                      {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
+                      {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
+                      <div className="mt-3 pt-3 border-t-[2px] border-hair">
+                        <div className="flex items-center justify-between">
+                          <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
+                          {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
+                        </div>
+                        <div className="mt-2"><Reactions itemId={it.id} initial={it.reactions} userId={user.id} /></div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="mt-10 text-center">
+              <div className="font-h text-lg font-bold">that&apos;s everyone.</div>
+              <div className="font-m text-[11px] text-muted mt-1">you&apos;re all caught up · <span className="font-h font-extrabold">kizu<span className="text-red">.</span></span></div>
+            </div>
+          </>
         )}
       </main>
     </div>

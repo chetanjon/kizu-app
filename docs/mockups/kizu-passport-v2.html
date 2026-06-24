@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kizu · taste passport (de-risked)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE3CE; --surface:#FFFFFF; --surface2:#F7EFDD;
+    --ink:#14110F; --ink2:#46423A; --muted:#8C8675; --hair:#E2D8C2;
+    --red:#FF2E4D; --vibe:#6B4BD6;
+    --watch:#2F6FE0; --listen:#E0567E; --go:#1B8A6B;
+    --indigo:#4035B8; --clay:#D8552F; --teal:#1B8A6B; --rose:#E0567E;
+    --mustard:#F0B429; --chartreuse:#C2D24A; --amber:#F0A23C;
+    --h:'Archivo',sans-serif; --b:'Plus Jakarta Sans',sans-serif; --m:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--b); -webkit-font-smoothing:antialiased; padding:34px 16px 80px;}
+  ::selection{background:var(--ink); color:var(--paper);}
+  .wordmark{font-family:var(--h); font-weight:900; letter-spacing:-.05em;}
+  .dot{color:var(--red);}
+  .top{text-align:center; margin-bottom:26px;}
+  .top h1{font-family:var(--h); font-weight:900; font-size:34px; letter-spacing:-.05em;}
+  .top p{color:var(--ink2); margin-top:6px; font-size:15px;}
+  .top .hint{font-family:var(--m); font-size:12px; color:var(--vibe); margin-top:9px;}
+  .stage{display:flex; gap:44px; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+
+  .phone{width:390px; height:812px; background:var(--paper); border:3px solid var(--ink); border-radius:44px; box-shadow:12px 14px 0 var(--ink); padding:13px; flex:none;}
+  .scr{width:100%; height:100%; background:var(--paper); border-radius:32px; overflow:hidden; display:flex; flex-direction:column; position:relative;}
+  .sbar{display:flex; justify-content:space-between; align-items:center; padding:14px 24px 4px; font-family:var(--m); font-size:12px; color:var(--ink2); flex:none;}
+  .body{flex:1; overflow:hidden; padding:12px 20px 14px; display:flex; flex-direction:column;}
+  .toprow{display:flex; align-items:center; justify-content:space-between;}
+  .eyebrow{font-family:var(--m); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
+  .lock{font-family:var(--m); font-size:9px; font-weight:700; color:var(--ink2); border:2px solid var(--ink); border-radius:999px; padding:3px 9px; background:var(--surface);}
+
+  .pages{flex:1; position:relative; margin-top:10px;}
+  .page{position:absolute; inset:0; display:none; flex-direction:column;}
+  .page.on{display:flex; animation:fl .28s ease;}
+  @keyframes fl{from{opacity:0; transform:translateX(14px);} to{opacity:1; transform:none;}}
+  .pager{flex:none; display:flex; align-items:center; justify-content:center; gap:8px; padding-top:12px;}
+  .pdot{width:8px; height:8px; border-radius:50%; border:2px solid var(--ink); background:var(--surface);}
+  .pdot.on{background:var(--vibe);}
+  .tapzones{position:absolute; inset:0; display:flex; z-index:5;}
+  .tz{flex:1; cursor:pointer;}
+
+  /* COVER */
+  .cover{flex:1; border:3px solid var(--ink); border-radius:18px; background:
+      radial-gradient(120% 80% at 20% 12%,#8E6BF0 0,transparent 55%),
+      radial-gradient(120% 90% at 88% 22%,#E0567E 0,transparent 50%),
+      radial-gradient(140% 120% at 70% 100%,#2F6FE0 0,transparent 60%),
+      linear-gradient(140deg,#3A2C7A,#14110F);
+      box-shadow:7px 8px 0 var(--ink); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; position:relative; overflow:hidden;}
+  .cover .ring{width:118px; height:118px; border:3px solid rgba(255,255,255,.6); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:44px; margin-bottom:22px;}
+  .cover h2{font-family:var(--h); font-weight:900; font-size:25px; letter-spacing:.04em; line-height:1.1;}
+  .cover .sub{font-family:var(--m); font-size:11px; letter-spacing:.18em; margin-top:10px; color:rgba(255,255,255,.8);}
+  .cover .no{font-family:var(--m); font-size:11px; letter-spacing:.16em; margin-top:26px; color:rgba(255,255,255,.7);}
+  .cover .brand{position:absolute; top:16px; left:18px; font-family:var(--h); font-weight:900; font-size:16px;}
+  .cover .open{position:absolute; bottom:18px; font-family:var(--m); font-size:10px; color:rgba(255,255,255,.7);}
+  .foil{position:absolute; inset:0; background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.14) 48%,transparent 60%); pointer-events:none;}
+
+  /* IDENTITY */
+  .idp{flex:1; border:3px solid var(--ink); border-radius:18px; background:var(--surface); box-shadow:6px 7px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;}
+  .idhead{background:var(--ink); color:var(--paper); padding:11px 15px; display:flex; justify-content:space-between; align-items:center;}
+  .idhead .t{font-family:var(--h); font-weight:900; font-size:13px; letter-spacing:.02em;}
+  .idhead .n{font-family:var(--m); font-size:10px; color:#C9BFA9;}
+  .idrow{display:flex; gap:13px; align-items:center; padding:15px 15px 8px;}
+  .idav{width:70px; height:86px; flex:none; border:2.5px solid var(--ink); border-radius:8px; background:linear-gradient(150deg,var(--mustard),var(--clay)); position:relative;}
+  .idav::after{content:"✦"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:26px; color:rgba(20,17,15,.35);}
+  .idname{font-family:var(--h); font-weight:900; font-size:23px; letter-spacing:-.03em;}
+  .season{font-family:var(--m); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:5px;}
+  .idtype{display:inline-block; font-family:var(--h); font-weight:800; font-size:16px; margin-top:3px;}
+  .because{font-size:12.5px; color:var(--ink2); line-height:1.45; padding:0 15px 12px;}
+  .because b{color:var(--ink);}
+  .proud{margin:0 15px 12px; background:var(--surface2); border:2.5px solid var(--ink); border-radius:12px; padding:11px 13px; display:flex; align-items:center; gap:12px;}
+  .proud .big{font-family:var(--h); font-weight:900; font-size:30px; line-height:1;}
+  .proud .lbl{font-family:var(--m); font-size:10px; color:var(--ink2); line-height:1.4;}
+  .proud .lbl b{font-family:var(--h);}
+  .quietrow{display:flex; gap:18px; padding:0 16px 8px; font-family:var(--m); font-size:10px; color:var(--muted);}
+  .drift{font-family:var(--m); font-size:9.5px; color:var(--muted); padding:0 15px 13px; margin-top:auto; line-height:1.5;}
+
+  /* STAMPS */
+  .stp{flex:1; border:3px solid var(--ink); border-radius:18px; background:var(--surface);
+       background-image:radial-gradient(var(--hair) 1px, transparent 1px); background-size:16px 16px;
+       box-shadow:6px 7px 0 var(--ink); padding:14px; position:relative; overflow:hidden;}
+  .stp .ph{font-family:var(--m); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-align:center;}
+  .stamp{position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+         border:2.5px solid; border-radius:50%; font-family:var(--h); font-weight:900; line-height:.95; padding:6px;}
+  .stamp .d{font-family:var(--m); font-weight:400; font-size:7px; margin-top:3px; opacity:.8;}
+  .stamp .pl{position:absolute; top:-7px; right:-7px; font-size:11px; background:var(--surface); border:2px solid currentColor; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center;}
+  .stamp.rect{border-radius:8px;}
+  .stamp.hero{box-shadow:3px 3px 0 currentColor;}
+  .faint{position:absolute; border:2.5px dotted var(--hair); border-radius:50%;}
+  .nextstamp{position:absolute; left:14px; right:14px; bottom:13px; background:var(--surface2); border:2px solid var(--ink); border-radius:10px; padding:9px 12px; font-family:var(--m); font-size:9.5px; text-align:center; line-height:1.5; color:var(--ink2);}
+
+  /* AMONG THEM (matches, qualitative) */
+  .mp{flex:1; border:3px solid var(--ink); border-radius:18px; background:var(--surface); box-shadow:6px 7px 0 var(--ink); padding:16px; display:flex; flex-direction:column;}
+  .mp .ph{font-family:var(--h); font-weight:900; font-size:19px; letter-spacing:-.02em;}
+  .mp .sub{font-family:var(--m); font-size:9.5px; color:var(--muted); margin-top:3px; margin-bottom:4px;}
+  .mrow{display:flex; align-items:flex-start; gap:12px; padding:13px 0; border-bottom:2px solid var(--hair);}
+  .mface{width:40px; height:40px; flex:none; border-radius:50%; border:2.5px solid var(--ink); margin-top:2px;}
+  .mname{font-family:var(--h); font-weight:800; font-size:16px;}
+  .mwhy{font-size:13px; color:var(--ink2); margin-top:3px; line-height:1.4;}
+  .romnote{margin-top:auto; background:var(--surface2); border:2px dashed var(--ink); border-radius:12px; padding:11px 13px; font-size:12px; color:var(--ink2); line-height:1.45;}
+  .romnote b{font-family:var(--h);}
+
+  .btnv{font-family:var(--h); font-weight:800; font-size:14px; background:var(--vibe); color:#fff; border:2.5px solid var(--ink); border-radius:999px; padding:11px; text-align:center; box-shadow:3px 3px 0 var(--ink); margin-top:12px; flex:none;}
+  .btng{font-family:var(--h); font-weight:800; font-size:13px; background:var(--surface); color:var(--ink); border:2.5px solid var(--ink); border-radius:999px; padding:10px; text-align:center; margin-top:9px; flex:none;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>kizu<span class="dot">.</span> taste passport — simple</h1>
+  <p>just you: a cover, who you are this season, and the stamps you’ve earned. no comparing.</p>
+  <p class="hint">tap the right side to flip the 3 pages →</p>
+</div>
+
+<div class="stage">
+  <div class="phone"><div class="scr">
+    <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+    <div class="body">
+      <div class="toprow">
+        <div class="eyebrow" id="plabel">cover</div>
+        <div class="lock">🔒 only you · share when you want</div>
+      </div>
+      <div class="pages">
+
+        <!-- COVER -->
+        <div class="page on" data-p="0">
+          <div class="cover">
+            <div class="foil"></div>
+            <div class="brand">kizu<span class="dot">.</span></div>
+            <div class="ring">✦</div>
+            <h2>TASTE<br>PASSPORT</h2>
+            <div class="sub">good taste runs in the group</div>
+            <div class="no">№ 0007 · the boys</div>
+            <div class="open">tap to open →</div>
+          </div>
+        </div>
+
+        <!-- IDENTITY (evidence-backed, drift, no rarity, landed leads) -->
+        <div class="page" data-p="1">
+          <div class="idp">
+            <div class="idhead"><span class="t">IDENTITY</span><span class="n">№ 0007</span></div>
+            <div class="idrow">
+              <div class="idav"></div>
+              <div>
+                <div class="idname">you</div>
+                <div class="season">this season, you read as</div>
+                <div class="idtype">slow · tender · end-of-day</div>
+              </div>
+            </div>
+            <div class="because">because you keep dropping <b>wong kar-wai</b>, <b>frank ocean</b>, and <b>cafés you stay in till they close</b>. <span style="color:var(--muted)">no test, no quiz — just what you actually love.</span></div>
+
+            <div class="proud">
+              <div class="big">7</div>
+              <div class="lbl"><b>times you were right about someone</b><br>you sent it, they loved it.</div>
+            </div>
+            <div class="quietrow"><span>23 dropped</span><span>9 queued</span><span>since mar ’26</span></div>
+
+            <div class="drift">↻ this rewrites itself as you change. it’s a mirror, not a label — kizu never decides who you are, it just notices.</div>
+          </div>
+        </div>
+
+        <!-- STAMPS (discovered, seeded, landed-led, private flags, no quest) -->
+        <div class="page" data-p="2">
+          <div class="stp">
+            <div class="ph">— things kizu has quietly noticed —</div>
+            <!-- hero = tied to north star (recs landed) -->
+            <div class="stamp hero" style="width:88px;height:88px;border-color:var(--vibe);color:var(--vibe);font-size:11px;top:30px;left:18px;transform:rotate(-9deg)">CALLED IT<br>×3<span class="d">you were right</span></div>
+            <div class="stamp" style="width:74px;height:74px;border-color:var(--clay);color:var(--clay);font-size:10px;top:40px;right:14px;transform:rotate(8deg)">SLOW<br>CINEMA<span class="d">mar ’26</span></div>
+            <div class="stamp rect" style="width:104px;height:48px;border-color:var(--mustard);color:#9a6f10;font-size:10px;top:140px;left:14px;transform:rotate(4deg)">FOUNDING DROP<span class="d">day one</span></div>
+            <div class="stamp" style="width:70px;height:70px;border-color:var(--teal);color:var(--teal);font-size:9px;top:128px;right:24px;transform:rotate(-7deg)">POST-<br>BREAKUP<span class="pl">🔒</span><span class="d">private</span></div>
+            <div class="stamp rect" style="width:96px;height:46px;border-color:var(--indigo);color:var(--indigo);font-size:9.5px;top:214px;left:30px;transform:rotate(-5deg)">DEEP CUT ×3<span class="d">apr 19</span></div>
+            <div class="faint" style="width:54px;height:54px;top:222px;right:24px;"></div>
+            <div class="nextstamp">stamps appear when something’s true — you can’t farm them. more arrive in their own time.</div>
+          </div>
+        </div>
+
+        <div class="tapzones"><div class="tz" id="prev"></div><div class="tz" id="next"></div></div>
+      </div>
+
+      <div class="pager"><span class="pdot on"></span><span class="pdot"></span><span class="pdot"></span></div>
+    </div>
+  </div></div>
+
+  <div style="width:340px; align-self:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:22px;">
+    <div style="font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)">what changed</div>
+    <h3 style="font-family:var(--h); font-weight:900; font-size:23px; letter-spacing:-.03em; margin:7px 0 13px">a mirror, not a game</h3>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:9px">🔒 <b>Private by default</b> — chip up top; sensitive stamps (post-breakup) locked even when you share.</p>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:9px">🎯 <b>The proud number is “right about someone”</b> (recs that landed = the north star). Drops/queued demoted to a quiet row.</p>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:9px">🏷️ <b>Type is evidence-backed + “this season”</b> — shows its reasons, drifts, never a fixed label. Rarity stat gone.</p>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:9px">✦ <b>Stamps are discovered, not pursued</b> — no “do X to earn Y” quest; “you can’t farm them.” Seeded with a Founding Drop so it’s never barren; hero stamp = “Called It.”</p>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:0">🙂 <b>About you, not everyone else</b> — the whole compare-your-friends page is gone. Three pages, all about your own taste. Any matching lives elsewhere, opt-in. Simple.</p>
+  </div>
+</div>
+
+<script>
+  let p=0; const max=2;
+  const pages=[...document.querySelectorAll('.page')], dots=[...document.querySelectorAll('.pdot')];
+  const labels=['cover','identity','stamps · noticed'];
+  function show(){pages.forEach(x=>x.classList.toggle('on',+x.dataset.p===p));
+    dots.forEach((d,i)=>d.classList.toggle('on',i===p)); document.getElementById('plabel').textContent=labels[p];}
+  document.getElementById('next').onclick=()=>{p=Math.min(max,p+1);show();};
+  document.getElementById('prev').onclick=()=>{p=Math.max(0,p-1);show();};
+</script>
+</body>
+</html>

@@ -19,8 +19,6 @@ export type Database = {
           email: string
           id: string
           name: string | null
-          next_sunset_at: string | null
-          sunset_frequency: string
           timezone: string
         }
         Insert: {
@@ -29,8 +27,6 @@ export type Database = {
           email: string
           id: string
           name?: string | null
-          next_sunset_at?: string | null
-          sunset_frequency?: string
           timezone?: string
         }
         Update: {
@@ -39,8 +35,6 @@ export type Database = {
           email?: string
           id?: string
           name?: string | null
-          next_sunset_at?: string | null
-          sunset_frequency?: string
           timezone?: string
         }
         Relationships: []
@@ -196,6 +190,51 @@ export type Database = {
           },
           {
             foreignKeyName: "reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      queue_items: {
+        Row: {
+          added_at: string
+          done_at: string | null
+          id: string
+          item_id: string
+          source: string
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          added_at?: string
+          done_at?: string | null
+          id?: string
+          item_id: string
+          source?: string
+          user_id: string
+          verdict?: string | null
+        }
+        Update: {
+          added_at?: string
+          done_at?: string | null
+          id?: string
+          item_id?: string
+          source?: string
+          user_id?: string
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_items_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"

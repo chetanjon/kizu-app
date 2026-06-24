@@ -29,16 +29,8 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const protectedPaths = [
-    "/wall",
-    "/post",
-    "/packs",
-    "/create-pack",
-    "/settings",
-    "/join",
-  ];
-  // Note: /settings was already in this list when the page didn't exist;
-  // it now actually has a route to gate.
+  // /r/<token> is intentionally public (rec-as-invite preview before signup).
+  const protectedPaths = ["/home", "/tonight", "/queue", "/you", "/drop", "/groups", "/join", "/admin"];
   const isProtected = protectedPaths.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   );
@@ -56,11 +48,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/wall/:path*",
-    "/post/:path*",
-    "/packs/:path*",
-    "/create-pack",
-    "/settings/:path*",
+    "/home/:path*",
+    "/tonight/:path*",
+    "/queue/:path*",
+    "/you/:path*",
+    "/drop/:path*",
+    "/groups/:path*",
     "/join/:path*",
+    "/admin/:path*",
   ],
 };

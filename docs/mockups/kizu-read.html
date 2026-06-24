@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kizu · the read (psychology)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE3CE; --surface:#FFFFFF; --surface2:#F7EFDD;
+    --ink:#14110F; --ink2:#46423A; --muted:#8C8675; --hair:#E2D8C2;
+    --red:#FF2E4D; --vibe:#6B4BD6;
+    --watch:#2F6FE0; --listen:#E0567E; --go:#1B8A6B; --mustard:#F0B429;
+    --h:'Archivo',sans-serif; --b:'Plus Jakarta Sans',sans-serif; --m:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--b); -webkit-font-smoothing:antialiased; padding:34px 16px 80px;}
+  ::selection{background:var(--ink); color:var(--paper);}
+  .wordmark{font-family:var(--h); font-weight:900; letter-spacing:-.05em;}
+  .dot{color:var(--red);}
+  .top{text-align:center; margin-bottom:24px;}
+  .top h1{font-family:var(--h); font-weight:900; font-size:34px; letter-spacing:-.05em;}
+  .top p{color:var(--ink2); margin-top:6px; font-size:15px;}
+  .stage{display:flex; gap:40px; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+
+  .phone{width:390px; height:812px; background:var(--paper); border:3px solid var(--ink); border-radius:44px; box-shadow:12px 14px 0 var(--ink); padding:13px; flex:none;}
+  .scr{width:100%; height:100%; background:var(--paper); border-radius:32px; overflow:hidden; display:flex; flex-direction:column;}
+  .sbar{display:flex; justify-content:space-between; align-items:center; padding:14px 24px 4px; font-family:var(--m); font-size:12px; color:var(--ink2); flex:none;}
+  .body{flex:1; overflow:auto; padding:14px 22px 26px;}
+  .body::-webkit-scrollbar{width:0;}
+  .toprow{display:flex; align-items:center; justify-content:space-between;}
+  .eyebrow{font-family:var(--m); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
+  .lock{font-family:var(--m); font-size:9px; font-weight:700; color:var(--ink2); border:2px solid var(--ink); border-radius:999px; padding:3px 9px; background:var(--surface);}
+
+  .kik{font-family:var(--m); font-size:11px; letter-spacing:.06em; color:var(--vibe); margin-top:24px; font-weight:700;}
+  .read{font-family:var(--h); font-weight:800; font-size:27px; line-height:1.22; letter-spacing:-.02em; margin-top:10px;}
+  .read .hl{color:var(--vibe);}
+  .read .small{font-family:var(--b); font-weight:600; font-size:14.5px; color:var(--ink2); display:block; margin-top:16px; line-height:1.5; letter-spacing:0;}
+  .evi{font-family:var(--m); font-size:10px; color:var(--muted); margin-top:18px; line-height:1.7; border-top:2px solid var(--hair); padding-top:14px;}
+  .evi b{color:var(--ink2);}
+
+  .landed{margin-top:24px; background:var(--ink); color:var(--paper); border:2.5px solid var(--ink); border-radius:14px; padding:15px 17px; box-shadow:4px 5px 0 var(--vibe); display:flex; align-items:center; gap:15px;}
+  .landed .big{font-family:var(--h); font-weight:900; font-size:34px; line-height:1;}
+  .landed .lbl{font-size:13px; line-height:1.4;}
+  .share{font-family:var(--h); font-weight:800; font-size:14px; background:var(--vibe); color:#fff; border:2.5px solid var(--ink); border-radius:999px; padding:13px; text-align:center; box-shadow:3px 3px 0 var(--ink); margin-top:26px;}
+
+  /* caption */
+  .note{width:360px; align-self:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:22px;}
+  .note .k{font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);}
+  .note h3{font-family:var(--h); font-weight:900; font-size:22px; letter-spacing:-.03em; margin:7px 0 13px;}
+  .vs{margin-bottom:14px;}
+  .vs .bad{font-size:13.5px; color:var(--muted); text-decoration:line-through; line-height:1.4;}
+  .vs .good{font-size:14.5px; color:var(--ink); font-weight:600; line-height:1.45; margin-top:3px;}
+  .lever{font-size:13px; line-height:1.5; color:var(--ink2); margin-bottom:9px;}
+  .lever b{color:var(--ink); font-family:var(--h);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>kizu<span class="dot">.</span> the read — done with psychology</h1>
+  <p>not “you like what you like.” what you do that you haven’t noticed.</p>
+</div>
+
+<div class="stage">
+  <div class="phone"><div class="scr">
+    <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+    <div class="body">
+      <div class="toprow"><div class="eyebrow">you</div><div class="lock">🔒 only you</div></div>
+
+      <div class="kik">✦ here’s something you don’t know about yourself</div>
+      <div class="read">
+        you <span class="hl">queue the ambitious stuff</span> — and <span class="hl">finish the comfort stuff.</span>
+        <span class="small">23 films in your queue you call “important.” the 4 you’ve actually rewatched this month are the soft ones. on a hard week, you always end up back at <b style="color:var(--ink)">In the Mood for Love.</b></span>
+        <span class="small">you’re not who you think you are. you’re kinder to yourself than that.</span>
+      </div>
+
+      <div class="evi">
+        <b>kizu noticed this from:</b><br>
+        ▸ queued vs. actually-finished (a 5:1 gap)<br>
+        ▸ what you reach for after 10pm<br>
+        ▸ the 3 things you’ve rewatched twice+
+      </div>
+
+      <div class="landed">
+        <div class="big">7</div>
+        <div class="lbl"><b style="font-family:var(--h)">people took your word for it.</b><br>you sent something, they loved it.</div>
+      </div>
+
+      <div class="share">share this read ✦</div>
+    </div>
+  </div></div>
+
+  <div class="note">
+    <div class="k">why this lands</div>
+    <h3>reveal, don’t describe</h3>
+
+    <div class="vs">
+      <div class="bad">“you are slow mornings and frank ocean.” (you already know this — useless)</div>
+      <div class="good">“you queue ambitious films and finish comfort ones.” (a true thing you’d never have said out loud)</div>
+    </div>
+
+    <p class="lever"><b>1 · Revealed &gt; stated.</b> People are wrong about their own taste. The gold is the gap between what you <i>say</i> you love and what you actually finish, replay, return to. kizu has both — most apps only have one.</p>
+    <p class="lever"><b>2 · The pattern you can’t self-see.</b> Timing, repetition, what you reach for when. You can’t observe your own habits from the inside; the data can.</p>
+    <p class="lever"><b>3 · A little provocation.</b> One line that reframes you (“you’re kinder to yourself than you think”). Mild surprise = it feels <i>seen</i>, not flattered.</p>
+    <p class="lever" style="margin-bottom:0"><b>4 · Show the evidence.</b> “noticed from: queued vs finished, what you reach for after 10pm.” Receipts make it true, not a horoscope.</p>
+  </div>
+</div>
+</body>
+</html>

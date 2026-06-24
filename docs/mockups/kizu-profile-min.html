@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kizu · profile (minimal)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE3CE; --surface:#FFFFFF; --surface2:#F7EFDD;
+    --ink:#14110F; --ink2:#46423A; --muted:#8C8675; --hair:#E2D8C2;
+    --red:#FF2E4D; --vibe:#6B4BD6;
+    --watch:#2F6FE0; --listen:#E0567E; --go:#1B8A6B; --mustard:#F0B429;
+    --h:'Archivo',sans-serif; --b:'Plus Jakarta Sans',sans-serif; --m:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--b); -webkit-font-smoothing:antialiased; padding:34px 16px 80px;}
+  ::selection{background:var(--ink); color:var(--paper);}
+  .wordmark{font-family:var(--h); font-weight:900; letter-spacing:-.05em;}
+  .dot{color:var(--red);}
+  .top{text-align:center; margin-bottom:26px;}
+  .top h1{font-family:var(--h); font-weight:900; font-size:34px; letter-spacing:-.05em;}
+  .top p{color:var(--ink2); margin-top:6px; font-size:15px;}
+  .stage{display:flex; gap:44px; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+
+  .phone{width:390px; height:812px; background:var(--paper); border:3px solid var(--ink); border-radius:44px; box-shadow:12px 14px 0 var(--ink); padding:13px; flex:none;}
+  .scr{width:100%; height:100%; background:var(--paper); border-radius:32px; overflow:hidden; display:flex; flex-direction:column;}
+  .sbar{display:flex; justify-content:space-between; align-items:center; padding:14px 24px 4px; font-family:var(--m); font-size:12px; color:var(--ink2); flex:none;}
+  .body{flex:1; overflow:auto; padding:14px 22px 26px;}
+  .body::-webkit-scrollbar{width:0;}
+  .toprow{display:flex; align-items:center; justify-content:space-between;}
+  .eyebrow{font-family:var(--m); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
+  .lock{font-family:var(--m); font-size:9px; font-weight:700; color:var(--ink2); border:2px solid var(--ink); border-radius:999px; padding:3px 9px; background:var(--surface);}
+
+  /* the read — the whole profile */
+  .read{font-family:var(--h); font-weight:800; font-size:30px; line-height:1.18; letter-spacing:-.025em; margin-top:24px;}
+  .read .hl{color:var(--vibe);}
+
+  .landed{margin-top:26px; background:var(--ink); color:var(--paper); border:2.5px solid var(--ink); border-radius:14px; padding:15px 17px; box-shadow:4px 5px 0 var(--vibe); display:flex; align-items:center; gap:15px;}
+  .landed .big{font-family:var(--h); font-weight:900; font-size:36px; line-height:1;}
+  .landed .lbl{font-size:13px; line-height:1.4;}
+
+  .picks{margin-top:26px;}
+  .pickhead{font-family:var(--m); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  .pk{display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:2px solid var(--hair);}
+  .pk .ti{font-family:var(--h); font-weight:800; font-size:17px;}
+  .pk .ty{margin-left:auto; font-family:var(--m); font-size:9px; font-weight:700; color:#fff; border:2px solid var(--ink); border-radius:5px; padding:2px 8px;}
+
+  .share{font-family:var(--h); font-weight:800; font-size:14px; background:var(--vibe); color:#fff; border:2.5px solid var(--ink); border-radius:999px; padding:13px; text-align:center; box-shadow:3px 3px 0 var(--ink); margin-top:30px;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>kizu<span class="dot">.</span> profile — only the useful bits</h1>
+  <p>two things: who you are (in words) and proof your taste lands. nothing else.</p>
+</div>
+
+<div class="stage">
+  <div class="phone"><div class="scr">
+    <div class="sbar"><span>9:41</span><span class="wordmark" style="font-size:14px">kizu<span class="dot">.</span></span></div>
+    <div class="body">
+      <div class="toprow">
+        <div class="eyebrow">you</div>
+        <div class="lock">🔒 only you</div>
+      </div>
+
+      <div class="read">
+        you are <span class="hl">slow mornings</span> and <span class="hl">end-of-day light</span> — wong kar-wai in the eyes, frank ocean in the chest. you rewatch the one that knows you.
+      </div>
+
+      <div class="landed">
+        <div class="big">7</div>
+        <div class="lbl"><b style="font-family:var(--h)">people took your word for it.</b><br>you sent something, they loved it.</div>
+      </div>
+
+      <div class="picks">
+        <div class="pickhead">what you’re known for</div>
+        <div class="pk"><span class="ti">In the Mood for Love</span><span class="ty" style="background:var(--watch)">MOVIES</span></div>
+        <div class="pk"><span class="ti">Blonde</span><span class="ty" style="background:var(--listen)">MUSIC</span></div>
+        <div class="pk"><span class="ti">Café Mogador</span><span class="ty" style="background:var(--go)">OUTSIDE</span></div>
+      </div>
+
+      <div class="share">share your taste ✦</div>
+    </div>
+  </div></div>
+
+  <div style="width:340px; align-self:center; background:var(--surface); border:2.5px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:22px;">
+    <div style="font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)">cut to the bone</div>
+    <h3 style="font-family:var(--h); font-weight:900; font-size:23px; letter-spacing:-.03em; margin:7px 0 13px">three things, gone simple</h3>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:10px"><b>1 · The read</b> — kizu describes your taste in one honest line. The creative, shareable soul. Rewrites itself quietly.</p>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:10px"><b>2 · Recs that landed</b> — the one number worth showing: proof people trust your taste (the north star).</p>
+    <p style="font-size:14px; line-height:1.5; color:var(--ink2); margin-bottom:14px"><b>3 · What you’re known for</b> — your 3 signature drops. Concrete, useful, no grid.</p>
+    <p style="font-size:13px; line-height:1.5; color:var(--muted); margin-bottom:0">Gone: stamps, passport number, taste-type label, season framing, vanity counts, compare page, page-flipping. All the weird stuff.</p>
+  </div>
+</div>
+</body>
+</html>
