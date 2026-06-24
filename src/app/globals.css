@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 /* kizu — taste-space design tokens (locked direction: neo-brutal, edited down,
-   purple accent, the red dot is precious). Fonts come from layout.tsx. */
-@theme inline {
+   purple accent, the red dot is precious). Fonts come from layout.tsx.
+   NOTE: @theme (not inline) so utilities reference var(--color-*) and dark mode
+   can flip them at runtime. LIGHT values below are the original, unchanged. */
+@theme {
   /* Fonts */
   --font-h: var(--font-archivo);          /* headlines / numbers / titles / logo */
   --font-b: var(--font-plus-jakarta);     /* body */
@@ -16,6 +18,9 @@
   --color-ink-2: #46423A;
   --color-muted: #8C8675;
   --color-hair: #E2D8C2;
+
+  /* Hard offset shadow color (ink in light, near-black in dark) */
+  --color-shadow: #14110F;
 
   /* RED is PRECIOUS — only the kizu. dot. Never buttons/links/fills. */
   --color-red: #FF2E4D;
@@ -40,14 +45,68 @@
   --color-amber: #F0A23C;
 }
 
-::selection {
-  background: #14110F;
-  color: #EDE3CE;
+/* ── DARK MODE ──────────────────────────────────────────────────────────────
+   Same design, inverted skin: warm near-black ground, cream becomes the ink
+   (text + the thick borders), shadows go pure black, accents brighten a notch
+   for contrast. The red dot + aurora are untouched. Applied automatically when
+   the OS prefers dark (unless forced light via .light), or manually via .dark. */
+@layer base {
+  .kizu-dark {
+    --color-paper: #16130F;
+    --color-surface: #221D17;
+    --color-surface-2: #2C261E;
+    --color-ink: #EDE3CE;
+    --color-ink-2: #CFC5AE;
+    --color-muted: #8F8674;
+    --color-hair: #352D23;
+    --color-shadow: #000000;
+    --color-vibe: #8B6BF0;
+    --color-watch: #4D89FF;
+    --color-listen: #FF6B9D;
+    --color-go: #33C495;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    --color-paper: #16130F;
+    --color-surface: #221D17;
+    --color-surface-2: #2C261E;
+    --color-ink: #EDE3CE;
+    --color-ink-2: #CFC5AE;
+    --color-muted: #8F8674;
+    --color-hair: #352D23;
+    --color-shadow: #000000;
+    --color-vibe: #8B6BF0;
+    --color-watch: #4D89FF;
+    --color-listen: #FF6B9D;
+    --color-go: #33C495;
+  }
+}
+html.dark {
+  --color-paper: #16130F;
+  --color-surface: #221D17;
+  --color-surface-2: #2C261E;
+  --color-ink: #EDE3CE;
+  --color-ink-2: #CFC5AE;
+  --color-muted: #8F8674;
+  --color-hair: #352D23;
+  --color-shadow: #000000;
+  --color-vibe: #8B6BF0;
+  --color-watch: #4D89FF;
+  --color-listen: #FF6B9D;
+  --color-go: #33C495;
 }
 
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+html, body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
 body {
-  background: #EDE3CE;
-  color: #14110F;
   font-family: var(--font-plus-jakarta), sans-serif;
   -webkit-font-smoothing: antialiased;
 }

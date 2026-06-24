@@ -15,7 +15,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/home"
-          className="inline-block font-h text-sm font-bold no-underline px-5 py-3 rounded-full border-[2.5px] border-ink bg-vibe text-white shadow-[3px_3px_0_#14110F] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_#14110F] transition-transform"
+          className="inline-block font-h text-sm font-bold no-underline px-5 py-3 rounded-full border-[2.5px] border-ink bg-vibe text-white shadow-[3px_3px_0_var(--color-shadow)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--color-shadow)] transition-transform"
         >
           back to kizu<span className="text-red">.</span>
         </Link>

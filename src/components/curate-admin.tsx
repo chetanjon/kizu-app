@@ -134,7 +134,7 @@ export default function CurateAdmin() {
       <h1 className="font-h text-3xl font-extrabold tracking-[-0.04em] mt-1">kizu<span className="text-red">.</span> curate</h1>
       <p className="text-muted text-sm mt-1 font-b">real people, real consent. each pick is one human + one thing, tagged to a moment.</p>
 
-      <div className="mt-6 bg-surface border-[2.5px] border-ink rounded-2xl p-5 shadow-[5px_5px_0_#14110F] flex flex-col gap-4">
+      <div className="mt-6 bg-surface border-[2.5px] border-ink rounded-2xl p-5 shadow-[5px_5px_0_var(--color-shadow)] flex flex-col gap-4">
         <div className="font-h font-extrabold text-sm">the person</div>
         <div className="grid grid-cols-2 gap-3">
           <div><div className={label}>name</div><input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Rui" /></div>
@@ -190,7 +190,7 @@ export default function CurateAdmin() {
         <div><div className={label}>their words</div><textarea className={field} value={words} onChange={(e) => setWords(e.target.value)} rows={2} placeholder="the only film i rewatch every winter." /></div>
 
         <button onClick={submit} disabled={busy}
-          className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-3 shadow-[3px_3px_0_#14110F] disabled:opacity-50">
+          className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-3 shadow-[3px_3px_0_var(--color-shadow)] disabled:opacity-50">
           {busy ? "adding…" : "add to curate"}
         </button>
         {msg && <div className="font-m text-xs text-center text-ink-2">{msg}</div>}

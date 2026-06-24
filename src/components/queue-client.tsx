@@ -58,7 +58,7 @@ export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedY
     const t = TYPE[r.type];
     const cover = img(r);
     return (
-      <div className="flex gap-3 items-center bg-surface border-[2.5px] border-ink rounded-xl p-2.5 shadow-[3px_3px_0_#14110F]">
+      <div className="flex gap-3 items-center bg-surface border-[2.5px] border-ink rounded-xl p-2.5 shadow-[3px_3px_0_var(--color-shadow)]">
         <div className="w-12 h-12 flex-none border-[2px] border-ink rounded-lg overflow-hidden" style={{ background: cover ? undefined : t.color }}>
           {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
         </div>
