@@ -23,6 +23,7 @@ export default function CurateAdmin() {
   // person
   const [name, setName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [whereMet, setWhereMet] = useState("");
   const [consent, setConsent] = useState(false);
   // pick
@@ -41,6 +42,16 @@ export default function CurateAdmin() {
     if (res.ok) setDrops((await res.json()).drops ?? []);
   }
   useEffect(() => { load(); }, []);
+
+  async function uploadPhoto(file: File) {
+    setUploading(true); setMsg(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/curate/upload", { method: "POST", body: fd });
+    const j = await res.json();
+    if (res.ok) setPhotoUrl(j.url); else setMsg(j.error || "upload failed");
+    setUploading(false);
+  }
 
   async function resolveLink() {
     if (!link.trim()) return;
@@ -121,7 +132,21 @@ export default function CurateAdmin() {
           <div><div className={label}>name</div><input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Rui" /></div>
           <div><div className={label}>where you met</div><input className={field} value={whereMet} onChange={(e) => setWhereMet(e.target.value)} placeholder="a roastery in lisbon" /></div>
         </div>
-        <div><div className={label}>photo url</div><input className={field} value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="https://…" /></div>
+        <div>
+          <div className={label}>photo</div>
+          <div className="flex items-center gap-3 mt-1">
+            {photoUrl
+              ? <img src={photoUrl} alt="" className="w-14 h-14 rounded-full border-[2.5px] border-ink object-cover" />
+              : <div className="w-14 h-14 rounded-full border-[2.5px] border-dashed border-ink flex-none" />}
+            <label className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-ink rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap">
+              {uploading ? "uploading…" : photoUrl ? "change photo" : "upload / take photo"}
+              <input type="file" accept="image/*" capture="environment" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
+            </label>
+            {photoUrl && <button type="button" onClick={() => setPhotoUrl("")} className="font-m text-xs text-red">remove</button>}
+          </div>
+          <input className={`${field} mt-2`} value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="…or paste an image url" />
+        </div>
         <label className="flex items-center gap-2 text-sm font-b">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="w-4 h-4 accent-[#6B4BD6]" />
           they consented to appear in kizu (required to publish)
