@@ -4,14 +4,16 @@ import { useState } from "react";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
 export type QRow = {
-  itemId: string;
+  key: string;                 // stable row key
+  itemId?: string;             // group item target
+  curateDropId?: string;       // curate pick target
   type: DropType;
   data: Record<string, unknown>;
   note: string | null;
   ratingValue: string | null;
   verdict: "loved" | "liked" | "meh" | null;
   done: boolean;
-  who: string | null;
+  who: string | null;          // who dropped / curated it
   mine: boolean;
 };
 
@@ -32,14 +34,15 @@ export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedY
   const [state, setState] = useState<QRow[]>(rows);
   const [filter, setFilter] = useState<Filter>("all");
 
-  async function setVerdict(itemId: string, verdict: "loved" | "liked" | "meh") {
+  async function setVerdict(row: QRow, verdict: "loved" | "liked" | "meh") {
     const prev = state;
-    setState((s) => s.map((r) => (r.itemId === itemId ? { ...r, verdict, done: true } : r)));
+    setState((s) => s.map((r) => (r.key === row.key ? { ...r, verdict, done: true } : r)));
     try {
+      const target = row.itemId ? { item_id: row.itemId } : { curate_drop_id: row.curateDropId };
       const res = await fetch("/api/queue/verdict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: itemId, verdict }),
+        body: JSON.stringify({ ...target, verdict }),
       });
       if (!res.ok) setState(prev);
     } catch {
@@ -72,7 +75,7 @@ export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedY
               {VERDICTS.map((v) => (
                 <button
                   key={v.key}
-                  onClick={() => setVerdict(r.itemId, v.key)}
+                  onClick={() => setVerdict(r, v.key)}
                   className="font-h text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 bg-surface hover:bg-vibe hover:text-white transition-colors"
                 >
                   {v.label}
@@ -111,14 +114,14 @@ export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedY
       {want.length > 0 && (
         <>
           <div className="font-m text-[10px] tracking-widest uppercase text-muted mb-3">want to · {want.length}</div>
-          <div className="flex flex-col gap-2.5">{want.map((r) => <Row key={r.itemId} r={r} />)}</div>
+          <div className="flex flex-col gap-2.5">{want.map((r) => <Row key={r.key} r={r} />)}</div>
         </>
       )}
 
       {done.length > 0 && (
         <>
           <div className="font-m text-[10px] tracking-widest uppercase text-muted mb-3 mt-8">done</div>
-          <div className="flex flex-col gap-2.5">{done.map((r) => <Row key={r.itemId} r={r} />)}</div>
+          <div className="flex flex-col gap-2.5">{done.map((r) => <Row key={r.key} r={r} />)}</div>
         </>
       )}
 

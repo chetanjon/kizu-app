@@ -5,10 +5,10 @@ import QueueClient, { type QRow } from "@/components/queue-client";
 import type { DropType } from "@/lib/item-render";
 
 type Raw = {
-  item_id: string;
+  item_id: string | null;
+  curate_drop_id: string | null;
   verdict: string | null;
   done_at: string | null;
-  source: string;
   items: {
     type: DropType;
     data: Record<string, unknown>;
@@ -16,6 +16,12 @@ type Raw = {
     rating_value: string | null;
     created_by: string;
     users: { name: string | null } | null;
+  } | null;
+  curate_drops: {
+    type: DropType;
+    data: Record<string, unknown>;
+    their_words: string | null;
+    curate_people: { name: string | null } | null;
   } | null;
 };
 
@@ -27,28 +33,48 @@ export default async function Queue() {
   const { data: raw } = await supabase
     .from("queue_items")
     .select(
-      "item_id, verdict, done_at, source, items!queue_items_item_id_fkey(type, data, note, rating_value, created_by, users!items_created_by_fkey(name))"
+      "item_id, curate_drop_id, verdict, done_at, " +
+      "items!queue_items_item_id_fkey(type, data, note, rating_value, created_by, users!items_created_by_fkey(name)), " +
+      "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words, curate_people!curate_drops_person_id_fkey(name))"
     )
     .eq("user_id", user.id)
     .order("added_at", { ascending: false });
 
   const rows: QRow[] = ((raw ?? []) as unknown as Raw[])
-    .filter((r) => r.items)
-    .map((r) => ({
-      itemId: r.item_id,
-      type: r.items!.type,
-      data: r.items!.data ?? {},
-      note: r.items!.note,
-      ratingValue: r.items!.rating_value,
-      verdict: (r.verdict as QRow["verdict"]) ?? null,
-      done: !!r.done_at,
-      who: r.items!.users?.name ?? null,
-      mine: r.items!.created_by === user.id,
-    }));
+    .map((r): QRow | null => {
+      if (r.items) {
+        return {
+          key: `i:${r.item_id}`,
+          itemId: r.item_id!,
+          type: r.items.type,
+          data: r.items.data ?? {},
+          note: r.items.note,
+          ratingValue: r.items.rating_value,
+          verdict: (r.verdict as QRow["verdict"]) ?? null,
+          done: !!r.done_at,
+          who: r.items.users?.name ?? null,
+          mine: r.items.created_by === user.id,
+        };
+      }
+      if (r.curate_drops) {
+        return {
+          key: `c:${r.curate_drop_id}`,
+          curateDropId: r.curate_drop_id!,
+          type: r.curate_drops.type,
+          data: r.curate_drops.data ?? {},
+          note: r.curate_drops.their_words,
+          ratingValue: null,
+          verdict: (r.verdict as QRow["verdict"]) ?? null,
+          done: !!r.done_at,
+          who: r.curate_drops.curate_people?.name ?? null,
+          mine: false,
+        };
+      }
+      return null;
+    })
+    .filter((r): r is QRow => r !== null);
 
-  // recs that landed FOR you: things you dropped that someone loved/liked.
-  // (Counting your OWN dropped items that others verdicted — Phase 3 makes this
-  //  precise with the recs table; here it's a simple presence count.)
+  // things you queued from OTHER people that you loved/liked (north-star seed).
   const landedCount = rows.filter((r) => !r.mine && r.done && (r.verdict === "loved" || r.verdict === "liked")).length;
 
   return (
@@ -59,7 +85,7 @@ export default async function Queue() {
       {rows.length === 0 ? (
         <div className="mt-8 border-[2px] border-dashed border-ink rounded-2xl p-12 text-center">
           <div className="font-h text-xl font-bold">nothing queued yet.</div>
-          <p className="text-muted text-sm mt-1">tap <b>＋ want</b> on anything your people drop.</p>
+          <p className="text-muted text-sm mt-1">tap <b>＋ want</b> on anything your people — or kizu — drop.</p>
           <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">go to home</Link>
         </div>
       ) : (

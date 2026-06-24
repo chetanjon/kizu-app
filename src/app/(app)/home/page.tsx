@@ -6,7 +6,10 @@ import Reactions from "@/components/reactions";
 import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
 import QueueButton from "@/components/queue-button";
+import CurateRiver, { type CDrop } from "@/components/curate-river";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+
+const RIVER_PAGE = 12;
 
 type Membership = {
   group_id: string;
@@ -57,6 +60,19 @@ export default async function Home() {
 
   const { data: me } = await supabase.from("users").select("name").eq("id", user.id).maybeSingle();
   const myName = me?.name ?? null;
+
+  // Curate river: published picks by consented people (RLS hides non-consented).
+  const { data: cRaw } = await supabase
+    .from("curate_drops")
+    .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
+    .eq("published", true)
+    .order("created_at", { ascending: false })
+    .range(0, RIVER_PAGE - 1);
+  const curate = ((cRaw ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
+
+  const { data: cq } = await supabase
+    .from("queue_items").select("curate_drop_id").eq("user_id", user.id).not("curate_drop_id", "is", null);
+  const queuedCurate = (cq ?? []).map((r) => r.curate_drop_id as string);
 
   return (
     <div className="min-h-screen bg-paper">
@@ -113,12 +129,26 @@ export default async function Home() {
                 );
               })}
             </div>
-            <div className="mt-10 text-center">
-              <div className="font-h text-lg font-bold">that&apos;s everyone.</div>
-              <div className="font-m text-[11px] text-muted mt-1">you&apos;re all caught up · <span className="font-h font-extrabold">kizu<span className="text-red">.</span></span></div>
-            </div>
           </>
         )}
+
+        {/* the threshold: your people end here; the curated world begins. */}
+        {curate.length > 0 ? (
+          <>
+            <div className="relative mt-12 mb-2 text-center">
+              <div className="border-t-[2.5px] border-dashed border-ink" />
+              <span className="inline-block bg-paper px-3 -mt-3.5 relative font-m text-[11px] text-ink-2">
+                ✦ <span className="font-h font-extrabold text-ink">you&apos;re caught up.</span> here&apos;s what the world&apos;s loving
+              </span>
+            </div>
+            <CurateRiver initial={curate} queuedIds={queuedCurate} nextOffset={RIVER_PAGE} done={curate.length < RIVER_PAGE} />
+          </>
+        ) : items.length > 0 ? (
+          <div className="mt-10 text-center">
+            <div className="font-h text-lg font-bold">that&apos;s everyone.</div>
+            <div className="font-m text-[11px] text-muted mt-1">you&apos;re all caught up · <span className="font-h font-extrabold">kizu<span className="text-red">.</span></span></div>
+          </div>
+        ) : null}
       </main>
     </div>
   );

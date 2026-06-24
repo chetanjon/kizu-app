@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 
-// "＋ want" / "✓ queued" toggle on a feed card. Optimistic, like reactions.tsx.
+// "＋ want" / "✓ queued" toggle. Target is a group item or a curate pick.
 export default function QueueButton({
   itemId,
+  curateDropId,
   initialQueued,
 }: {
-  itemId: string;
+  itemId?: string;
+  curateDropId?: string;
   initialQueued: boolean;
 }) {
   const [queued, setQueued] = useState(initialQueued);
   const [busy, setBusy] = useState(false);
+  const body = itemId ? { item_id: itemId } : { curate_drop_id: curateDropId };
 
   async function toggle() {
     if (busy) return;
@@ -22,9 +25,9 @@ export default function QueueButton({
       const res = await fetch("/api/queue", {
         method: next ? "POST" : "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: itemId }),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) setQueued(!next); // revert on failure
+      if (!res.ok) setQueued(!next);
     } catch {
       setQueued(!next);
     } finally {

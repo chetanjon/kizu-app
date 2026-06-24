@@ -197,30 +197,101 @@ export type Database = {
           },
         ]
       }
+      curate_people: {
+        Row: {
+          consent: boolean
+          created_at: string
+          id: string
+          name: string
+          photo_url: string | null
+          where_met: string | null
+        }
+        Insert: {
+          consent?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          photo_url?: string | null
+          where_met?: string | null
+        }
+        Update: {
+          consent?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+          where_met?: string | null
+        }
+        Relationships: []
+      }
+      curate_drops: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          moment: string
+          person_id: string
+          published: boolean
+          their_words: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          moment: string
+          person_id: string
+          published?: boolean
+          their_words?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          moment?: string
+          person_id?: string
+          published?: boolean
+          their_words?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curate_drops_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "curate_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queue_items: {
         Row: {
           added_at: string
+          curate_drop_id: string | null
           done_at: string | null
           id: string
-          item_id: string
+          item_id: string | null
           source: string
           user_id: string
           verdict: string | null
         }
         Insert: {
           added_at?: string
+          curate_drop_id?: string | null
           done_at?: string | null
           id?: string
-          item_id: string
+          item_id?: string | null
           source?: string
           user_id: string
           verdict?: string | null
         }
         Update: {
           added_at?: string
+          curate_drop_id?: string | null
           done_at?: string | null
           id?: string
-          item_id?: string
+          item_id?: string | null
           source?: string
           user_id?: string
           verdict?: string | null
@@ -231,6 +302,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_items_curate_drop_id_fkey"
+            columns: ["curate_drop_id"]
+            isOneToOne: false
+            referencedRelation: "curate_drops"
             referencedColumns: ["id"]
           },
           {
