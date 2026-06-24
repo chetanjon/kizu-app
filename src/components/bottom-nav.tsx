@@ -64,7 +64,7 @@ export default function BottomNav() {
       <Link
         href="/drop"
         aria-label="drop"
-        className="-mt-7 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-ink bg-vibe text-white shadow-[3px_4px_0_var(--color-shadow)]"
+        className="-mt-7 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-ink bg-vibe text-white shadow-[3px_4px_0_#14110F]"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
       </Link>

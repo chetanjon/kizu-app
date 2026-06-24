@@ -89,7 +89,7 @@ export default async function Home() {
           <div className="mt-8 border-[2px] border-dashed border-ink rounded-2xl p-14 text-center">
             <div className="font-h text-xl font-bold">nothing here yet.</div>
             <p className="text-muted text-sm mt-1">drop the first movie, song, or place you love.</p>
-            <Link href="/drop" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_var(--color-shadow)]">＋ drop something</Link>
+            <Link href="/drop" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">＋ drop something</Link>
             <p className="text-muted text-xs mt-6 font-m">share to invite: send <b>/join/{g.invite_code}</b></p>
           </div>
         ) : (
@@ -100,7 +100,7 @@ export default async function Home() {
                 const cover = img(it);
                 const mine = it.created_by === user.id;
                 return (
-                  <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_var(--color-shadow)]">
+                  <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_#14110F]">
                     <div className="aspect-[4/3] relative border-b-[2.5px] border-ink overflow-hidden rounded-t-[13px]" style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
                       {it.rating_value && <span className="absolute left-2.5 bottom-2.5 bg-ink text-white font-m text-xs font-bold rounded-md px-2 py-0.5">{it.rating_value}</span>}

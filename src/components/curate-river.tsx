@@ -68,7 +68,7 @@ export default function CurateRiver({
           const t = TYPE[d.type];
           const initials = (p?.name ?? "?").slice(0, 1).toUpperCase();
           return (
-            <article key={d.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_6px_0_var(--color-shadow)]">
+            <article key={d.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_6px_0_#14110F]">
               <div className="flex items-center gap-3 p-3.5">
                 <div className="w-12 h-12 flex-none rounded-full border-[2.5px] border-ink overflow-hidden flex items-center justify-center font-h font-extrabold text-white" style={{ background: t.color }}>
                   {p?.photo_url ? <img src={p.photo_url} alt="" className="w-full h-full object-cover" /> : initials}

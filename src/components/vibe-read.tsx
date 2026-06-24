@@ -33,7 +33,7 @@ export default function VibeRead({ groupId }: { groupId: string }) {
   return (
     <>
       <button onClick={generate} disabled={busy}
-        className="inline-flex items-center gap-2 font-h font-bold text-sm text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_var(--color-shadow)] disabled:opacity-70"
+        className="inline-flex items-center gap-2 font-h font-bold text-sm text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F] disabled:opacity-70"
         style={{ background: "linear-gradient(120deg,#6B4BD6,#E0567E,#F0A23C)" }}>
         ✦ {busy ? "reading the room…" : "read the group's vibe"}
       </button>
@@ -42,14 +42,14 @@ export default function VibeRead({ groupId }: { groupId: string }) {
         <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-sm flex items-center justify-center p-5" onClick={() => setOpen(false)}>
           <div className="w-full max-w-[440px] max-h-[92vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             {err ? (
-              <div className="bg-surface border-[3px] border-ink rounded-[24px] shadow-[8px_8px_0_var(--color-shadow)] p-7 text-center">
+              <div className="bg-surface border-[3px] border-ink rounded-[24px] shadow-[8px_8px_0_#14110F] p-7 text-center">
                 <div className="font-h text-xl font-extrabold">not yet<span className="text-red">.</span></div>
                 <p className="text-muted mt-2 text-sm">{err}</p>
                 <button onClick={() => setOpen(false)} className="mt-5 font-h font-bold text-sm bg-ink text-paper rounded-full px-5 py-2.5">close</button>
               </div>
             ) : read ? (
               <>
-                <div className="rounded-[26px] overflow-hidden border-[3px] border-ink shadow-[9px_9px_0_var(--color-shadow)] text-white"
+                <div className="rounded-[26px] overflow-hidden border-[3px] border-ink shadow-[9px_9px_0_#14110F] text-white"
                   style={{ background: "linear-gradient(135deg,#6B4BD6,#E0567E 55%,#F0A23C)" }}>
                   <div className="p-6" style={{ background: "linear-gradient(180deg,rgba(15,12,24,.10),rgba(15,12,24,.34))" }}>
                     <div className="font-m text-[11px] font-bold tracking-[0.16em] opacity-90">✦ VIBE READ</div>
@@ -81,7 +81,7 @@ export default function VibeRead({ groupId }: { groupId: string }) {
                   </div>
                 </div>
                 <div className="flex gap-2.5 mt-3">
-                  <button onClick={generate} disabled={busy} className="flex-1 font-h font-bold text-sm bg-surface border-[2.5px] border-ink rounded-xl py-3 shadow-[3px_3px_0_var(--color-shadow)]">↻ regenerate</button>
+                  <button onClick={generate} disabled={busy} className="flex-1 font-h font-bold text-sm bg-surface border-[2.5px] border-ink rounded-xl py-3 shadow-[3px_3px_0_#14110F]">↻ regenerate</button>
                   <button onClick={() => setOpen(false)} className="flex-1 font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-ink rounded-xl py-3">close</button>
                 </div>
               </>

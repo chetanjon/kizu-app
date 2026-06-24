@@ -40,7 +40,7 @@ export default function NotificationsBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-2 w-[280px] z-40 bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_var(--color-shadow)] overflow-hidden">
+          <div className="absolute right-0 mt-2 w-[280px] z-40 bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_#14110F] overflow-hidden">
             <div className="px-4 py-3 border-b-[2px] border-hair font-m text-[10px] tracking-widest uppercase text-muted">kizu<span className="text-red">.</span> noticed</div>
             {items.length === 0 ? (
               <div className="px-4 py-6 text-center font-m text-[11px] text-muted">nothing yet. it stays quiet.</div>

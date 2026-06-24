@@ -87,7 +87,7 @@ export default async function Queue() {
         <div className="mt-8 border-[2px] border-dashed border-ink rounded-2xl p-12 text-center">
           <div className="font-h text-xl font-bold">nothing queued yet.</div>
           <p className="text-muted text-sm mt-1">tap <b>＋ want</b> on anything your people — or kizu — drop.</p>
-          <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_var(--color-shadow)]">go to home</Link>
+          <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">go to home</Link>
         </div>
       ) : (
         <QueueClient rows={rows} landedYou={landedCount} />

@@ -34,19 +34,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={`${archivo.variable} ${plusJakarta.variable} ${spaceMono.variable} antialiased`}
     >
-      <body>
-        {/* apply saved theme before paint (no flash). default = follow system. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var t=localStorage.getItem('kizu-theme');var e=document.documentElement;if(t==='dark')e.classList.add('dark');else if(t==='light')e.classList.add('light');}catch(_){}})();",
-          }}
-        />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
