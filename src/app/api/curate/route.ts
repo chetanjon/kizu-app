@@ -70,6 +70,15 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   if (!(await gate())) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const b = await req.json().catch(() => ({}));
+  const admin0 = createAdminClient();
+
+  // toggle a person's consent (lives on curate_people, not the drop).
+  if (typeof b.consent === "boolean" && b.person_id) {
+    const { error } = await admin0.from("curate_people").update({ consent: b.consent }).eq("id", String(b.person_id));
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
+
   const id = String(b.id ?? "");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 

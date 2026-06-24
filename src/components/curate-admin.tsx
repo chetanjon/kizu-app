@@ -102,6 +102,14 @@ export default function CurateAdmin() {
     setBusy(false);
   }
 
+  async function toggleConsent(d: Drop) {
+    if (!d.curate_people) return;
+    await fetch("/api/curate", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ person_id: d.curate_people.id, consent: !d.curate_people.consent }),
+    });
+    load();
+  }
   async function togglePublish(d: Drop) {
     await fetch("/api/curate", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
@@ -198,6 +206,7 @@ export default function CurateAdmin() {
               <div className="font-m text-[9px] text-muted truncate">{d.curate_people?.name} · {d.moment}{d.curate_people?.consent ? "" : " · ⚠ no consent"}</div>
             </div>
             <div className="ml-auto flex gap-1.5">
+              <button onClick={() => toggleConsent(d)} className={`font-m text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 ${d.curate_people?.consent ? "bg-ink text-paper" : "bg-surface text-red"}`}>{d.curate_people?.consent ? "consent ✓" : "consent ✗"}</button>
               <button onClick={() => togglePublish(d)} className={`font-m text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 ${d.published ? "bg-go text-white" : "bg-surface"}`}>{d.published ? "live" : "draft"}</button>
               <button onClick={() => remove(d.id)} className="font-m text-[10px] font-bold text-red border-[2px] border-ink rounded-full px-2.5 py-1">del</button>
             </div>
