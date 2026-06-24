@@ -48,7 +48,7 @@ export default function Reactions({
       <button onClick={() => setOpen((o) => !o)}
         className="w-6 h-6 rounded-full border border-dashed border-ink/40 text-muted text-xs flex items-center justify-center">+</button>
       {open && (
-        <div className="absolute z-30 top-8 left-0 flex flex-wrap gap-1 bg-surface border-[2px] border-ink rounded-xl p-2 shadow-[3px_3px_0_#14110F] w-[184px]">
+        <div className="absolute z-30 bottom-8 left-0 flex flex-wrap gap-1 bg-surface border-[2px] border-ink rounded-xl p-2 shadow-[3px_3px_0_#14110F] w-[184px]">
           {PALETTE.map((e) => (
             <button key={e} onClick={() => toggle(e)} className="text-lg p-1 rounded hover:bg-surface-2">{e}</button>
           ))}

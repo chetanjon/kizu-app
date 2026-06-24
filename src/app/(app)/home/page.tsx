@@ -100,8 +100,8 @@ export default async function Home() {
                 const cover = img(it);
                 const mine = it.created_by === user.id;
                 return (
-                  <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_5px_0_#14110F]">
-                    <div className="aspect-[4/3] relative border-b-[2.5px] border-ink" style={{ background: cover ? undefined : t.color }}>
+                  <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_#14110F]">
+                    <div className="aspect-[4/3] relative border-b-[2.5px] border-ink overflow-hidden rounded-t-[13px]" style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
                       {it.rating_value && <span className="absolute left-2.5 bottom-2.5 bg-ink text-white font-m text-xs font-bold rounded-md px-2 py-0.5">{it.rating_value}</span>}
                     </div>
