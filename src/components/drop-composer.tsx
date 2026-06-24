@@ -17,9 +17,12 @@ const RATINGS: Record<string, string[]> = {
 };
 
 type Picked = { data: Record<string, any>; title: string; sub: string; img: string | null };
+type Member = { id: string; name: string | null };
 
-export default function DropComposer({ groupId }: { groupId: string }) {
+export default function DropComposer({ groupId, members = [] }: { groupId: string; members?: Member[] }) {
   const router = useRouter();
+  const [recTo, setRecTo] = useState("");          // "" = everyone, id = member, "__link__" = shareable link
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("watch");
   const [q, setQ] = useState("");
   const [subtype, setSubtype] = useState("cafe");
@@ -103,6 +106,7 @@ export default function DropComposer({ groupId }: { groupId: string }) {
     } else { setMsg("paste a link or type a title"); return; }
 
     setBusy(true); setMsg("");
+    const isMember = recTo && recTo !== "__link__";
     const res = await fetch("/api/items", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -111,11 +115,19 @@ export default function DropComposer({ groupId }: { groupId: string }) {
         rating_value: ratingValue || null,
         rating_style: ratingValue ? ratingStyle : null,
         note: note.trim() || null,
+        rec_to: isMember ? recTo : null,
       }),
     });
     const j = await res.json();
     if (!res.ok) { setMsg(j.error || "couldn't drop"); setBusy(false); return; }
-    router.push("/feed");
+
+    // shareable link for someone not in the group → show the /r link to copy.
+    if (recTo === "__link__") {
+      const rr = await (await fetch("/api/recs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: j.id }) })).json();
+      if (rr.url) { setShareUrl(window.location.origin + rr.url); setBusy(false); return; }
+    }
+
+    router.push("/home");
     router.refresh();
   }
 
@@ -125,7 +137,7 @@ export default function DropComposer({ groupId }: { groupId: string }) {
     <div className="w-full max-w-[460px] bg-paper border-[3px] border-ink rounded-[24px] shadow-[8px_8px_0_#14110F] p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-h text-2xl font-extrabold tracking-[-0.03em]">drop something</h2>
-        <button onClick={() => router.push("/feed")} className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-lg">×</button>
+        <button onClick={() => router.push("/home")} className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-lg">×</button>
       </div>
 
       <div className="flex gap-1 bg-[#ECE4D2] rounded-xl p-1 mb-4">
@@ -211,11 +223,34 @@ export default function DropComposer({ groupId }: { groupId: string }) {
       <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="one-line take (optional)…"
         className="w-full mt-4 bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
 
-      <button onClick={drop} disabled={busy}
-        className="w-full mt-5 font-h font-extrabold text-[15px] text-white border-[2.5px] border-ink rounded-xl py-3.5 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
-        style={{ background: accent }}>
-        {busy ? "dropping…" : "drop it to the group"}
-      </button>
+      <div className="mt-4">
+        <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setRecTo("")} className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recTo === "" ? "bg-ink text-paper" : "bg-surface"}`}>everyone</button>
+          {members.map((m) => (
+            <button key={m.id} onClick={() => setRecTo(m.id)} className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recTo === m.id ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
+          ))}
+          <button onClick={() => setRecTo("__link__")} className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recTo === "__link__" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
+        </div>
+      </div>
+
+      {shareUrl ? (
+        <div className="mt-5 bg-surface border-[2.5px] border-ink rounded-xl p-3.5">
+          <div className="font-h font-bold text-sm">your rec link — send it to them.</div>
+          <div className="font-m text-[10px] text-muted mt-0.5">they see just this one thing, can react, and join if they want.</div>
+          <input readOnly value={shareUrl} onClick={(e) => e.currentTarget.select()} className="w-full mt-2 bg-surface-2 border-[2px] border-ink rounded-lg px-2.5 py-2 text-[12px] font-m" />
+          <div className="flex gap-2 mt-2">
+            <button onClick={() => navigator.clipboard?.writeText(shareUrl)} className="flex-1 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-lg py-2">copy</button>
+            <button onClick={() => { router.push("/home"); router.refresh(); }} className="font-h font-bold text-sm bg-surface border-[2.5px] border-ink rounded-lg px-4">done</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={drop} disabled={busy}
+          className="w-full mt-5 font-h font-extrabold text-[15px] text-white border-[2.5px] border-ink rounded-xl py-3.5 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
+          style={{ background: accent }}>
+          {busy ? "dropping…" : recTo === "__link__" ? "drop + make a link" : recTo ? `send it to ${(members.find((m) => m.id === recTo)?.name || "them").toLowerCase()}` : "drop it to the group"}
+        </button>
+      )}
       {msg && <p className="font-m text-[12px] text-red text-center mt-3">{msg}</p>}
     </div>
   );

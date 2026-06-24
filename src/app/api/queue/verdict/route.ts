@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   const val = (item_id ?? curate_drop_id)!;
 
   const { data: row } = await admin
-    .from("queue_items").select("id").eq("user_id", user.id).eq(col, val).maybeSingle();
+    .from("queue_items").select("id, source_rec_id").eq("user_id", user.id).eq(col, val).maybeSingle();
   if (!row) return NextResponse.json({ error: "not in your queue" }, { status: 404 });
 
   const { error } = await admin
@@ -38,10 +38,17 @@ export async function POST(req: Request) {
     .eq("user_id", user.id).eq(col, val);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  const good = verdict === "loved" || verdict === "liked";
   let landed = false;
-  if (item_id && (verdict === "loved" || verdict === "liked")) {
+  if (item_id && good) {
     const { data: item } = await admin.from("items").select("created_by").eq("id", item_id).maybeSingle();
     landed = !!item && item.created_by !== user.id;
+
+    // if this came from a rec, mark it landed (the north-star event).
+    if (row.source_rec_id) {
+      await admin.from("recs").update({ landed_at: new Date().toISOString() })
+        .eq("id", row.source_rec_id).is("landed_at", null);
+    }
   }
 
   return NextResponse.json({ ok: true, landed });

@@ -265,6 +265,58 @@ export type Database = {
           },
         ]
       }
+      recs: {
+        Row: {
+          created_at: string
+          from_user: string
+          id: string
+          item_id: string
+          landed_at: string | null
+          to_user: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          id?: string
+          item_id: string
+          landed_at?: string | null
+          to_user?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          id?: string
+          item_id?: string
+          landed_at?: string | null
+          to_user?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recs_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recs_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recs_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queue_items: {
         Row: {
           added_at: string
@@ -273,6 +325,7 @@ export type Database = {
           id: string
           item_id: string | null
           source: string
+          source_rec_id: string | null
           user_id: string
           verdict: string | null
         }
@@ -283,6 +336,7 @@ export type Database = {
           id?: string
           item_id?: string | null
           source?: string
+          source_rec_id?: string | null
           user_id: string
           verdict?: string | null
         }
@@ -293,6 +347,7 @@ export type Database = {
           id?: string
           item_id?: string | null
           source?: string
+          source_rec_id?: string | null
           user_id?: string
           verdict?: string | null
         }

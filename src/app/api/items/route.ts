@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { createRec } from "@/lib/recs";
 import { NextResponse } from "next/server";
 
 // Create a drop. Authorize via getUser, verify group membership, write via admin.
@@ -41,7 +42,20 @@ export async function POST(req: Request) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  return NextResponse.json({ id: item.id });
+  // optional: drop this FOR a specific group member (rec-as-invite).
+  let recUrl: string | null = null;
+  const rec_to = b.rec_to ? String(b.rec_to) : null;
+  if (rec_to && rec_to !== user.id) {
+    const { data: rmem } = await admin
+      .from("group_members").select("group_id")
+      .eq("group_id", group_id).eq("user_id", rec_to).maybeSingle();
+    if (rmem) {
+      const rec = await createRec(admin, user.id, item.id, rec_to);
+      if (rec) recUrl = `/r/${rec.token}`;
+    }
+  }
+
+  return NextResponse.json({ id: item.id, recUrl });
 }
 
 // Delete your own drop.
