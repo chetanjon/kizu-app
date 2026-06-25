@@ -7,7 +7,7 @@ import Reactions from "@/components/reactions";
 import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
 import QueueButton from "@/components/queue-button";
-import NotificationsBell from "@/components/notifications-bell";
+import GenderSetter from "@/components/gender-setter";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
@@ -33,7 +33,7 @@ export default async function Home() {
   // (getMemberships is request-memoized, so this reuses the layout's call.)
   const [memberships, meRes, cRes, cqRes] = await Promise.all([
     getMemberships(user.id),
-    supabase.from("users").select("name").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("name, gender").eq("id", user.id).maybeSingle(),
     supabase
       .from("curate_drops")
       .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
@@ -47,6 +47,7 @@ export default async function Home() {
   const active = memberships.find((m) => m.is_home) ?? memberships[0];
   const g = active.groups!;
   const myName = meRes.data?.name ?? null;
+  const myGender = meRes.data?.gender ?? null;
   const curate = ((cRes.data ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
   const queuedCurate = (cqRes.data ?? []).map((r) => r.curate_drop_id as string);
 
@@ -68,22 +69,16 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 border-b-[2px] border-ink bg-paper/85 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
-          <span className="flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
-            {g.name.toLowerCase()}
-          </span>
-        </div>
-        <NotificationsBell />
-      </header>
-
       <main className="max-w-[1100px] mx-auto px-6 py-8">
-        <div className="font-m text-[11px] tracking-widest uppercase text-muted">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
+        <span className="inline-flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
+          {g.name.toLowerCase()}
+        </span>
+        <div className="font-m text-[11px] tracking-widest uppercase text-muted mt-4">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
         <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">what your <span className="text-vibe">people love</span></h1>
         <div className="mt-4"><VibeRead groupId={g.id} /></div>
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
+        {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}
 
         {items.length === 0 ? (
           <div className="mt-8 border-[2px] border-dashed border-ink rounded-2xl p-14 text-center">

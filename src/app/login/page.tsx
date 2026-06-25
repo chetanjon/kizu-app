@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase-browser";
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/feed";
+  const next = searchParams.get("next") || "/home";
 
   const handleGoogleLogin = async () => {
     const supabase = createClient();

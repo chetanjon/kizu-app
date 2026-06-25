@@ -17,6 +17,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string
+          gender: string | null
           id: string
           name: string | null
           timezone: string
@@ -25,6 +26,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email: string
+          gender?: string | null
           id: string
           name?: string | null
           timezone?: string
@@ -33,6 +35,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string
+          gender?: string | null
           id?: string
           name?: string | null
           timezone?: string

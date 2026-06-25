@@ -20,10 +20,31 @@ const spaceMono = Space_Mono({
   weight: ["400", "700"],
 });
 
+const DESC =
+  "A private taste space for you and your people. Drop the movies, music, and places you love — and let an AI read your group's vibe back to you.";
+
 export const metadata: Metadata = {
-  title: "kizu — good taste runs in the group",
-  description:
-    "A private taste space for you and your people. Drop the movies, music, and places you love — and let an AI read your group's vibe back to you.",
+  metadataBase: new URL("https://kizu.app"),
+  title: {
+    default: "kizu — good taste runs in the group",
+    template: "%s · kizu",
+  },
+  description: DESC,
+  applicationName: "kizu",
+  keywords: ["kizu", "taste", "group", "movies", "music", "places", "recommendations", "friends"],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "https://kizu.app",
+    siteName: "kizu",
+    title: "kizu — good taste runs in the group",
+    description: DESC,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "kizu — good taste runs in the group",
+    description: DESC,
+  },
 };
 
 export default function RootLayout({

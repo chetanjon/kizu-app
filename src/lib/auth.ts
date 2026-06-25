@@ -18,6 +18,16 @@ export type Membership = {
   groups: { id: string; name: string; color: string; invite_code: string } | null;
 };
 
+export const getProfile = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("users")
+    .select("name, gender")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data ?? { name: null, gender: null }) as { name: string | null; gender: string | null };
+});
+
 export const getMemberships = cache(async (userId: string): Promise<Membership[]> => {
   const supabase = await createClient();
   const { data } = await supabase
