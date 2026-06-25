@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { setActiveGroup } from "@/lib/groups";
 import { NextResponse } from "next/server";
 
 // Create a group. We authorize with the user-scoped client (getUser), then
@@ -32,13 +33,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error?.message ?? "create failed" }, { status: 400 });
   }
 
-  const { count } = await admin
-    .from("group_members").select("*", { count: "exact", head: true }).eq("user_id", user.id);
-
   const { error: mErr } = await admin
     .from("group_members")
-    .insert({ group_id: group.id, user_id: user.id, is_home: (count ?? 0) === 0 });
+    .insert({ group_id: group.id, user_id: user.id, is_home: false });
   if (mErr) return NextResponse.json({ error: mErr.message }, { status: 400 });
 
+  await setActiveGroup(admin, user.id, group.id);
   return NextResponse.json({ id: group.id, invite_code: group.invite_code });
 }

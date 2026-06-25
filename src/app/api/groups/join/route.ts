@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { setActiveGroup } from "@/lib/groups";
 import { NextResponse } from "next/server";
 
 // Join a group by invite code. Code lookup uses the admin client (you can't
@@ -19,16 +20,14 @@ export async function POST(req: Request) {
     .from("groups").select("id").eq("invite_code", code).maybeSingle();
   if (!group) return NextResponse.json({ error: "no group with that code" }, { status: 404 });
 
-  const { count } = await supabase
-    .from("group_members").select("*", { count: "exact", head: true }).eq("user_id", user.id);
-
   const { error } = await admin
     .from("group_members")
     .upsert(
-      { group_id: group.id, user_id: user.id, is_home: (count ?? 0) === 0 },
+      { group_id: group.id, user_id: user.id, is_home: false },
       { onConflict: "group_id,user_id", ignoreDuplicates: true }
     );
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  await setActiveGroup(admin, user.id, group.id);
   return NextResponse.json({ id: group.id });
 }
