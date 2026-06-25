@@ -41,3 +41,27 @@ export async function POST(req: Request) {
   await setActiveGroup(admin, user.id, group.id);
   return NextResponse.json({ id: group.id, invite_code: group.invite_code });
 }
+
+// Rename / recolor a group — creator only.
+export async function PATCH(req: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const b = await req.json().catch(() => ({}));
+  const group_id = String(b.group_id ?? "");
+  if (!group_id) return NextResponse.json({ error: "group_id required" }, { status: 400 });
+
+  const admin = createAdminClient();
+  const { data: group } = await admin.from("groups").select("created_by").eq("id", group_id).maybeSingle();
+  if (!group) return NextResponse.json({ error: "no group" }, { status: 404 });
+  if (group.created_by !== user.id) return NextResponse.json({ error: "only the creator can edit" }, { status: 403 });
+
+  const update: { name?: string; color?: string } = {};
+  if (typeof b.name === "string") { const n = b.name.trim().slice(0, 40); if (n) update.name = n; }
+  if (/^#[0-9A-Fa-f]{6}$/.test(b.color)) update.color = b.color;
+  if (Object.keys(update).length === 0) return NextResponse.json({ error: "nothing to update" }, { status: 400 });
+
+  await admin.from("groups").update(update).eq("id", group_id);
+  return NextResponse.json({ ok: true, ...update });
+}
