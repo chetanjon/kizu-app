@@ -16,13 +16,17 @@ export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activ
   async function switchTo(id: string) {
     if (id === activeId || busy) return;
     setBusy(true);
-    await fetch("/api/groups/active", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ group_id: id }),
-    });
-    setOpen(false);
-    router.refresh();
+    try {
+      await fetch("/api/groups/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ group_id: id }),
+      });
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
