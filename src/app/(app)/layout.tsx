@@ -14,8 +14,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-paper">
+      <div className="pb-24">{children}</div>
       <AppNav gender={profile.gender} />
-      {children}
     </div>
   );
 }

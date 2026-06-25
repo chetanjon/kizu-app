@@ -8,6 +8,7 @@ import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
 import QueueButton from "@/components/queue-button";
 import GenderSetter from "@/components/gender-setter";
+import NotificationsBell from "@/components/notifications-bell";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
@@ -69,12 +70,19 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-paper">
+      <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 border-b-[2px] border-ink bg-paper/85 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
+          <span className="flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
+            {g.name.toLowerCase()}
+          </span>
+        </div>
+        <NotificationsBell />
+      </header>
+
       <main className="max-w-[1100px] mx-auto px-6 py-8">
-        <span className="inline-flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
-          {g.name.toLowerCase()}
-        </span>
-        <div className="font-m text-[11px] tracking-widest uppercase text-muted mt-4">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
+        <div className="font-m text-[11px] tracking-widest uppercase text-muted">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
         <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">what your <span className="text-vibe">people love</span></h1>
         <div className="mt-4"><VibeRead groupId={g.id} /></div>
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}

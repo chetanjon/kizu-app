@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import NotificationsBell from "@/components/notifications-bell";
 
-// Sticky responsive top bar. A violet tile slides to the active destination
+// Fixed BOTTOM nav (thumb zone). A violet tile slides to the active destination
 // (the one show of motion); the active slot goes white. Violet is reserved for
 // the tile + the drop button only — RED stays on the kizu. dot.
 // Five slots: home · pick · ＋drop(center) · queue · you. drop is an ACTION, not
@@ -36,108 +35,105 @@ const Plus = () => (
   </svg>
 );
 
-// "you" standing figure — armless filled silhouette, swapped by gender.
+// "you" — dancing figure, right hand up + motion lines (emoji-like energy),
+// swapped by gender. man/neutral = "groove solid" (F); woman = "groove" (G).
 function Figure({ gender }: { gender: string | null | undefined }) {
-  if (gender === "male") {
-    return (
-      <svg width="22" height="26" viewBox="0 0 24 28" aria-hidden>
-        <circle cx="12" cy="5" r="3.2" fill="currentColor" />
-        <path d="M7 12.5c0-2.2 2.2-3.3 5-3.3s5 1.1 5 3.3l-.5 4.2H7.5z" fill="currentColor" />
-        <rect x="9.1" y="16.2" width="2.5" height="8.4" rx="1.1" fill="currentColor" />
-        <rect x="12.4" y="16.2" width="2.5" height="8.4" rx="1.1" fill="currentColor" />
-      </svg>
-    );
-  }
   if (gender === "female") {
     return (
-      <svg width="22" height="26" viewBox="0 0 24 28" aria-hidden>
-        <circle cx="12" cy="5" r="3.2" fill="currentColor" />
-        <path d="M12 9c-1.8 0-2.9 1.1-3.3 2.6L6.4 18.2h11.2l-2.3-6.6C14.9 10.1 13.8 9 12 9z" fill="currentColor" />
-        <rect x="9.4" y="18" width="2.2" height="6.5" rx="1.1" fill="currentColor" />
-        <rect x="12.4" y="18" width="2.2" height="6.5" rx="1.1" fill="currentColor" />
+      <svg width="24" height="27" viewBox="0 0 24 28" aria-hidden>
+        <circle cx="13" cy="5" r="2.9" fill="currentColor" />
+        <g fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12.6 8.5 19.4 3.8" />
+          <path d="M11.7 10 6.6 12.2" />
+          <path d="M11.4 18 13.8 23.4" />
+          <path d="M11.4 18 7.6 22.4" />
+        </g>
+        <path d="M12.7 8 8 18.6h7.8z" fill="currentColor" />
+        <g fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" opacity={0.55}>
+          <path d="M20.4 5q1.3.7 1.4 2.1" />
+          <path d="M5.6 20.6q-1.1.7-1.1 2" />
+        </g>
       </svg>
     );
   }
-  // neutral default (gender null / unanswered)
+  // man / neutral — fuller body, bent knee, kicked leg, motion ticks
   return (
-    <svg width="22" height="26" viewBox="0 0 24 28" aria-hidden>
-      <circle cx="12" cy="5" r="3.2" fill="currentColor" />
-      <rect x="8.8" y="9.2" width="6.4" height="8" rx="2.6" fill="currentColor" />
-      <rect x="9.2" y="16.2" width="2.3" height="8.2" rx="1.1" fill="currentColor" />
-      <rect x="12.5" y="16.2" width="2.3" height="8.2" rx="1.1" fill="currentColor" />
+    <svg width="24" height="27" viewBox="0 0 24 28" aria-hidden>
+      <circle cx="13.6" cy="4.8" r="3.1" fill="currentColor" />
+      <g fill="none" stroke="currentColor" strokeWidth={4.2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12.9 8.2 9.7 15.2" />
+        <path d="M12.4 9.2 19.7 3.6" />
+        <path d="M11.8 10.6 6.4 12" />
+        <path d="M9.7 15.2 12 18.4 14.4 23" />
+        <path d="M9.7 15.2 6.2 18 7.9 22.2" />
+      </g>
+      <g fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" opacity={0.55}>
+        <path d="M20.8 5.4q1.4.7 1.5 2.2" />
+        <path d="M4.8 20.9q-1.2.7-1.2 2.1" />
+      </g>
     </svg>
   );
 }
 
-// destinations carry their slot index in the 5-wide row (drop is slot 2).
-const DESTS = [
-  { key: "home", href: "/home", label: "home", slot: 0, Icon: Home },
-  { key: "pick", href: "/tonight", label: "pick", slot: 1, Icon: Pick },
-  { key: "queue", href: "/queue", label: "queue", slot: 3, Icon: Queue },
-  { key: "you", href: "/you", label: "you", slot: 4, Icon: null as null },
-] as const;
-
 export default function AppNav({ gender }: { gender?: string | null }) {
   const path = usePathname();
   const isOn = (href: string) => path === href || path.startsWith(href + "/");
-  const active = DESTS.find((d) => isOn(d.href));
+
+  // destinations carry their slot index in the 5-wide row (drop is slot 2).
+  const dests = [
+    { href: "/home", slot: 0 },
+    { href: "/tonight", slot: 1 },
+    { href: "/queue", slot: 3 },
+    { href: "/you", slot: 4 },
+  ];
+  const active = dests.find((d) => isOn(d.href));
 
   const slotClass = (on: boolean) =>
-    `relative z-[1] flex-1 flex flex-col items-center gap-1 pt-2 pb-1.5 active:scale-95 transition-transform ${
+    `relative z-[1] flex h-full flex-1 flex-col items-center justify-center gap-1 active:scale-95 transition-transform ${
       on ? "text-white" : "text-muted"
     }`;
 
   return (
-    <header className="sticky top-0 z-40 bg-surface border-b-[2.5px] border-ink">
-      <div className="mx-auto flex max-w-[760px] items-center gap-2 px-3 sm:gap-4 sm:px-5">
-        <Link href="/home" className="hidden shrink-0 font-h text-2xl font-extrabold tracking-[-0.05em] sm:block">
-          kizu<span className="text-red">.</span>
-        </Link>
-
-        <nav className="relative flex flex-1 items-end">
-          {/* the sliding tile — only when a real destination is active */}
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t-[2.5px] border-ink bg-surface">
+      <div className="mx-auto max-w-[600px] px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+        <div className="relative flex h-[52px]">
+          {/* sliding tile — spans the full row height so it frames each slot cleanly */}
           {active && (
             <span
-              className="absolute bottom-1 z-0 h-[42px] rounded-[13px] border-[2.5px] border-ink bg-vibe transition-[left] duration-200 ease-out motion-reduce:transition-none"
-              style={{ left: `calc(${active.slot * 20}% + 7px)`, width: "calc(20% - 14px)" }}
+              className="absolute inset-y-0 z-0 rounded-[14px] border-[2.5px] border-ink bg-vibe transition-[left] duration-200 ease-out motion-reduce:transition-none"
+              style={{ left: `calc(${active.slot * 20}% + 6px)`, width: "calc(20% - 12px)" }}
             />
           )}
 
           <Link href="/home" className={slotClass(isOn("/home"))}>
-            <span className="flex h-[34px] items-center justify-center"><Home /></span>
+            <Home />
             <span className="font-m text-[9.5px] font-bold">home</span>
           </Link>
 
           <Link href="/tonight" className={slotClass(isOn("/tonight"))}>
-            <span className="flex h-[34px] items-center justify-center"><Pick /></span>
+            <Pick />
             <span className="font-m text-[9.5px] font-bold">pick</span>
           </Link>
 
           {/* drop — the action: always-violet raised button, never the tile */}
-          <Link href="/drop" className="relative z-[1] flex flex-1 flex-col items-center gap-1 pt-2 pb-1.5 text-vibe">
-            <span className="flex h-[34px] items-center justify-center">
-              <span className="flex h-[38px] w-[38px] items-center justify-center rounded-full border-[2.5px] border-ink bg-vibe text-white shadow-[2px_3px_0_#14110F] transition active:translate-y-[1px] active:shadow-[1px_1px_0_#14110F]">
-                <Plus />
-              </span>
+          <Link href="/drop" className="relative z-[1] flex h-full flex-1 flex-col items-center justify-center gap-1 text-vibe">
+            <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-[2.5px] border-ink bg-vibe text-white shadow-[2px_3px_0_#14110F] transition active:translate-y-[1px] active:shadow-[1px_1px_0_#14110F]">
+              <Plus />
             </span>
             <span className="font-m text-[9.5px] font-bold">drop</span>
           </Link>
 
           <Link href="/queue" className={slotClass(isOn("/queue"))}>
-            <span className="flex h-[34px] items-center justify-center"><Queue /></span>
+            <Queue />
             <span className="font-m text-[9.5px] font-bold">queue</span>
           </Link>
 
           <Link href="/you" className={slotClass(isOn("/you"))}>
-            <span className="flex h-[34px] items-center justify-center"><Figure gender={gender} /></span>
+            <Figure gender={gender} />
             <span className="font-m text-[9.5px] font-bold">you</span>
           </Link>
-        </nav>
-
-        <div className="shrink-0">
-          <NotificationsBell />
         </div>
       </div>
-    </header>
+    </nav>
   );
 }
