@@ -55,7 +55,10 @@ export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activ
               <Link href="/groups/new" onClick={() => setOpen(false)}
                 className="block px-4 py-2.5 font-m text-[12px] font-bold text-vibe hover:bg-surface-2">＋ create new group</Link>
               <Link href="/groups/new?tab=join" onClick={() => setOpen(false)}
-                className="block px-4 py-2.5 font-m text-[12px] font-bold hover:bg-surface-2">→ join with code</Link>
+                className="flex items-center gap-1.5 px-4 py-2.5 font-m text-[12px] font-bold hover:bg-surface-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h13M12 6l6 6-6 6" /></svg>
+                join with code
+              </Link>
               <Link href="/groups/manage" onClick={() => setOpen(false)}
                 className="block px-4 py-2.5 font-m text-[12px] font-bold hover:bg-surface-2 border-t-[1.5px] border-hair">⚙ manage group</Link>
             </div>
