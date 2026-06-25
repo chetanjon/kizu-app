@@ -10,6 +10,7 @@ import QueueButton from "@/components/queue-button";
 import GenderSetter from "@/components/gender-setter";
 import NotificationsBell from "@/components/notifications-bell";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
+import GroupSwitcher from "@/components/group-switcher";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 
 const RIVER_PAGE = 12;
@@ -73,10 +74,10 @@ export default async function Home() {
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 border-b-[2px] border-ink bg-paper/85 backdrop-blur">
         <div className="flex items-center gap-3">
           <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
-          <span className="flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
-            {g.name.toLowerCase()}
-          </span>
+          <GroupSwitcher
+              groups={memberships.map((m) => ({ id: m.groups!.id, name: m.groups!.name, color: m.groups!.color }))}
+              activeId={g.id}
+            />
         </div>
         <NotificationsBell />
       </header>
