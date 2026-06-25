@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const COLORS = ["#F0A23C", "#2F6FE0", "#E0567E", "#1B8A6B", "#6B4BD6"];
 
-export default function NewGroup() {
+function NewGroupInner() {
   const router = useRouter();
-  const [tab, setTab] = useState<"create" | "join">("create");
+  const sp = useSearchParams();
+  const [tab, setTab] = useState<"create" | "join">(sp.get("tab") === "join" ? "join" : "create");
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLORS[0]);
   const [code, setCode] = useState("");
@@ -25,7 +26,7 @@ export default function NewGroup() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setErr(j.error || `error ${res.status} — check server env vars`); return; }
-      router.push("/feed");
+      router.push("/home");
     } catch {
       setErr("network error — try again");
     } finally {
@@ -44,7 +45,7 @@ export default function NewGroup() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setErr(j.error || `error ${res.status}`); return; }
-      router.push("/feed");
+      router.push("/home");
     } catch {
       setErr("network error — try again");
     } finally {
@@ -108,5 +109,13 @@ export default function NewGroup() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewGroup() {
+  return (
+    <Suspense>
+      <NewGroupInner />
+    </Suspense>
   );
 }
