@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     .from("group_members")
     .select("group_id, groups(created_by)")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+    .order("joined_at", { ascending: true });
 
   if (!rest || rest.length === 0) return NextResponse.json({ ok: true, noGroups: true });
 
