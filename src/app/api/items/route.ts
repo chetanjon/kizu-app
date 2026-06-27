@@ -29,9 +29,10 @@ export async function POST(req: Request) {
   const rating_value = b.rating_value ? String(b.rating_value).slice(0, 40) : null;
 
   const data: Record<string, unknown> = (b.data && typeof b.data === "object") ? b.data : {};
-  // Harden: a go_out photo_url, if present, must be an object WE stored in THIS group.
-  // Blocks "skip the upload route, point photo_url at anything" (XSS/IDOR/SSRF).
-  if (type === "go_out") {
+  // Harden: a photo_url on ANY drop type, if present, must be an object WE stored
+  // in THIS group's drops bucket. Blocks "skip the upload route, point photo_url
+  // at anything" (XSS/IDOR/SSRF/hotlink) — including non-go_out drops via the API.
+  {
     const p = data["photo_url"];
     if (p != null && !(isDropPhotoPath(p) && p.startsWith(`groups/${group_id}/`))) {
       return NextResponse.json({ error: "bad photo" }, { status: 400 });
