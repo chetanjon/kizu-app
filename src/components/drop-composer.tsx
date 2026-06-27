@@ -41,7 +41,10 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previewObjectUrl = useRef<string | null>(null);
 
-  function reset() { setQ(""); setPicked(null); setResults(null); setMsg(""); setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null); }
+  function reset() {
+    if (previewObjectUrl.current) { URL.revokeObjectURL(previewObjectUrl.current); previewObjectUrl.current = null; }
+    setQ(""); setPicked(null); setResults(null); setMsg(""); setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null);
+  }
 
   // Shrink large photos in the browser before upload: faster upload + avoids the
   // 5MB server reject. Server still re-encodes authoritatively (EXIF strip etc.).
