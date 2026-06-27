@@ -20,6 +20,7 @@ export async function signDropPhoto(
   const now = Date.now();
   const hit = cache.get(path);
   if (hit && hit.exp > now) return hit.url;
+  if (hit && hit.exp <= now) cache.delete(path);
   const { data } = await admin.storage.from("drops").createSignedUrl(path, TTL_SECONDS);
   const url = data?.signedUrl ?? null;
   if (url) cache.set(path, { url, exp: now + REUSE_MS });

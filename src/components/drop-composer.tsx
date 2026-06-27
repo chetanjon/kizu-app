@@ -39,6 +39,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewObjectUrl = useRef<string | null>(null);
 
   function reset() { setQ(""); setPicked(null); setResults(null); setMsg(""); setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null); }
 
@@ -63,18 +64,27 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
 
   async function uploadPhoto(file: File) {
     setUploadingPhoto(true); setMsg("");
-    setPhotoPreview(URL.createObjectURL(file)); // instant local preview, no network wait
-    const fd = new FormData();
-    fd.append("file", await downscale(file));
-    fd.append("group_id", groupId);
-    const res = await fetch("/api/items/upload", { method: "POST", body: fd });
-    const j = await res.json();
-    if (res.ok) { setPhotoPath(j.path); setPhotoDim({ w: j.width, h: j.height }); }
-    else { setMsg(j.error || "couldn't add photo"); setPhotoPreview(null); }
-    setUploadingPhoto(false);
+    // Revoke any previous object URL before creating a new one
+    if (previewObjectUrl.current) { URL.revokeObjectURL(previewObjectUrl.current); previewObjectUrl.current = null; }
+    const objUrl = URL.createObjectURL(file);
+    previewObjectUrl.current = objUrl;
+    setPhotoPreview(objUrl); // instant local preview, no network wait
+    try {
+      const fd = new FormData();
+      fd.append("file", await downscale(file));
+      fd.append("group_id", groupId);
+      const res = await fetch("/api/items/upload", { method: "POST", body: fd });
+      const j = await res.json();
+      if (res.ok) { setPhotoPath(j.path); setPhotoDim({ w: j.width, h: j.height }); }
+      else { setMsg(j.error || "couldn't add photo"); setPhotoPreview(null); }
+    } catch { setMsg("couldn't add photo"); setPhotoPreview(null); }
+    finally { setUploadingPhoto(false); }
   }
 
-  function removePhoto() { setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null); }
+  function removePhoto() {
+    if (previewObjectUrl.current) { URL.revokeObjectURL(previewObjectUrl.current); previewObjectUrl.current = null; }
+    setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null);
+  }
 
   // auto-resolve as soon as a URL is pasted/typed (no "look up" click needed)
   function onInput(v: string) {
@@ -126,7 +136,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   }
 
   async function drop() {
-    if (busy) return;
+    if (busy || uploadingPhoto) return;
     let type: Tab = tab;
     let data: Record<string, any> = {};
 
