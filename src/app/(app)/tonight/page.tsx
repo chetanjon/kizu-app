@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import TonightDealer, { type Cand } from "@/components/tonight-dealer";
 import type { DropType } from "@/lib/item-render";
+import { createAdminClient } from "@/lib/supabase-admin";
+import { signPhotos } from "@/lib/drop-photos";
 
 type ItemRow = {
   id: string; type: DropType; data: Record<string, unknown>; note: string | null;
@@ -45,6 +47,8 @@ export default async function Tonight() {
     .from("queue_items").select("item_id, curate_drop_id").eq("user_id", user.id);
   const queuedItems = new Set((qRaw ?? []).map((q) => q.item_id).filter(Boolean));
   const queuedCurate = new Set((qRaw ?? []).map((q) => q.curate_drop_id).filter(Boolean));
+
+  await signPhotos(createAdminClient(), (iRaw ?? []) as unknown as ItemRow[], (it) => (it as { data?: Record<string, unknown> }).data);
 
   const fromItems: Cand[] = ((iRaw ?? []) as unknown as ItemRow[])
     .filter((i) => !queuedItems.has(i.id))
