@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendPushToUser } from "@/lib/push";
 
 export type NotifKind = "rec_for_you" | "it_landed" | "weekly_read";
 
@@ -24,4 +25,12 @@ export async function notify(
     if ((count ?? 0) > 0) return;
   }
   await admin.from("notifications").insert({ user_id: userId, kind, body, href });
+
+  // Also deliver to the lock screen for opted-in users. The cryptic line is the
+  // push title; tapping opens href. Never let push failure affect the in-app notif.
+  try {
+    await sendPushToUser(admin, userId, { title: body, url: href ?? "/home" });
+  } catch {
+    /* push is best-effort */
+  }
 }
