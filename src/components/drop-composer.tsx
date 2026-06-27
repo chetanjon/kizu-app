@@ -31,12 +31,50 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   const [ratingStyle, setRatingStyle] = useState<keyof typeof RATINGS>("stars");
   const [ratingValue, setRatingValue] = useState("");
   const [musicNote, setMusicNote] = useState("");
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoDim, setPhotoDim] = useState<{ w: number; h: number } | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function reset() { setQ(""); setPicked(null); setResults(null); setMsg(""); }
+  function reset() { setQ(""); setPicked(null); setResults(null); setMsg(""); setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null); }
+
+  // Shrink large photos in the browser before upload: faster upload + avoids the
+  // 5MB server reject. Server still re-encodes authoritatively (EXIF strip etc.).
+  async function downscale(file: File, max = 1600): Promise<File> {
+    if (!file.type.startsWith("image/")) return file;
+    try {
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+      if (scale === 1 && file.size < 2 * 1024 * 1024) return file;
+      const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(bmp, 0, 0, w, h);
+      const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/webp", 0.85));
+      return blob ? new File([blob], "photo.webp", { type: "image/webp" }) : file;
+    } catch { return file; } // HEIC/unsupported → send original, server handles it
+  }
+
+  async function uploadPhoto(file: File) {
+    setUploadingPhoto(true); setMsg("");
+    setPhotoPreview(URL.createObjectURL(file)); // instant local preview, no network wait
+    const fd = new FormData();
+    fd.append("file", await downscale(file));
+    fd.append("group_id", groupId);
+    const res = await fetch("/api/items/upload", { method: "POST", body: fd });
+    const j = await res.json();
+    if (res.ok) { setPhotoPath(j.path); setPhotoDim({ w: j.width, h: j.height }); }
+    else { setMsg(j.error || "couldn't add photo"); setPhotoPreview(null); }
+    setUploadingPhoto(false);
+  }
+
+  function removePhoto() { setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null); }
 
   // auto-resolve as soon as a URL is pasted/typed (no "look up" click needed)
   function onInput(v: string) {
@@ -95,7 +133,11 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
     if (tab === "go_out") {
       const name = q.trim();
       if (!name) { setMsg("name the place first"); return; }
-      data = { place_name: name, subtype, music_note: musicNote.trim() || null, photo_url: null };
+      data = {
+        place_name: name, subtype, music_note: musicNote.trim() || null,
+        photo_url: photoPath,
+        ...(photoDim ? { photo_w: photoDim.w, photo_h: photoDim.h } : {}),
+      };
     } else if (picked) {
       data = picked.data;
     } else if (q.trim()) {
@@ -163,6 +205,17 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             <input value={musicNote} onChange={(e) => setMusicNote(e.target.value)} placeholder="music vibe (optional) — e.g. italo + funk"
               className="w-full bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
           )}
+          <div className="flex items-center gap-3 mt-1">
+            {photoPreview
+              ? <img src={photoPreview} alt="" className="w-16 h-16 rounded-lg border-[2.5px] border-ink object-cover" />
+              : <div className="w-16 h-16 rounded-lg border-[2.5px] border-dashed border-ink flex-none" />}
+            <label className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-ink rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap">
+              {uploadingPhoto ? "uploading…" : photoPreview ? "change photo" : "add a photo"}
+              <input type="file" accept="image/*" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
+            </label>
+            {photoPreview && <button type="button" onClick={removePhoto} className="font-m text-xs text-red">remove</button>}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
