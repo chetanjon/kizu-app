@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import { getCurrentUser } from "@/lib/auth";
 import { SignOutButton } from "@/components/sign-out-button";
+import InstallPrompt from "@/components/install-prompt";
 
 // Phase 6 builds the real "taste read" here (behavioral read + recs-that-landed
 // + signature picks). Placeholder for now, but it owns sign-out.
@@ -22,6 +23,7 @@ export default async function You() {
         yourself, and how often people take your word for it.
       </p>
       <p className="font-m text-[11px] text-muted mt-6">your read is coming.</p>
+      <div className="mt-8 max-w-[420px]"><InstallPrompt inline /></div>
       <div className="mt-10 pt-8 border-t-[2px] border-hair">
         <SignOutButton />
       </div>

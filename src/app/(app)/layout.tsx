@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, getMemberships, getProfile } from "@/lib/auth";
 import AppNav from "@/components/app-nav";
+import InstallPrompt from "@/components/install-prompt";
 
 // Shell for the signed-in app: auth guard once, persistent sticky top nav.
 // getCurrentUser/getMemberships/getProfile are request-memoized, so the page
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-paper">
       <div className="pb-24">{children}</div>
+      <InstallPrompt />
       <AppNav gender={profile.gender} />
     </div>
   );

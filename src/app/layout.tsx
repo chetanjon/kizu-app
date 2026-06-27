@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Plus_Jakarta_Sans, Space_Mono } from "next/font/google";
+import PwaRegister from "@/components/pwa-register";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -45,7 +46,10 @@ export const metadata: Metadata = {
     title: "kizu — good taste runs in the group",
     description: DESC,
   },
+  appleWebApp: { capable: true, title: "kizu", statusBarStyle: "default" },
 };
+
+export const viewport: Viewport = { themeColor: "#EDE3CE" };
 
 export default function RootLayout({
   children,
@@ -57,7 +61,7 @@ export default function RootLayout({
       lang="en"
       className={`${archivo.variable} ${plusJakarta.variable} ${spaceMono.variable} antialiased`}
     >
-      <body>{children}</body>
+      <body>{children}<PwaRegister /></body>
     </html>
   );
 }
