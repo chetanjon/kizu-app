@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import QueueClient, { type QRow } from "@/components/queue-client";
 import type { DropType } from "@/lib/item-render";
+import { createAdminClient } from "@/lib/supabase-admin";
+import { signPhotos } from "@/lib/drop-photos";
 
 type Raw = {
   item_id: string | null;
@@ -40,6 +42,8 @@ export default async function Queue() {
     )
     .eq("user_id", user.id)
     .order("added_at", { ascending: false });
+
+  await signPhotos(createAdminClient(), (raw ?? []) as unknown as Raw[], (r) => (r as { items?: { data?: Record<string, unknown> } }).items?.data);
 
   const rows: QRow[] = ((raw ?? []) as unknown as Raw[])
     .map((r): QRow | null => {

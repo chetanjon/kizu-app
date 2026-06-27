@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { notFound } from "next/navigation";
 import RecCard from "@/components/rec-card";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { signPhotos } from "@/lib/drop-photos";
 
 // Public, no-wall rec page. Reads the rec by EXACT token via the service-role
 // client (no broad public RLS on recs) — so a single shared item is visible
@@ -17,6 +18,8 @@ export default async function RecPage({ params }: { params: Promise<{ token: str
     .eq("token", token)
     .maybeSingle();
   if (!rec || !rec.items) notFound();
+
+  await signPhotos(admin, [rec], (r) => (r as { items?: { data?: Record<string, unknown> } }).items?.data);
 
   const item = rec.items as unknown as { type: DropType; data: Record<string, unknown>; note: string | null; rating_value: string | null };
   const fromName = (rec.from as unknown as { name: string | null } | null)?.name ?? "someone";

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { createRec } from "@/lib/recs";
+import { isDropPhotoPath } from "@/lib/drop-photos";
 import { NextResponse } from "next/server";
 
 // Create a drop. Authorize via getUser, verify group membership, write via admin.
@@ -27,6 +28,16 @@ export async function POST(req: Request) {
   const note = b.note ? String(b.note).slice(0, 200) : null;
   const rating_value = b.rating_value ? String(b.rating_value).slice(0, 40) : null;
 
+  const data: Record<string, unknown> = (b.data && typeof b.data === "object") ? b.data : {};
+  // Harden: a go_out photo_url, if present, must be an object WE stored in THIS group.
+  // Blocks "skip the upload route, point photo_url at anything" (XSS/IDOR/SSRF).
+  if (type === "go_out") {
+    const p = data["photo_url"];
+    if (p != null && !(isDropPhotoPath(p) && p.startsWith(`groups/${group_id}/`))) {
+      return NextResponse.json({ error: "bad photo" }, { status: 400 });
+    }
+  }
+
   const { data: item, error } = await admin
     .from("items")
     .insert({
@@ -36,7 +47,7 @@ export async function POST(req: Request) {
       rating_value,
       rating_style,
       note,
-      data: (b.data && typeof b.data === "object") ? b.data : {},
+      data,
     })
     .select("id")
     .single();
@@ -69,10 +80,15 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const admin = createAdminClient();
-  const { data: item } = await admin.from("items").select("created_by").eq("id", id).maybeSingle();
+  const { data: item } = await admin.from("items").select("created_by, data").eq("id", id).maybeSingle();
   if (!item) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (item.created_by !== user.id) return NextResponse.json({ error: "not yours" }, { status: 403 });
 
   await admin.from("items").delete().eq("id", id);
+
+  // best-effort: remove the stored photo so deleted drops don't orphan files
+  const p = (item.data as Record<string, unknown> | null)?.["photo_url"];
+  if (isDropPhotoPath(p)) await admin.storage.from("drops").remove([p]);
+
   return NextResponse.json({ ok: true });
 }
