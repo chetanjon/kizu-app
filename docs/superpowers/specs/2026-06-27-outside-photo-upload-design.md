@@ -36,7 +36,7 @@ Modeled on `/api/curate/upload`, but **group-membership-gated** instead of found
 2. Read `file` from `formData`; reject if not a `File`, or raw size > 5MB.
 3. **`sharp` pipeline** (the security core): `sharp(buffer, { limitInputPixels: 24_000_000 })` (≈24MP bomb guard) → `.rotate()` (apply orientation, then drop EXIF) → `.resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })` → `.webp({ quality: 80 })` → output buffer. A throw here = invalid/hostile image → `400 "couldn't read that image"`. Re-encoding strips all metadata (incl. GPS) by default.
 4. Upload the re-encoded buffer to `drops` at `groups/{group_id}/{crypto.randomUUID()}.webp` via `createAdminClient()`, `contentType: "image/webp"`, `upsert: false`.
-5. Return `{ path }` (the bucket-relative path), **not** a public URL.
+5. Return `{ path, width, height }` (bucket-relative path + the re-encoded dimensions from `sharp`), **not** a public URL. The dimensions let the feed reserve space and avoid layout shift.
 
 ### Write path — harden `src/app/api/items/route.ts`
 - If `data.photo_url` is present for a `go_out` drop, validate it is a string matching `groups/{group_id}/<uuid>.webp` for **the same `group_id` being written** (prefix + shape check). Anything else → strip it or `400`. This closes the "skip the upload route, set any URL" bypass.
@@ -44,14 +44,24 @@ Modeled on `/api/curate/upload`, but **group-membership-gated** instead of found
 ### Delete path — extend item deletion
 - Wherever an item is deleted, if `data.photo_url` is set, `admin.storage.from("drops").remove([path])` (best-effort; failure logged, not fatal). Prevents orphan accumulation. (If no item-delete route exists yet, add the cleanup at the point one is introduced and note it here.)
 
-### Read path — signed URLs
-- Add a small helper (e.g. in `item-render.ts` or a server util) that, for a `go_out` item with a `photo_url` path, calls `admin.storage.from("drops").createSignedUrl(path, <ttl>)` for group members rendering the feed. TTL short enough to limit a leak window, long enough for the page session (e.g. 1 hour). Server-side only; the service-role key never reaches the client.
+### Read path — signed URLs (with caching, so private ≠ slow)
+- Add a small server helper that, for a `go_out` item with a `photo_url` path, returns a signed URL via `admin.storage.from("drops").createSignedUrl(path, ttl)` for group members rendering the feed. **TTL = 6 hours.**
+- **Caching:** `createSignedUrl` mints a *new* token each call, which would defeat browser/HTTP caching (fresh URL every render → re-download every time). To keep it fast, **memoize the generated URL by `path`** server-side (simple in-memory `Map` with an expiry ~30 min under the token TTL). Repeat renders return the *same* signed URL within that window, so the browser/HTTP layer caches the image bytes and the feed paints instantly on revisits. Best-effort cache; a miss just re-signs.
+- Server-side only; the service-role key never reaches the client.
 
 ### Composer UI — `src/components/drop-composer.tsx`
 - In the `go_out` branch (under the subtype pills / music-vibe input): file picker mirroring `curate-admin.tsx:149–156` — a labeled button + hidden `<input type="file" accept="image/*">` (gallery **or** camera; no forced `capture`).
 - New state: `photoPath` (uploaded path), `photoPreview` (local object URL for instant preview), `uploadingPhoto`.
 - On select: optional client-side downscale for snappy upload + to dodge the 5MB rejection, then `FormData` (`file` + `group_id`) → `POST /api/items/upload` → store returned `path` in `photoPath`; show preview thumbnail + a "remove" button. Errors surface in the existing `msg` line.
-- In `drop()`: set `data.photo_url = photoPath || null` for `go_out` (replacing the hardcoded `null`). All other tabs unchanged.
+- In `drop()`: for `go_out`, set `data.photo_url = photoPath || null` (replacing the hardcoded `null`) and, when present, `data.photo_w` / `data.photo_h` from the upload response (for layout-shift-free rendering). All other tabs unchanged.
+
+### Performance — fast loading
+The point of downscaling was always speed + cost; making it explicit:
+- **Small files:** ~1600px **webp** at quality 80 lands around ~150–300KB — typically 10–30× smaller than the raw phone photo. This is the biggest single win.
+- **Signed-URL memoization** (above) so going private doesn't reintroduce re-downloads.
+- **Lazy + non-blocking images:** feed `<img>` get `loading="lazy"`, `decoding="async"`, and **explicit width/height** (intrinsic aspect ratio stored in `data` alongside `photo_url`) so only on-screen photos fetch and there's zero layout shift / reflow jank.
+- **Instant local preview:** the composer shows the chosen photo via a local object URL immediately, while the upload happens in the background — the user never waits on the network to see their pick.
+- **Bounded feed:** kizu's feed is finite and anti-doomscroll, so total image payload per load stays naturally small (no infinite list of images to stream).
 
 ### Rate limiting
 - Basic per-user upload throttle (e.g. N uploads / minute) in the upload route to blunt storage-quota abuse. Lightweight; in-memory or a simple Supabase check — sized for ~50 friends, not a public service.
