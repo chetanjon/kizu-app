@@ -26,7 +26,7 @@ type Item = {
   data: Record<string, unknown>;
   created_by: string;
   users: { name: string | null } | null;
-  reactions: { emoji: string; user_id: string }[];
+  reactions: { emoji: string; user_id: string; users: { name: string | null } | null }[];
 };
 
 export default async function Home() {
@@ -59,7 +59,7 @@ export default async function Home() {
   // group items, then which of them I've already queued.
   const { data: iRaw } = await supabase
     .from("items")
-    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
+    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
     .eq("group_id", g.id)
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
@@ -108,6 +108,10 @@ export default async function Home() {
                 const t = TYPE[it.type];
                 const cover = img(it);
                 const mine = it.created_by === user.id;
+                // Reactor names only reach the client for the dropper's own drops.
+                const rx = mine
+                  ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
+                  : it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id }));
                 return (
                   <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_#14110F]">
                     <div className="aspect-[4/3] relative border-b-[2.5px] border-ink overflow-hidden rounded-t-[13px]" style={{ background: cover ? undefined : t.color }}>
@@ -127,7 +131,7 @@ export default async function Home() {
                           <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
                           {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
                         </div>
-                        <div className="mt-2"><Reactions itemId={it.id} initial={it.reactions} userId={user.id} /></div>
+                        <div className="mt-2"><Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} /></div>
                       </div>
                     </div>
                   </article>

@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { REACTIONS } from "@/lib/reactions";
 import { NextResponse } from "next/server";
 
-const ALLOWED = ["🔥", "😭", "😍", "🎧", "🕺", "📍", "😂", "🤝"];
+const ALLOWED: readonly string[] = REACTIONS;
 
 // Toggle a reaction on an item.
 export async function POST(req: Request) {
