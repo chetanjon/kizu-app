@@ -139,7 +139,7 @@ export default async function Home() {
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
-                          {forYou ? (
+                          {forYou && it.anon ? (
                             <span className="font-m text-[11px] text-vibe">✦ someone left this for you</span>
                           ) : it.anon ? (
                             <span className="font-m text-[11px] text-muted">{mine ? "✦ you left this for someone" : "someone dropped this ✦"}</span>
