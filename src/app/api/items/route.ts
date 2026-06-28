@@ -40,6 +40,13 @@ export async function POST(req: Request) {
     }
   }
 
+  // recipients of a targeted (anonymous) drop. Array now; tolerate the legacy
+  // single-string shape so an in-flight old client mid-deploy still works.
+  const recTo: string[] = Array.isArray(b.rec_to)
+    ? b.rec_to.map((x: unknown) => String(x))
+    : b.rec_to ? [String(b.rec_to)] : [];
+  const targets = [...new Set(recTo)].filter((id) => id && id !== user.id);
+
   const { data: item, error } = await admin
     .from("items")
     .insert({
@@ -50,30 +57,34 @@ export async function POST(req: Request) {
       rating_style,
       note,
       data,
+      anon: targets.length > 0,
     })
     .select("id")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // optional: drop this FOR a specific group member (rec-as-invite).
+  // one rec per valid member target. Each gets its own queue row + cryptic ping
+  // (createRec handles all three). Non-members skip silently. Remember who was
+  // recced so they're left out of the generic group push below.
   let recUrl: string | null = null;
-  const rec_to = b.rec_to ? String(b.rec_to) : null;
-  if (rec_to && rec_to !== user.id) {
+  const recced: string[] = [];
+  for (const id of targets) {
     const { data: rmem } = await admin
       .from("group_members").select("group_id")
-      .eq("group_id", group_id).eq("user_id", rec_to).maybeSingle();
-    if (rmem) {
-      const rec = await createRec(admin, user.id, item.id, rec_to);
-      if (rec) recUrl = `/r/${rec.token}`;
+      .eq("group_id", group_id).eq("user_id", id).maybeSingle();
+    if (!rmem) continue;
+    const rec = await createRec(admin, user.id, item.id, id);
+    if (rec) {
+      recced.push(id);
+      if (!recUrl) recUrl = `/r/${rec.token}`;
     }
   }
 
   // Cryptic, push-only ping to the rest of the group — the feed already shows
   // the drop in-app, so we deliberately skip the in-app notifications table.
   // Awaited (not fire-and-forget): serverless freezes work after the response.
-  // Skip the dropper, and the rec recipient (they get the specific rec ping).
-  const skip = new Set<string>([user.id]);
-  if (recUrl && rec_to) skip.add(rec_to);
+  // Skip the dropper, and the rec recipients (they get the specific rec ping).
+  const skip = new Set<string>([user.id, ...recced]);
   const { data: members } = await admin
     .from("group_members").select("user_id").eq("group_id", group_id);
   const recipients = (members ?? []).map((m) => m.user_id).filter((id) => !skip.has(id));
