@@ -21,6 +21,7 @@ const RIVER_PAGE = 12;
 type Item = {
   id: string;
   type: DropType;
+  anon: boolean;
   rating_value: string | null;
   note: string | null;
   data: Record<string, unknown>;
@@ -59,7 +60,7 @@ export default async function Home() {
   // group items, then which of them I've already queued.
   const { data: iRaw } = await supabase
     .from("items")
-    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
+    .select("id, type, anon, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
     .eq("group_id", g.id)
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
@@ -72,6 +73,15 @@ export default async function Home() {
     .eq("user_id", user.id)
     .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
   const queued = new Set((qRaw ?? []).map((q) => q.item_id));
+
+  // which of these drops were left FOR me. recs_select_mine RLS returns only my
+  // own recs, so this is the recipient-side signal.
+  const { data: recRaw } = await supabase
+    .from("recs")
+    .select("item_id")
+    .eq("to_user", user.id)
+    .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+  const forMe = new Set((recRaw ?? []).map((r) => r.item_id as string));
 
   return (
     <div className="min-h-screen bg-paper">
@@ -108,6 +118,7 @@ export default async function Home() {
                 const t = TYPE[it.type];
                 const cover = img(it);
                 const mine = it.created_by === user.id;
+                const forYou = forMe.has(it.id);
                 // Reactor names only reach the client for the dropper's own drops.
                 const rx = mine
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
@@ -128,7 +139,13 @@ export default async function Home() {
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
-                          <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
+                          {forYou ? (
+                            <span className="font-m text-[11px] text-vibe">✦ someone left this for you</span>
+                          ) : it.anon ? (
+                            <span className="font-m text-[11px] text-muted">{mine ? "✦ you left this for someone" : "someone dropped this ✦"}</span>
+                          ) : (
+                            <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
+                          )}
                           {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
                         </div>
                         <div className="mt-2"><Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} /></div>
