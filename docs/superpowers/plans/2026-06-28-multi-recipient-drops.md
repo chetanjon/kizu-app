@@ -1,41 +1,134 @@
-# Multi-recipient Drops + Private "for you" Signal — Implementation Plan
+# Multi-recipient Drops + Anonymous "for you" Targeting — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let a user drop one thing *for multiple specific people* in a single action, and show each recipient a private, sender-anonymous "✦ someone left this for you" signal on that drop in the feed.
+**Goal:** Let a user drop one thing *for multiple specific people* in a single action, where a targeted drop is genuinely anonymous to every viewer — recipients see "✦ someone left this for you," bystanders see "someone dropped this ✦," the author sees "✦ you left this for someone," and the author's name appears nowhere on it. Group-wide drops stay public and attributed.
 
-**Architecture:** No schema change. A drop is one `items` row; targeting a person is one `recs` row, and `createRec()` already does the full per-recipient job (insert rec, enqueue, ping). Multi-recipient = loop `createRec()` per recipient for the same item. The feed reads the current user's own `recs` (allowed by existing `recs_select_mine` RLS) to mark which cards were left for them, and renders the targeted ones anonymously to the recipient only. Three independent edits: the API write side, the feed read/render side, and the composer UI.
+**Architecture:** A drop is one `items` row; targeting a person is one `recs` row, and `createRec()` already does the full per-recipient job (insert rec, enqueue, ping). Multi-recipient = loop `createRec()` per recipient for the same item. Anonymity is carried by one new explicit boolean, `items.anon`, set at creation — NOT derived from `recs` (which would collide with the shareable-link claim flow). The feed reads the current user's own `recs` (allowed by existing `recs_select_mine` RLS) to mark which cards were left for them, and renders each card per-viewer against `it.anon`.
 
-**Tech Stack:** Next.js 16 (App Router) + TypeScript, Supabase (service-role admin writes, user-scoped reads), Tailwind v4. React client component for the composer; server component for the feed.
+**Tech Stack:** Next.js 16 (App Router) + TypeScript, Supabase (service-role admin writes, user-scoped reads, SQL migrations), Tailwind v4. React client component for the composer; server component for the feed.
 
 **Spec:** `docs/superpowers/specs/2026-06-28-multi-recipient-drops-design.md`
 
 ## Global Constraints
 
-- **No migration, no schema change.** The `recs` model already supports N recipients per item (one row each). Do not alter `recs`, `items`, `queue_items`, or any RLS policy.
+- **One small additive migration only:** `items.anon BOOLEAN NOT NULL DEFAULT false`. Do not alter `recs`, `queue_items`, or any RLS policy. kizu.app is LIVE — applying the migration to the production DB is a **production change that requires the user's explicit go-ahead** (Task 1, Step 2). Code that selects `anon` must not ship before the column exists.
 - **No new npm dependencies.** Budget is $0; ask before adding any.
-- **No test framework exists** (`package.json` has only `dev`/`build`/`start`/`lint`). Do NOT introduce one. Per-task verification = `npx tsc --noEmit` (typecheck) + `npm run lint` (eslint) both clean, plus the explicit manual check in that task. This matches the spec's verification section.
-- **Soft anonymity, recipient-only.** Hide the sender's name *only* on the recipient's own card. Bystanders (non-recipients) see normal authorship. Never show recipient names/counts to the group, and never disclose co-recipients to a recipient.
-- **Backward-compatible API.** `/api/items` must accept the new `rec_to` array AND tolerate the legacy single-string shape, so an in-flight old client during deploy still works.
-- **Card copy:** exactly `✦ someone left this for you` — lowercase, matches the existing notification voice ("someone left something for you."). Tinted `text-vibe` (violet) per the approved design.
+- **No test framework exists** (`package.json` has only `dev`/`build`/`start`/`lint`). Do NOT introduce one. Per-task verification = `npx tsc --noEmit` + `npm run lint` both clean, plus the explicit manual/SQL check in that task. Matches the spec's verification section.
+- **Anonymity rule (the spine):** group-wide drop = attributed (author name shown to all). Targeted drop = anonymous to ALL viewers; the author's name is shown to no one. Never show recipient names or counts to anyone, and never disclose co-recipients to a recipient.
+- **Backward-compatible API.** `/api/items` must accept the new `rec_to` array AND tolerate the legacy single-string shape.
+- **Card copy (exact, lowercase, matches kizu voice):** recipient `✦ someone left this for you`; bystander `someone dropped this ✦`; author of their own anon drop `✦ you left this for someone`. The recipient line is tinted `text-vibe`; the other two are `text-muted`.
 - **Brand tokens only** (`bg-vibe`, `text-vibe`, `text-muted`, `border-ink`, `font-m`, etc.) — no raw hexes. RED is reserved; do not use it here.
-- **Embed hint:** the feed's `items`↔`users` join must keep the `users!items_created_by_fkey(name)` disambiguation (ambiguous otherwise → `PGRST201`, silent 0 rows). Don't touch it.
+- **Embed hint:** the feed's `items`↔`users` join must keep the `users!items_created_by_fkey(name)` disambiguation (ambiguous otherwise → `PGRST201`, silent 0 rows).
 
 ---
 
-### Task 1: API — accept `rec_to` as an array of recipients
+### Task 1: Migration — add `items.anon` + sync types
 
 **Files:**
-- Modify: `src/app/api/items/route.ts:57-70` (the rec block + the response)
-- (No change needed to `src/lib/recs.ts` — `createRec` is already per-recipient and already sends the sender-anonymous ping.)
+- Create: `supabase/migrations/20260628_drop_anon.sql`
+- Modify: `src/lib/database.types.ts:144-176` (the `items` Row/Insert/Update blocks)
 
 **Interfaces:**
-- Consumes: existing `createRec(admin, fromUser, itemId, toUser)` → `{ token, recId } | null`; existing `admin` client and verified `user`.
-- Produces: `POST /api/items` now reads `body.rec_to` as `string[]` (or a single string, legacy). For each distinct id ≠ sender that is a group member, creates one rec. Response shape unchanged: `{ id: string, recUrl: string | null }` (`recUrl` is the first created rec's `/r/<token>`, or `null`).
+- Produces: an `anon` boolean column on `items` (default `false`), and a matching `anon: boolean` (Row) / `anon?: boolean` (Insert, Update) in the generated types. Task 2 sets it on insert; Task 3 reads it.
 
-- [ ] **Step 1: Replace the single-recipient rec block with an array loop**
+- [ ] **Step 1: Write the migration**
 
-In `src/app/api/items/route.ts`, replace the current block (lines 57–70):
+Create `supabase/migrations/20260628_drop_anon.sql`:
+
+```sql
+-- Kizu — anonymous targeted drops.
+-- A drop made FOR specific people is anonymous to every viewer (no author name
+-- shown). Carry that as an explicit flag set at creation — NOT derived from recs,
+-- because the shareable-link claim flow (/api/recs/claim) also sets recs.to_user
+-- and would otherwise wrongly anonymize a claimed link drop.
+ALTER TABLE public.items
+  ADD COLUMN anon BOOLEAN NOT NULL DEFAULT false;
+
+-- Verify:
+--   SELECT column_name, data_type, column_default
+--     FROM information_schema.columns
+--    WHERE table_schema='public' AND table_name='items' AND column_name='anon';
+```
+
+- [ ] **Step 2: Apply the migration to the database — REQUIRES USER GO-AHEAD**
+
+kizu.app is live. **Pause and get the user's explicit confirmation before applying.**
+Apply via the project's normal path (Supabase MCP `apply_migration`, the Supabase SQL
+editor, or `supabase db push` if a local CLI link exists). Then run the verify query from
+Step 1 and confirm one row comes back: `anon | boolean | false`.
+
+- [ ] **Step 3: Hand-update the generated types**
+
+In `src/lib/database.types.ts`, add `anon` alphabetically-first to each `items` block.
+
+Row (after line 144 `Row: {`), add as the first field:
+
+```ts
+          anon: boolean
+```
+
+Insert (after `Insert: {`), add as the first field:
+
+```ts
+          anon?: boolean
+```
+
+Update (after `Update: {`), add as the first field:
+
+```ts
+          anon?: boolean
+```
+
+- [ ] **Step 4: Typecheck + lint**
+
+Run: `npx tsc --noEmit && npm run lint`
+Expected: no errors.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add supabase/migrations/20260628_drop_anon.sql src/lib/database.types.ts
+git commit -m "feat(db): add items.anon flag for anonymous targeted drops"
+```
+
+---
+
+### Task 2: API — set `anon` + fan out to N recipients
+
+**Files:**
+- Modify: `src/app/api/items/route.ts` (move recipient parsing above the insert; set `anon` on insert; loop `createRec`)
+
+**Interfaces:**
+- Consumes: existing `createRec(admin, fromUser, itemId, toUser)` → `{ token, recId } | null`; the `items.anon` column from Task 1.
+- Produces: `POST /api/items` reads `body.rec_to` as `string[]` (or legacy single string), inserts the item with `anon = (targets.length > 0)`, creates one rec per valid member target. Response shape unchanged: `{ id: string, recUrl: string | null }`.
+
+- [ ] **Step 1: Parse recipients BEFORE the insert and set `anon`**
+
+In `src/app/api/items/route.ts`, the item insert currently sits at lines 42–55 and the rec
+block at 57–70. Restructure so recipients are known before the insert.
+
+First, immediately above the `const { data: item, error } = await admin.from("items").insert({...})`
+call (line 42), add:
+
+```ts
+  // recipients of a targeted (anonymous) drop. Array now; tolerate the legacy
+  // single-string shape so an in-flight old client mid-deploy still works.
+  const recTo: string[] = Array.isArray(b.rec_to)
+    ? b.rec_to.map((x: unknown) => String(x))
+    : b.rec_to ? [String(b.rec_to)] : [];
+  const targets = [...new Set(recTo)].filter((id) => id && id !== user.id);
+```
+
+Then add `anon` to the insert object (it currently sets `group_id, created_by, type, rating_value, rating_style, note, data`):
+
+```ts
+      anon: targets.length > 0,
+```
+
+- [ ] **Step 2: Replace the old single-recipient rec block with the fan-out loop**
+
+Replace the existing block (lines 57–70):
 
 ```ts
   // optional: drop this FOR a specific group member (rec-as-invite).
@@ -54,19 +147,11 @@ In `src/app/api/items/route.ts`, replace the current block (lines 57–70):
   return NextResponse.json({ id: item.id, recUrl });
 ```
 
-with:
+with (note: `targets` is already computed in Step 1):
 
 ```ts
-  // optional: drop this FOR one or more group members (rec-as-invite).
-  // Accept rec_to as an array of user ids; tolerate the legacy single-string
-  // shape so an in-flight old client mid-deploy still works. De-dupe and drop
-  // the sender. Each valid member gets its own rec + queue row + cryptic ping
-  // (createRec handles all three). Membership failures skip silently.
-  const recTo: string[] = Array.isArray(b.rec_to)
-    ? b.rec_to.map((x: unknown) => String(x))
-    : b.rec_to ? [String(b.rec_to)] : [];
-  const targets = [...new Set(recTo)].filter((id) => id && id !== user.id);
-
+  // one rec per valid member target. Each gets its own queue row + cryptic ping
+  // (createRec handles all three). Non-members skip silently.
   let recUrl: string | null = null;
   for (const id of targets) {
     const { data: rmem } = await admin
@@ -80,45 +165,66 @@ with:
   return NextResponse.json({ id: item.id, recUrl });
 ```
 
-- [ ] **Step 2: Typecheck**
+- [ ] **Step 3: Typecheck + lint**
 
-Run: `npx tsc --noEmit`
-Expected: no errors.
+Run: `npx tsc --noEmit && npm run lint`
+Expected: no errors. (The `(x: unknown) => String(x)` annotation avoids an implicit-any.)
 
-- [ ] **Step 3: Lint**
+- [ ] **Step 4: Manual verification — legacy shape + anon flag**
 
-Run: `npm run lint`
-Expected: no errors (the `(x: unknown) => String(x)` annotation avoids an implicit-any lint error).
-
-- [ ] **Step 4: Manual verification — legacy single-recipient still works**
-
-Run `npm run dev`. With the **current** composer (which still sends a single `rec_to` string), drop something for one group member. Confirm in Supabase: one new `recs` row (`to_user` = that member), one new `queue_items` row (`source='rec'`), and the member receives the "someone left something for you." notification. This proves backward compatibility before the composer changes in Task 3.
+Run `npm run dev`. With the **current** composer (still sends a single `rec_to` string), drop
+for one member. Confirm in Supabase: the new `items` row has `anon=true`; one `recs` row; one
+`queue_items` row (`source='rec'`); the member gets the "someone left something for you." ping.
+Then drop with no recipient ("everyone"): the new `items` row has `anon=false` and no rec.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add src/app/api/items/route.ts
-git commit -m "feat(api): accept rec_to as an array of recipients on /api/items"
+git commit -m "feat(api): set items.anon and fan out rec_to array to N recipients"
 ```
 
 ---
 
-### Task 2: Feed — detect "for me" and render the sender-anonymous signal
+### Task 3: Feed — anon-aware, per-viewer render
 
 **Files:**
-- Modify: `src/app/(app)/home/page.tsx` (add a `recs` read after line 73; add `forYou` + conditional author line in the card map)
+- Modify: `src/app/(app)/home/page.tsx` (Item type; items select; `forMe` read; per-card render)
 
 **Interfaces:**
-- Consumes: existing `supabase` user-scoped client, `user.id`, the `items` list and its `ids` array, and the existing `recs_select_mine` RLS (returns only rows where `to_user = auth.uid()`).
-- Produces: a `forMe: Set<string>` of item ids left for the current user; the card author line renders `✦ someone left this for you` when the item is in `forMe`, else the real author name (unchanged).
+- Consumes: `items.anon` (Task 1), the user-scoped `supabase` client, `recs_select_mine` RLS, the existing `ids` array and `Item` type.
+- Produces: a `forMe: Set<string>`; each card's author line renders one of four ways — `for you` (recipient), `you left this for someone` (author of anon), `someone dropped this` (bystander of anon), or the real name (attributed group drop).
 
-- [ ] **Step 1: Add the "for me" recs lookup**
+- [ ] **Step 1: Add `anon` to the `Item` type**
 
-In `src/app/(app)/home/page.tsx`, immediately after the existing `queued` Set (line 73, `const queued = new Set(...)`), add:
+In `src/app/(app)/home/page.tsx`, the `Item` type (lines 20–29) currently lists
+`id, type, rating_value, note, data, created_by, users, reactions`. Add:
 
 ```ts
-  // which of these drops were left FOR me (from any sender). recs_select_mine
-  // RLS returns only my own recs, so this is the recipient-side "for you" signal.
+  anon: boolean;
+```
+
+- [ ] **Step 2: Select `anon` in the items query**
+
+Change the items select (line 61) from:
+
+```ts
+    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
+```
+
+to:
+
+```ts
+    .select("id, type, anon, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
+```
+
+- [ ] **Step 3: Add the "left for me" lookup**
+
+Immediately after the existing `const queued = new Set(...)` (line 73), add:
+
+```ts
+  // which of these drops were left FOR me. recs_select_mine RLS returns only my
+  // own recs, so this is the recipient-side signal.
   const { data: recRaw } = await supabase
     .from("recs")
     .select("item_id")
@@ -127,7 +233,7 @@ In `src/app/(app)/home/page.tsx`, immediately after the existing `queued` Set (l
   const forMe = new Set((recRaw ?? []).map((r) => r.item_id as string));
 ```
 
-- [ ] **Step 2: Compute `forYou` per card**
+- [ ] **Step 4: Compute `forYou` per card**
 
 In the `items.map((it) => { ... })` body, just after the existing `const mine = it.created_by === user.id;` (line 108), add:
 
@@ -135,7 +241,7 @@ In the `items.map((it) => { ... })` body, just after the existing `const mine = 
                 const forYou = forMe.has(it.id);
 ```
 
-- [ ] **Step 3: Render the author line conditionally**
+- [ ] **Step 5: Render the author line four ways**
 
 Replace the existing author `<span>` (line 125):
 
@@ -146,51 +252,50 @@ Replace the existing author `<span>` (line 125):
 with:
 
 ```tsx
-                          {forYou
-                            ? <span className="font-m text-[11px] text-vibe">✦ someone left this for you</span>
-                            : <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>}
+                          {forYou ? (
+                            <span className="font-m text-[11px] text-vibe">✦ someone left this for you</span>
+                          ) : it.anon ? (
+                            <span className="font-m text-[11px] text-muted">{mine ? "✦ you left this for someone" : "someone dropped this ✦"}</span>
+                          ) : (
+                            <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
+                          )}
 ```
 
-(The sender is excluded from their own recs, so `mine` and `forYou` are never both true; the `mine ? DeleteDrop : QueueButton` control to the right is unaffected. A "for you" drop is already in the recipient's queue via `createRec`, so its QueueButton shows queued — consistent.)
+- [ ] **Step 6: Typecheck + lint**
 
-- [ ] **Step 4: Typecheck**
-
-Run: `npx tsc --noEmit`
+Run: `npx tsc --noEmit && npm run lint`
 Expected: no errors.
 
-- [ ] **Step 5: Lint**
+- [ ] **Step 7: Manual verification — all four viewpoints**
 
-Run: `npm run lint`
-Expected: no errors.
+With `npm run dev`, as user A drop something for user B (single-recipient is fine here):
+- **B** (recipient) `/home`: card reads `✦ someone left this for you` in violet, no name.
+- **A** (author) `/home`: same card reads `✦ you left this for someone`, no name, with delete control.
+- A third member **C** (bystander): same card reads `someone dropped this ✦`, no name.
+- A normal "everyone" drop: shows the real author name to all three.
+- Create a shareable link drop and claim it as a new user: it stays **attributed** (real name, `anon=false`) — NOT anonymized.
 
-- [ ] **Step 6: Manual verification — recipient sees anonymous signal, others see the name**
-
-With `npm run dev`: as user A, drop something for user B (using the still-single-recipient composer or a direct `POST /api/items` with `rec_to: ["<B-id>"]`). Then:
-- Log in as **B**, open `/home`: that card's footer reads `✦ someone left this for you` in violet, with **no** "A" name.
-- Log in as **A** (or any non-recipient member): the same card shows A's real name, no "for you" marker.
-- A normal group-wide drop (no rec) shows the author name for everyone, as before.
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add "src/app/(app)/home/page.tsx"
-git commit -m "feat(feed): show sender-anonymous 'left for you' signal to recipients"
+git commit -m "feat(feed): anon-aware per-viewer render for targeted drops"
 ```
 
 ---
 
-### Task 3: Composer — multi-select recipients
+### Task 4: Composer — multi-select recipients
 
 **Files:**
-- Modify: `src/components/drop-composer.tsx` (state at line 24; a toggle helper; the "drop it for…" picker at lines 292–301; submission `rec_to` + link branch at lines 163–183; the button label at lines 314–318)
+- Modify: `src/components/drop-composer.tsx` (state at line 24; a toggle helper; the picker at lines 292–301; submission `rec_to` + link branch at lines 163–183; the button label at lines 314–318)
 
 **Interfaces:**
-- Consumes: the Task 1 API contract (`rec_to: string[]`), the `members: Member[]` prop (`{ id, name }`).
-- Produces: composer posts `rec_to: string[]` — `[...recipients]` when targeting people, `[]` for everyone or link. Link branch keyed on `recMode === "link"`. No external interface beyond the existing `/api/items` + `/api/recs` calls.
+- Consumes: the Task 2 API contract (`rec_to: string[]`), the `members: Member[]` prop (`{ id, name }`).
+- Produces: composer posts `rec_to: string[]` — `[...recipients]` when targeting people, `[]` for everyone or link. Link branch keyed on `recMode === "link"`.
 
 - [ ] **Step 1: Replace `recTo` state with mode + recipient set**
 
-In `src/components/drop-composer.tsx`, replace line 24:
+Replace line 24:
 
 ```ts
   const [recTo, setRecTo] = useState("");          // "" = everyone, id = member, "__link__" = shareable link
@@ -199,14 +304,14 @@ In `src/components/drop-composer.tsx`, replace line 24:
 with:
 
 ```ts
-  // recMode: "everyone" (group-wide, no recs) | "people" (one rec per id) | "link" (open /r link)
+  // recMode: "everyone" (group-wide, attributed) | "people" (anonymous, one rec per id) | "link"
   const [recMode, setRecMode] = useState<"everyone" | "people" | "link">("everyone");
   const [recipients, setRecipients] = useState<Set<string>>(new Set());
 ```
 
 - [ ] **Step 2: Add the recipient toggle helper**
 
-Add this function inside the component (e.g. just after `reset()`, near line 47):
+Add inside the component, just after `reset()` (near line 47):
 
 ```ts
   function toggleRecipient(id: string) {
@@ -307,7 +412,7 @@ with:
 
 - [ ] **Step 5: Compute the drop-button label and use it**
 
-Add, just before `const accent = ...` (line 189):
+Add just before `const accent = ...` (line 189):
 
 ```ts
   const recCount = recipients.size;
@@ -319,37 +424,32 @@ Add, just before `const accent = ...` (line 189):
     : "drop it to the group";
 ```
 
-Then replace the button's label expression (lines 314–318), changing:
+Then replace the button's label expression (lines 314–318):
 
 ```tsx
           {busy ? "dropping…" : recTo === "__link__" ? "drop + make a link" : recTo ? `send it to ${(members.find((m) => m.id === recTo)?.name || "them").toLowerCase()}` : "drop it to the group"}
 ```
 
-to:
+with:
 
 ```tsx
           {dropLabel}
 ```
 
-- [ ] **Step 6: Typecheck**
+- [ ] **Step 6: Typecheck + lint**
 
-Run: `npx tsc --noEmit`
-Expected: no errors. (Confirm no remaining references to the deleted `recTo` / `setRecTo` anywhere in the file.)
+Run: `npx tsc --noEmit && npm run lint`
+Expected: no errors. Confirm no remaining references to the deleted `recTo` / `setRecTo`.
 
-- [ ] **Step 7: Lint**
-
-Run: `npm run lint`
-Expected: no errors.
-
-- [ ] **Step 8: Manual verification — multi-select end to end**
+- [ ] **Step 7: Manual verification — multi-select end to end**
 
 With `npm run dev`, in a group with ≥2 other members:
-- Tap two member chips: both light violet; button reads **"send it to 2 people"**. Tap one off: button reads **"send it to {name}"**. Tap it off too: mode falls back to **everyone**, button reads **"drop it to the group"**.
-- Tap "everyone" then a member: "everyone" de-selects, member lights. Tap "✦ anyone (link)": members clear, link mode active, button reads **"drop + make a link"**.
-- Drop for two members → confirm **two** `recs` rows + **two** `queue_items` + **two** pings; each recipient's `/home` shows `✦ someone left this for you`; neither sees the other recipient.
-- Drop to everyone → zero recs, normal authorship for all. Link → unchanged `/r/<token>` copy flow.
+- Tap two member chips: both light violet; button reads **"send it to 2 people"**. Tap one off → **"send it to {name}"**. Tap it off → mode falls back to **everyone**, button reads **"drop it to the group"**.
+- Tap "everyone" then a member: "everyone" de-selects, member lights. Tap "✦ anyone (link)": members clear, button reads **"drop + make a link"**.
+- Drop for two members → **two** `recs` + **two** `queue_items` + **two** pings; `items.anon=true`; each recipient's `/home` shows `✦ someone left this for you`; neither sees the other recipient.
+- Drop to everyone → `anon=false`, attributed for all. Link → unchanged `/r/<token>` copy flow.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/components/drop-composer.tsx
@@ -361,16 +461,18 @@ git commit -m "feat(composer): multi-select recipients for a drop"
 ## Self-Review
 
 **Spec coverage:**
-- Multi-select recipients → Task 3 (UI) + Task 1 (API loop). ✓
-- One item, N recs, no migration → Task 1 loops `createRec`; no schema touched. ✓
-- Recipient sees private "for you" → Task 2 (`forMe` + conditional render). ✓
-- Sender anonymous to recipient (soft) → Task 2 renders `✦ someone left this for you`, no name; bystanders keep authorship. ✓
-- Backward-compatible API → Task 1 normalizes legacy single string; Task 1 Step 4 explicitly verifies the old composer before Task 3. ✓
-- No recipient names/counts to group; no co-recipient disclosure → nothing renders recipient identity to anyone but a `for you` flag on the recipient's own card. ✓
-- `/r/<token>` link flow unchanged → Task 3 keeps the link branch (keyed on `recMode === "link"`); `/api/recs` untouched. ✓
-- RLS unchanged → Task 2 relies on existing `recs_select_mine`. ✓
-- Edge cases (self in set, dupes, non-member, legacy shape) → Task 1 `filter(id !== user.id)` + `new Set()` de-dupe + membership `continue` + array normalization. ✓
+- Multi-select recipients → Task 4 (UI) + Task 2 (API loop). ✓
+- One item, N recs, no rec-model rewrite → Task 2 loops `createRec`. ✓
+- `items.anon` flag (not derived from recs; link-claim-proof) → Task 1 (migration + types), Task 2 sets it. ✓
+- Anonymity rule, four viewpoints (recipient / author / bystander / attributed) → Task 3 Step 5. ✓
+- Name shown to no one on anon drops → Task 3 render has no name branch for `forYou`/`it.anon`. ✓
+- Backward-compatible API + legacy single-string → Task 2 Step 1 normalization; Task 2 Step 4 verifies old composer. ✓
+- Shareable-link drop stays attributed after claim → `anon=false` at creation (Task 2), feed keys on `it.anon` (Task 3); verified in Task 3 Step 7. ✓
+- No recipient names/counts to anyone; no co-recipient disclosure → only a `forYou` flag renders, never identities. ✓
+- `/r/<token>` link flow unchanged → Task 4 keeps the `recMode === "link"` branch; `/api/recs` untouched. ✓
+- RLS unchanged → Task 3 relies on existing `recs_select_mine`. ✓
+- Production-change gate for the live migration → Task 1 Step 2. ✓
 
-**Placeholder scan:** None — every step shows the exact before/after code or an exact command.
+**Placeholder scan:** None — every step shows exact before/after code, SQL, or an exact command.
 
-**Type consistency:** `recMode`/`recipients`/`toggleRecipient`/`recCount`/`oneName`/`dropLabel` defined and used consistently in Task 3; `forMe`/`forYou` consistent in Task 2; API reads `rec_to` array consistently with the composer's emitted `rec_to: string[]`. The deleted `recTo`/`setRecTo` are removed everywhere they were used (state, picker, submission, button) — Task 3 Step 6 explicitly checks for stragglers.
+**Type consistency:** `anon` defined in Task 1 (DB + types), set in Task 2 (insert), read in Task 3 (`Item` type + select + render). `recMode`/`recipients`/`toggleRecipient`/`recCount`/`oneName`/`dropLabel` defined and used consistently in Task 4; `forMe`/`forYou` consistent in Task 3. The deleted `recTo`/`setRecTo` are removed everywhere (state, picker, submission, button) — Task 4 Step 6 checks for stragglers. `targets` is computed once in Task 2 Step 1 and reused in the insert (`anon`) and the loop.
