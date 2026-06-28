@@ -33,7 +33,7 @@ export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activ
     <div className="relative">
       <button onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 font-m text-xs font-bold border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: active?.color }} />
+        <span className="w-2 h-2 rounded-full border-[1.5px] border-ink shrink-0" style={{ background: active?.color }} />
         {active?.name.toLowerCase()}
         <span className="text-[9px] opacity-70">▾</span>
       </button>
@@ -46,7 +46,7 @@ export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activ
             {groups.map((g) => (
               <button key={g.id} onClick={() => switchTo(g.id)}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold hover:bg-surface-2 text-left">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
+                <span className="w-2 h-2 rounded-full border-[1.5px] border-ink shrink-0" style={{ background: g.color }} />
                 {g.name.toLowerCase()}
                 {g.id === activeId && <span className="ml-auto text-vibe font-bold">✓</span>}
               </button>
