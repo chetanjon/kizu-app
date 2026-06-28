@@ -38,11 +38,13 @@ export default function Reactions({
   }
 
   async function toggle(emoji: string) {
-    const mine = counts[emoji]?.mine;
-    setRx((prev) =>
-      mine ? prev.filter((r) => !(r.emoji === emoji && r.user_id === userId))
-           : [...prev, { emoji, user_id: userId }]
-    );
+    const mineThis = counts[emoji]?.mine;
+    // one reaction per user per drop: drop my existing reaction, then add the new
+    // one unless I tapped the one I already had (that's a toggle-off).
+    setRx((prev) => {
+      const withoutMine = prev.filter((r) => r.user_id !== userId);
+      return mineThis ? withoutMine : [...withoutMine, { emoji, user_id: userId }];
+    });
     setOpen(false);
     await fetch("/api/reactions", {
       method: "POST",

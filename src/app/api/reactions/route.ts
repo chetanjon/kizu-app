@@ -23,12 +23,18 @@ export async function POST(req: Request) {
     .from("group_members").select("group_id").eq("group_id", item.group_id).eq("user_id", user.id).maybeSingle();
   if (!mem) return NextResponse.json({ error: "not a member" }, { status: 403 });
 
+  // One reaction per user per drop. Clear whatever this user had on this item
+  // (this also self-heals any legacy multi-emoji rows), then:
+  //  - tapped their current emoji  → leaves it cleared (toggled off)
+  //  - tapped a different emoji     → sets the new one
   const { data: existing } = await admin
     .from("reactions").select("emoji")
-    .eq("item_id", item_id).eq("user_id", user.id).eq("emoji", emoji).maybeSingle();
-
-  if (existing) {
-    await admin.from("reactions").delete().eq("item_id", item_id).eq("user_id", user.id).eq("emoji", emoji);
+    .eq("item_id", item_id).eq("user_id", user.id);
+  const had = existing ?? [];
+  if (had.length) {
+    await admin.from("reactions").delete().eq("item_id", item_id).eq("user_id", user.id);
+  }
+  if (had.some((r) => r.emoji === emoji)) {
     return NextResponse.json({ active: false });
   }
   await admin.from("reactions").insert({ item_id, user_id: user.id, emoji });
