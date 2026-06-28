@@ -9,6 +9,7 @@ import NameSetter from "@/components/name-setter";
 import QueueButton from "@/components/queue-button";
 import GenderSetter from "@/components/gender-setter";
 import NotificationsBell from "@/components/notifications-bell";
+import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import GroupSwitcher from "@/components/group-switcher";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
@@ -89,6 +90,7 @@ export default async function Home() {
         <div className="font-m text-[11px] tracking-widest uppercase text-muted">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
         <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">what your <span className="text-vibe">people love</span></h1>
         <div className="mt-4"><VibeRead groupId={g.id} /></div>
+        <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
         {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}
 
