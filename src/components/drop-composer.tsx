@@ -21,7 +21,9 @@ type Member = { id: string; name: string | null };
 
 export default function DropComposer({ groupId, members = [] }: { groupId: string; members?: Member[] }) {
   const router = useRouter();
-  const [recTo, setRecTo] = useState("");          // "" = everyone, id = member, "__link__" = shareable link
+  // recMode: "everyone" (group-wide, attributed) | "people" (anonymous, one rec per id) | "link"
+  const [recMode, setRecMode] = useState<"everyone" | "people" | "link">("everyone");
+  const [recipients, setRecipients] = useState<Set<string>>(new Set());
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("watch");
   const [q, setQ] = useState("");
@@ -44,6 +46,13 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   function reset() {
     if (previewObjectUrl.current) { URL.revokeObjectURL(previewObjectUrl.current); previewObjectUrl.current = null; }
     setQ(""); setPicked(null); setResults(null); setMsg(""); setPhotoPath(null); setPhotoPreview(null); setPhotoDim(null);
+  }
+
+  function toggleRecipient(id: string) {
+    const next = new Set(recipients);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setRecipients(next);
+    setRecMode(next.size === 0 ? "everyone" : "people");
   }
 
   // Shrink large photos in the browser before upload: faster upload + avoids the
@@ -161,7 +170,6 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
     } else { setMsg("paste a link or type a title"); return; }
 
     setBusy(true); setMsg("");
-    const isMember = recTo && recTo !== "__link__";
     const res = await fetch("/api/items", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -170,14 +178,14 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         rating_value: ratingValue || null,
         rating_style: ratingValue ? ratingStyle : null,
         note: note.trim() || null,
-        rec_to: isMember ? recTo : null,
+        rec_to: recMode === "people" ? [...recipients] : [],
       }),
     });
     const j = await res.json();
     if (!res.ok) { setMsg(j.error || "couldn't drop"); setBusy(false); return; }
 
     // shareable link for someone not in the group → show the /r link to copy.
-    if (recTo === "__link__") {
+    if (recMode === "link") {
       const rr = await (await fetch("/api/recs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: j.id }) })).json();
       if (rr.url) { setShareUrl(window.location.origin + rr.url); setBusy(false); return; }
     }
@@ -185,6 +193,14 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
     router.push("/home");
     router.refresh();
   }
+
+  const recCount = recipients.size;
+  const oneName = recCount === 1 ? (members.find((m) => recipients.has(m.id))?.name || "them").toLowerCase() : "";
+  const dropLabel = busy ? "dropping…"
+    : recMode === "link" ? "drop + make a link"
+    : recMode === "people" && recCount === 1 ? `send it to ${oneName}`
+    : recMode === "people" && recCount > 1 ? `send it to ${recCount} people`
+    : "drop it to the group";
 
   const accent = TABS.find((t) => t.key === tab)!.color;
 
@@ -292,11 +308,14 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
       <div className="mt-4">
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setRecTo("")} className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recTo === "" ? "bg-ink text-paper" : "bg-surface"}`}>everyone</button>
+          <button onClick={() => { setRecMode("everyone"); setRecipients(new Set()); }}
+            className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recMode === "everyone" ? "bg-ink text-paper" : "bg-surface"}`}>everyone</button>
           {members.map((m) => (
-            <button key={m.id} onClick={() => setRecTo(m.id)} className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recTo === m.id ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
+            <button key={m.id} onClick={() => toggleRecipient(m.id)}
+              className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
           ))}
-          <button onClick={() => setRecTo("__link__")} className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recTo === "__link__" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
+          <button onClick={() => { setRecMode("link"); setRecipients(new Set()); }}
+            className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
         </div>
       </div>
 
@@ -314,7 +333,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         <button onClick={drop} disabled={busy}
           className="w-full mt-5 font-h font-extrabold text-[15px] text-white border-[2.5px] border-ink rounded-xl py-3.5 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
           style={{ background: accent }}>
-          {busy ? "dropping…" : recTo === "__link__" ? "drop + make a link" : recTo ? `send it to ${(members.find((m) => m.id === recTo)?.name || "them").toLowerCase()}` : "drop it to the group"}
+          {dropLabel}
         </button>
       )}
       {msg && <p className="font-m text-[12px] text-red text-center mt-3">{msg}</p>}

@@ -145,6 +145,7 @@ export type Database = {
       }
       items: {
         Row: {
+          anon: boolean
           created_at: string
           created_by: string
           data: Json
@@ -156,6 +157,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          anon?: boolean
           created_at?: string
           created_by: string
           data?: Json
@@ -167,6 +169,7 @@ export type Database = {
           type: string
         }
         Update: {
+          anon?: boolean
           created_at?: string
           created_by?: string
           data?: Json
