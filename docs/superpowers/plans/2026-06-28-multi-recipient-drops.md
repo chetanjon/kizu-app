@@ -284,7 +284,7 @@ Replace the existing author `<span>` (line 131):
 with:
 
 ```tsx
-                          {forYou ? (
+                          {forYou && it.anon ? (
                             <span className="font-m text-[11px] text-vibe">✦ someone left this for you</span>
                           ) : it.anon ? (
                             <span className="font-m text-[11px] text-muted">{mine ? "✦ you left this for someone" : "someone dropped this ✦"}</span>
@@ -292,6 +292,11 @@ with:
                             <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
                           )}
 ```
+
+> The recipient branch is gated on `it.anon` so that a claimed **link** drop
+> (`anon=false`, but `recs.to_user` = the claimer) stays attributed — it shows the
+> author's name, not "someone left this for you." Only genuinely anonymous targeted
+> drops get the recipient treatment.
 
 - [ ] **Step 6: Typecheck + lint**
 
