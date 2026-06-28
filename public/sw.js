@@ -21,7 +21,9 @@ self.addEventListener("push", (event) => {
       body: data.body || "",
       icon: "/icons/icon.png",
       badge: "/icons/icon.png",
-      data: { url: data.url || "/home" },
+      // `kind` lets the app find + clear these once the user opens kizu
+      // (e.g. drop pings are stale the moment you're looking at the feed).
+      data: { url: data.url || "/home", kind: data.kind || null },
     })
   );
 });

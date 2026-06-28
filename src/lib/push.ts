@@ -9,7 +9,9 @@ if (configured) {
   webpush.setVapidDetails(SUBJECT!, PUBLIC!, PRIVATE!);
 }
 
-export type PushPayload = { title: string; body?: string; url?: string };
+// `kind` is an optional marker echoed into the notification's data so the app
+// can find and auto-dismiss a class of notifications later (e.g. "drop").
+export type PushPayload = { title: string; body?: string; url?: string; kind?: string };
 
 // Send a web push to all of a user's subscriptions. No-ops if VAPID isn't
 // configured (safe to deploy before the env vars exist). Never throws.

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { createRec } from "@/lib/recs";
+import { sendPushToUser } from "@/lib/push";
 import { isDropPhotoPath } from "@/lib/drop-photos";
 import { NextResponse } from "next/server";
 
@@ -66,6 +67,26 @@ export async function POST(req: Request) {
       if (rec) recUrl = `/r/${rec.token}`;
     }
   }
+
+  // Cryptic, push-only ping to the rest of the group — the feed already shows
+  // the drop in-app, so we deliberately skip the in-app notifications table.
+  // Awaited (not fire-and-forget): serverless freezes work after the response.
+  // Skip the dropper, and the rec recipient (they get the specific rec ping).
+  const skip = new Set<string>([user.id]);
+  if (recUrl && rec_to) skip.add(rec_to);
+  const { data: members } = await admin
+    .from("group_members").select("user_id").eq("group_id", group_id);
+  await Promise.all(
+    (members ?? [])
+      .filter((m) => !skip.has(m.user_id))
+      .map((m) =>
+        sendPushToUser(admin, m.user_id, {
+          title: "someone dropped something.",
+          url: "/home",
+          kind: "drop",
+        }),
+      ),
+  );
 
   return NextResponse.json({ id: item.id, recUrl });
 }

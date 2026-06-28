@@ -92,7 +92,7 @@ Push back before implementing any of these:
 - ❌ **Fake friend activity.** Seeding is done HONESTLY via Kizu Curate (a clearly-labeled house persona), never by faking humans inside a trust circle.
 - ❌ Romance/dating as the headline. Taste-match % ships **platonic**; "kizu match" (opt-in, consenting, separate surface) is a deferred future layer with its own safety design.
 - ❌ Monetization of any kind (legal constraint — F-1 visa).
-- ❌ Push notifications by default. In-app, cryptic, earned-event notifications only to start; PWA push is a deliberate later decision, not an assumption.
+- ❌ Push notifications by default. In-app, cryptic, earned-event notifications only to start; PWA push is a deliberate later decision, not an assumption. **(Override, 2026-06-27: PWA push is now live, and we deliberately push — cryptic, push-only, no in-app row — on EVERY drop to the rest of the group, not just earned events. These auto-clear from the tray once the user opens kizu. Owner-approved exception to the "earned-event only" rule.)**
 
 If I ask for one of these, say so and ask me to confirm before building.
 
