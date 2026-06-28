@@ -97,19 +97,24 @@ git commit -m "feat(db): add items.anon flag for anonymous targeted drops"
 ### Task 2: API — set `anon` + fan out to N recipients
 
 **Files:**
-- Modify: `src/app/api/items/route.ts` (move recipient parsing above the insert; set `anon` on insert; loop `createRec`)
+- Modify: `src/app/api/items/route.ts` (parse recipients above the insert; set `anon` on insert; loop `createRec`; skip ALL rec recipients from the group push)
 
 **Interfaces:**
-- Consumes: existing `createRec(admin, fromUser, itemId, toUser)` → `{ token, recId } | null`; the `items.anon` column from Task 1.
-- Produces: `POST /api/items` reads `body.rec_to` as `string[]` (or legacy single string), inserts the item with `anon = (targets.length > 0)`, creates one rec per valid member target. Response shape unchanged: `{ id: string, recUrl: string | null }`.
+- Consumes: existing `createRec(admin, fromUser, itemId, toUser)` → `{ token, recId } | null`; existing `sendPushToUser`; the `items.anon` column from Task 1.
+- Produces: `POST /api/items` reads `body.rec_to` as `string[]` (or legacy single string), inserts the item with `anon = (targets.length > 0)`, creates one rec per valid member target, and excludes every actual rec recipient (plus the dropper) from the group "someone dropped something." push. Response shape unchanged: `{ id: string, recUrl: string | null }`.
+
+> **Context — this file changed on `main` since the spec was drafted.** After the rec
+> block, `/api/items` now fans out a cryptic, push-only `"someone dropped something."`
+> notification to the rest of the group (lines 71–95), using a `skip` set seeded with the
+> dropper and the single rec recipient. The push title is already anonymous (no sender
+> name) — keep it. Your job is to (a) make recipients an array, (b) set `anon`, and
+> (c) make the `skip` set exclude **all** rec recipients, not just one. **Do not delete or
+> alter the push fan-out otherwise.**
 
 - [ ] **Step 1: Parse recipients BEFORE the insert and set `anon`**
 
-In `src/app/api/items/route.ts`, the item insert currently sits at lines 42–55 and the rec
-block at 57–70. Restructure so recipients are known before the insert.
-
-First, immediately above the `const { data: item, error } = await admin.from("items").insert({...})`
-call (line 42), add:
+In `src/app/api/items/route.ts`, immediately above the
+`const { data: item, error } = await admin.from("items").insert({...})` call (line 43), add:
 
 ```ts
   // recipients of a targeted (anonymous) drop. Array now; tolerate the legacy
@@ -120,15 +125,16 @@ call (line 42), add:
   const targets = [...new Set(recTo)].filter((id) => id && id !== user.id);
 ```
 
-Then add `anon` to the insert object (it currently sets `group_id, created_by, type, rating_value, rating_style, note, data`):
+Then add `anon` to the insert object (currently `group_id, created_by, type, rating_value, rating_style, note, data`) — e.g. directly after `data,`:
 
 ```ts
       anon: targets.length > 0,
 ```
 
-- [ ] **Step 2: Replace the old single-recipient rec block with the fan-out loop**
+- [ ] **Step 2: Replace the single-recipient rec block with the fan-out loop**
 
-Replace the existing block (lines 57–70):
+Replace exactly the rec block (lines 58–69) — and ONLY this block; leave the push fan-out
+below it intact:
 
 ```ts
   // optional: drop this FOR a specific group member (rec-as-invite).
@@ -143,41 +149,62 @@ Replace the existing block (lines 57–70):
       if (rec) recUrl = `/r/${rec.token}`;
     }
   }
-
-  return NextResponse.json({ id: item.id, recUrl });
 ```
 
-with (note: `targets` is already computed in Step 1):
+with (collect the ids that actually got a rec, for the skip set in Step 3):
 
 ```ts
   // one rec per valid member target. Each gets its own queue row + cryptic ping
-  // (createRec handles all three). Non-members skip silently.
+  // (createRec handles all three). Non-members skip silently. Remember who was
+  // recced so they're left out of the generic group push below.
   let recUrl: string | null = null;
+  const recced: string[] = [];
   for (const id of targets) {
     const { data: rmem } = await admin
       .from("group_members").select("group_id")
       .eq("group_id", group_id).eq("user_id", id).maybeSingle();
     if (!rmem) continue;
     const rec = await createRec(admin, user.id, item.id, id);
-    if (rec && !recUrl) recUrl = `/r/${rec.token}`;
+    if (rec) {
+      recced.push(id);
+      if (!recUrl) recUrl = `/r/${rec.token}`;
+    }
   }
-
-  return NextResponse.json({ id: item.id, recUrl });
 ```
 
-- [ ] **Step 3: Typecheck + lint**
+- [ ] **Step 3: Skip every rec recipient from the group push**
+
+In the push fan-out, replace the two-line `skip` seed (lines 75–76):
+
+```ts
+  const skip = new Set<string>([user.id]);
+  if (recUrl && rec_to) skip.add(rec_to);
+```
+
+with:
+
+```ts
+  const skip = new Set<string>([user.id, ...recced]);
+```
+
+Leave the rest of the fan-out (members query, mute filter, `sendPushToUser` with title
+`"someone dropped something."`) unchanged.
+
+- [ ] **Step 4: Typecheck + lint**
 
 Run: `npx tsc --noEmit && npm run lint`
 Expected: no errors. (The `(x: unknown) => String(x)` annotation avoids an implicit-any.)
 
-- [ ] **Step 4: Manual verification — legacy shape + anon flag**
+- [ ] **Step 5: Manual verification — legacy shape + anon flag**
 
 Run `npm run dev`. With the **current** composer (still sends a single `rec_to` string), drop
 for one member. Confirm in Supabase: the new `items` row has `anon=true`; one `recs` row; one
-`queue_items` row (`source='rec'`); the member gets the "someone left something for you." ping.
-Then drop with no recipient ("everyone"): the new `items` row has `anon=false` and no rec.
+`queue_items` row (`source='rec'`); the recipient gets the "someone left something for you."
+ping and is NOT also sent the generic "someone dropped something." group push. Then drop with
+no recipient ("everyone"): the new `items` row has `anon=false`, no rec, and the rest of the
+group gets the "someone dropped something." push.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add src/app/api/items/route.ts
@@ -195,10 +222,15 @@ git commit -m "feat(api): set items.anon and fan out rec_to array to N recipient
 - Consumes: `items.anon` (Task 1), the user-scoped `supabase` client, `recs_select_mine` RLS, the existing `ids` array and `Item` type.
 - Produces: a `forMe: Set<string>`; each card's author line renders one of four ways — `for you` (recipient), `you left this for someone` (author of anon), `someone dropped this` (bystander of anon), or the real name (attributed group drop).
 
+> **Context — this file changed on `main`.** The items `.select()` now also embeds reactor
+> names (`reactions(emoji, user_id, users!reactions_user_id_fkey(name))`), and the card
+> builds an `rx` array + passes `canSeeWho={mine}` to `<Reactions>`. None of that interacts
+> with anonymity (reactor visibility is about who reacted, not who dropped). Touch only the
+> lines below; leave the reactions logic alone.
+
 - [ ] **Step 1: Add `anon` to the `Item` type**
 
-In `src/app/(app)/home/page.tsx`, the `Item` type (lines 20–29) currently lists
-`id, type, rating_value, note, data, created_by, users, reactions`. Add:
+In `src/app/(app)/home/page.tsx`, the `Item` type (lines 21–30), add a field (e.g. after `created_by: string;`):
 
 ```ts
   anon: boolean;
@@ -206,21 +238,21 @@ In `src/app/(app)/home/page.tsx`, the `Item` type (lines 20–29) currently list
 
 - [ ] **Step 2: Select `anon` in the items query**
 
-Change the items select (line 61) from:
+Change the items select (line 62) from:
 
 ```ts
-    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
+    .select("id, type, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
 ```
 
-to:
+to (insert `anon` right after `type,`):
 
 ```ts
-    .select("id, type, anon, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id)")
+    .select("id, type, anon, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
 ```
 
 - [ ] **Step 3: Add the "left for me" lookup**
 
-Immediately after the existing `const queued = new Set(...)` (line 73), add:
+Immediately after the existing `const queued = new Set(...)` (line 74), add:
 
 ```ts
   // which of these drops were left FOR me. recs_select_mine RLS returns only my
@@ -235,7 +267,7 @@ Immediately after the existing `const queued = new Set(...)` (line 73), add:
 
 - [ ] **Step 4: Compute `forYou` per card**
 
-In the `items.map((it) => { ... })` body, just after the existing `const mine = it.created_by === user.id;` (line 108), add:
+In the `items.map((it) => { ... })` body, just after the existing `const mine = it.created_by === user.id;` (line 110), add:
 
 ```ts
                 const forYou = forMe.has(it.id);
@@ -243,7 +275,7 @@ In the `items.map((it) => { ... })` body, just after the existing `const mine = 
 
 - [ ] **Step 5: Render the author line four ways**
 
-Replace the existing author `<span>` (line 125):
+Replace the existing author `<span>` (line 131):
 
 ```tsx
                           <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
