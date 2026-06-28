@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { SignOutButton } from "@/components/sign-out-button";
 import InstallPrompt from "@/components/install-prompt";
 import PushToggle from "@/components/push-toggle";
+import MuteDropsToggle from "@/components/mute-drops-toggle";
 
 // Phase 6 builds the real "taste read" here (behavioral read + recs-that-landed
 // + signature picks). Placeholder for now, but it owns sign-out.
@@ -10,7 +11,7 @@ export default async function You() {
   const user = await getCurrentUser();
   const supabase = await createClient();
   const { data: me } = user
-    ? await supabase.from("users").select("name").eq("id", user.id).maybeSingle()
+    ? await supabase.from("users").select("name, mute_drop_pings").eq("id", user.id).maybeSingle()
     : { data: null };
 
   return (
@@ -24,7 +25,11 @@ export default async function You() {
         yourself, and how often people take your word for it.
       </p>
       <p className="font-m text-[11px] text-muted mt-6">your read is coming.</p>
-      <div className="mt-8 max-w-[420px] flex flex-col gap-3"><InstallPrompt inline /><PushToggle /></div>
+      <div className="mt-8 max-w-[420px] flex flex-col gap-3">
+        <InstallPrompt inline />
+        <PushToggle />
+        <MuteDropsToggle initialMuted={me?.mute_drop_pings ?? false} />
+      </div>
       <div className="mt-10 pt-8 border-t-[2px] border-hair">
         <SignOutButton />
       </div>

@@ -76,11 +76,17 @@ export async function POST(req: Request) {
   if (recUrl && rec_to) skip.add(rec_to);
   const { data: members } = await admin
     .from("group_members").select("user_id").eq("group_id", group_id);
+  const recipients = (members ?? []).map((m) => m.user_id).filter((id) => !skip.has(id));
+  // honor per-user opt-out: anyone who muted drop pings is dropped from the fan-out.
+  const { data: muted } = recipients.length
+    ? await admin.from("users").select("id").eq("mute_drop_pings", true).in("id", recipients)
+    : { data: [] };
+  const mutedSet = new Set((muted ?? []).map((u) => u.id));
   await Promise.all(
-    (members ?? [])
-      .filter((m) => !skip.has(m.user_id))
-      .map((m) =>
-        sendPushToUser(admin, m.user_id, {
+    recipients
+      .filter((id) => !mutedSet.has(id))
+      .map((id) =>
+        sendPushToUser(admin, id, {
           title: "someone dropped something.",
           url: "/home",
           kind: "drop",
