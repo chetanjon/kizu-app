@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Read = {
+export type Read = {
   title: string;
   body: string;
   person_lines: { name: string; line: string }[];
@@ -10,8 +10,8 @@ type Read = {
   top_picks: { type: string; title: string }[];
 };
 
-export default function VibeRead({ groupId }: { groupId: string }) {
-  const [read, setRead] = useState<Read | null>(null);
+export default function VibeRead({ groupId, initial = null }: { groupId: string; initial?: Read | null }) {
+  const [read, setRead] = useState<Read | null>(initial);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -32,10 +32,10 @@ export default function VibeRead({ groupId }: { groupId: string }) {
 
   return (
     <>
-      <button onClick={generate} disabled={busy}
+      <button onClick={read ? () => setOpen(true) : generate} disabled={busy}
         className="inline-flex items-center gap-2 font-h font-bold text-sm text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F] disabled:opacity-70"
         style={{ background: "linear-gradient(120deg,#6B4BD6,#E0567E,#F0A23C)" }}>
-        ✦ {busy ? "reading the room…" : "read the group's vibe"}
+        ✦ {busy ? "reading the room…" : read ? "this week's read" : "read the group's vibe"}
       </button>
 
       {open && (

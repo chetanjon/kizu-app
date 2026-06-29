@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import VibeRead from "@/components/vibe-read";
+import VibeRead, { type Read as VibeReadData } from "@/components/vibe-read";
 import Reactions from "@/components/reactions";
 import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
@@ -94,6 +94,12 @@ export default async function Home() {
   // with to_user = you, so reading recs.to_user here would wrongly tag those.
   const forMe = new Set((qRaw ?? []).filter((q) => q.source_rec_id).map((q) => q.item_id as string));
 
+  // the group's latest vibe read (the weekly cron writes these) → surfaced on the
+  // button so people can open the week's read without regenerating it.
+  const { data: latestRead } = await createAdminClient()
+    .from("vibe_reads").select("card_data")
+    .eq("group_id", g.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
+
   return (
     <div className="min-h-screen bg-paper">
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 border-b-[2px] border-ink bg-paper/85 backdrop-blur">
@@ -110,7 +116,7 @@ export default async function Home() {
       <main className="max-w-[1100px] mx-auto px-6 py-8">
         <div className="font-m text-[11px] tracking-widest uppercase text-muted">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
         <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">what your <span className="text-vibe">people love</span></h1>
-        <div className="mt-4"><VibeRead groupId={g.id} /></div>
+        <div className="mt-4"><VibeRead groupId={g.id} initial={(latestRead?.card_data as VibeReadData) ?? null} /></div>
         <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
         {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}

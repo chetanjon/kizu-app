@@ -21,6 +21,15 @@ export type QRow = {
   told?: string | null;         // set after a verdict: dropper who'll hear "it landed"
 };
 
+// "easiest win" = least friction to act on right now: a song plays instantly; a
+// movie you already have is one tap; one you don't takes hunting; going out is
+// the most effort. The single highest scorer in "want to" gets an ↑ up next tag.
+function easeScore(r: QRow): number {
+  let s = r.type === "listen" ? 3 : r.type === "watch" ? 2 : 1;
+  if (r.type === "watch" && r.availability) s += 1.5; // you have it → easy win
+  return s;
+}
+
 type Filter = "all" | DropType;
 const CHIPS: { key: Filter; label: string }[] = [
   { key: "all", label: "all" },
@@ -62,6 +71,10 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
   const done = shown.filter((r) => r.done);
   // only the first song shown carries the "pick your music app" prompt.
   const firstListenKey = [...want, ...done].find((r) => r.type === "listen")?.key;
+  // the single easiest win among things you still want to get to.
+  const upNextKey = want.length
+    ? want.reduce((best, r) => (easeScore(r) > easeScore(best) ? r : best)).key
+    : null;
 
   const Row = ({ r }: { r: QRow }) => {
     const t = TYPE[r.type];
@@ -73,6 +86,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
         </div>
         <div className="min-w-0">
           <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: t.color }}>{t.label}</span>
+          {r.key === upNextKey && <span className="ml-1.5 inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 align-middle">↑ up next</span>}
           <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
           <div className="font-m text-[9px] text-muted truncate">{[sub(r), r.who ? `· ${r.who.toLowerCase()}` : ""].filter(Boolean).join(" ")}</div>
           <ItemActions actions={r.availability ? [r.availability] : actionsFor(r, musicApp, r.key === firstListenKey)} className="mt-1.5" />
