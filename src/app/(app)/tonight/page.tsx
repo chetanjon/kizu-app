@@ -5,10 +5,11 @@ import TonightDealer, { type Cand } from "@/components/tonight-dealer";
 import type { DropType } from "@/lib/item-render";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
+import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 
 type ItemRow = {
   id: string; type: DropType; data: Record<string, unknown>; note: string | null;
-  anon: boolean; created_by: string; users: { name: string | null } | null;
+  rating_value: string | null; anon: boolean; created_by: string; users: { name: string | null } | null;
 };
 type CurateRow = {
   id: string; type: DropType; moment: string; their_words: string | null;
@@ -29,7 +30,7 @@ export default async function Tonight() {
   // pool = your people's drops (not your own) + the curated world.
   const { data: iRaw } = await supabase
     .from("items")
-    .select("id, type, data, note, anon, created_by, users!items_created_by_fkey(name)")
+    .select("id, type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)")
     .eq("group_id", active.group_id)
     .neq("created_by", user.id)
     .order("created_at", { ascending: false })
@@ -48,13 +49,16 @@ export default async function Tonight() {
   const queuedItems = new Set((qRaw ?? []).map((q) => q.item_id).filter(Boolean));
   const queuedCurate = new Set((qRaw ?? []).map((q) => q.curate_drop_id).filter(Boolean));
 
-  await signPhotos(createAdminClient(), (iRaw ?? []) as unknown as ItemRow[], (it) => (it as { data?: Record<string, unknown> }).data);
+  const itemRows = (iRaw ?? []) as unknown as ItemRow[];
+  await signPhotos(createAdminClient(), itemRows, (it) => (it as { data?: Record<string, unknown> }).data);
+  const proofMap = await fetchPositiveVerdicts(createAdminClient(), itemRows.map((i) => i.id));
 
-  const fromItems: Cand[] = ((iRaw ?? []) as unknown as ItemRow[])
+  const fromItems: Cand[] = itemRows
     .filter((i) => !queuedItems.has(i.id))
     .map((i) => ({
       key: `i:${i.id}`, itemId: i.id, type: i.type, data: i.data ?? {},
       note: i.note, who: i.anon ? null : (i.users?.name ?? null),
+      rating: i.rating_value, proof: proofLine(proofMap.get(i.id), [i.created_by, user.id]),
     }));
 
   const fromCurate: Cand[] = ((cRaw ?? []) as unknown as CurateRow[])

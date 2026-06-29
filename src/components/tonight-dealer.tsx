@@ -14,6 +14,8 @@ export type Cand = {
   note: string | null;
   who: string | null;
   moment?: string;
+  rating?: string | null;        // the dropper's own take
+  proof?: string | null;         // who else in the group is into it
 };
 
 type Lens = "all" | DropType;
@@ -109,9 +111,11 @@ export default function TonightDealer({ pool }: { pool: Cand[] }) {
           <div className="font-m text-[11px] text-muted mt-2">
             {current.curateDropId ? "✦ kizu curate" : "from your people"}
             {current.who ? ` · ${current.who.toLowerCase()}` : ""}
+            {current.rating ? ` · rated ${current.rating}` : ""}
             {current.moment ? ` · for ${current.moment}` : ""}
           </div>
           {current.note && <p className="text-sm mt-2 leading-snug italic">&ldquo;{current.note}&rdquo;</p>}
+          {current.proof && <div className="font-m text-[12px] font-bold text-go mt-2">♥ {current.proof}</div>}
           <ItemActions actions={actionsFor(current)} className="mt-3" />
 
           <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">

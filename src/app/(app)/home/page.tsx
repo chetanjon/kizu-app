@@ -15,6 +15,7 @@ import GroupSwitcher from "@/components/group-switcher";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
+import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 
@@ -69,6 +70,8 @@ export default async function Home() {
   await signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>);
 
   const ids = items.map((i) => i.id);
+  // who in the group is into each drop (loved/liked) — admin: verdicts are owner-scoped.
+  const proofMap = await fetchPositiveVerdicts(createAdminClient(), ids);
   const { data: qRaw } = await supabase
     .from("queue_items")
     .select("item_id")
@@ -121,6 +124,7 @@ export default async function Home() {
                 const cover = img(it);
                 const mine = it.created_by === user.id;
                 const forYou = forMe.has(it.id);
+                const proof = proofLine(proofMap.get(it.id), [it.created_by, user.id]);
                 // Reactor names only reach the client for the dropper's own drops.
                 const rx = mine
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
@@ -139,6 +143,7 @@ export default async function Home() {
                       <div className="font-h font-extrabold text-lg tracking-[-0.02em] mt-2 leading-tight">{title(it)}</div>
                       {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
+                      {proof && <div className="font-m text-[11px] text-go mt-2">♥ {proof}</div>}
                       <ItemActions actions={actionsFor(it)} className="mt-2.5" />
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
