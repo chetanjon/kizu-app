@@ -324,16 +324,16 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
         </div>
 
-        {/* anonymous — group-wide only. a targeted/link drop is always attributed. */}
-        {recMode === "everyone" && (
-          <div className="mt-3">
-            <button onClick={() => setAnon(!anon)}
-              className={`inline-flex items-center gap-1.5 font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${anon ? "bg-ink text-paper" : "bg-surface"}`}>
-              🕶 {anon ? "anonymous · on" : "drop without my name"}
-            </button>
-            {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
-          </div>
-        )}
+        {/* anonymous is a group-wide modifier — turning it ON implies "everyone"
+            (and clears any recipients), so you never pick everyone separately.
+            picking a person or the link turns it back off (targeted = attributed). */}
+        <div className="mt-3">
+          <button onClick={() => { const next = !anon; setAnon(next); if (next) { setRecMode("everyone"); setRecipients(new Set()); } }}
+            className={`inline-flex items-center gap-1.5 font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${anon ? "bg-ink text-paper" : "bg-surface"}`}>
+            🕶 {anon ? "anonymous · on" : "drop without my name"}
+          </button>
+          {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
+        </div>
       </div>
 
       {shareUrl ? (
