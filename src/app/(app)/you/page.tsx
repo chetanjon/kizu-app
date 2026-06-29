@@ -8,6 +8,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import InstallPrompt from "@/components/install-prompt";
 import PushToggle from "@/components/push-toggle";
 import MuteDropsToggle from "@/components/mute-drops-toggle";
+import ServicesSetter from "@/components/services-setter";
 import { redirect } from "next/navigation";
 
 const MIN_SIGNALS = 5; // keep in sync with /api/read
@@ -20,7 +21,7 @@ export default async function You() {
   const admin = createAdminClient();
 
   const [{ data: me }, signals, matches, { data: cachedRow }] = await Promise.all([
-    admin.from("users").select("name, mute_drop_pings").eq("id", user.id).maybeSingle(),
+    admin.from("users").select("name, mute_drop_pings, services").eq("id", user.id).maybeSingle(),
     getUserSignals(admin, user.id),
     getTasteMatches(admin, user.id),
     admin.from("taste_reads").select("card_data").eq("user_id", user.id)
@@ -105,6 +106,7 @@ export default async function You() {
       {/* settings + sign out (unchanged) */}
       <div className="mt-12 max-w-[420px] flex flex-col gap-3">
         <InstallPrompt inline />
+        <ServicesSetter initial={me?.services ?? []} />
         <PushToggle />
         <MuteDropsToggle initialMuted={me?.mute_drop_pings ?? false} />
       </div>

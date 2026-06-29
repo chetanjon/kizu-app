@@ -6,6 +6,8 @@ import QueueClient, { type QRow } from "@/components/queue-client";
 import type { DropType } from "@/lib/item-render";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
+import { availabilityMap } from "@/lib/providers";
+import { cleanServices } from "@/lib/services";
 
 type Raw = {
   item_id: string | null;
@@ -46,6 +48,14 @@ export default async function Queue() {
 
   await signPhotos(createAdminClient(), (raw ?? []) as unknown as Raw[], (r) => (r as { items?: { data?: Record<string, unknown> } }).items?.data);
 
+  const { data: me } = await supabase.from("users").select("services").eq("id", user.id).maybeSingle();
+  const availMap = await availabilityMap(
+    ((raw ?? []) as unknown as Raw[])
+      .filter((r) => r.items && r.item_id)
+      .map((r) => ({ id: r.item_id!, type: r.items!.type, data: r.items!.data })),
+    cleanServices(me?.services),
+  );
+
   const rows: QRow[] = ((raw ?? []) as unknown as Raw[])
     .map((r): QRow | null => {
       if (r.items) {
@@ -60,6 +70,7 @@ export default async function Queue() {
           done: !!r.done_at,
           who: r.items.anon ? null : (r.items.users?.name ?? null),
           mine: r.items.created_by === user.id,
+          availability: availMap.get(r.item_id!) ?? null,
         };
       }
       if (r.curate_drops) {

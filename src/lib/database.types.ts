@@ -48,6 +48,7 @@ export type Database = {
           id: string
           mute_drop_pings: boolean
           name: string | null
+          services: string[]
           timezone: string
         }
         Insert: {
@@ -58,6 +59,7 @@ export type Database = {
           id: string
           mute_drop_pings?: boolean
           name?: string | null
+          services?: string[]
           timezone?: string
         }
         Update: {
@@ -68,6 +70,7 @@ export type Database = {
           id?: string
           mute_drop_pings?: boolean
           name?: string | null
+          services?: string[]
           timezone?: string
         }
         Relationships: []

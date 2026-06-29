@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
-import { actionsFor } from "@/lib/item-actions";
+import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 
 export type QRow = {
@@ -17,6 +17,7 @@ export type QRow = {
   done: boolean;
   who: string | null;          // who dropped / curated it
   mine: boolean;
+  availability?: Action | null; // movie/tv: "you have it" / "on netflix" (server-resolved)
 };
 
 type Filter = "all" | DropType;
@@ -68,7 +69,7 @@ export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedY
           <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: t.color }}>{t.label}</span>
           <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
           <div className="font-m text-[9px] text-muted truncate">{[sub(r), r.who ? `· ${r.who.toLowerCase()}` : ""].filter(Boolean).join(" ")}</div>
-          <ItemActions actions={actionsFor(r)} className="mt-1.5" />
+          <ItemActions actions={r.availability ? [r.availability] : actionsFor(r)} className="mt-1.5" />
         </div>
         <div className="ml-auto flex-none">
           {r.done ? (

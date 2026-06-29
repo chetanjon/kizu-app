@@ -6,6 +6,8 @@ import type { DropType } from "@/lib/item-render";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
+import { availabilityMap } from "@/lib/providers";
+import { cleanServices } from "@/lib/services";
 
 type ItemRow = {
   id: string; type: DropType; data: Record<string, unknown>; note: string | null;
@@ -52,6 +54,11 @@ export default async function Tonight() {
   const itemRows = (iRaw ?? []) as unknown as ItemRow[];
   await signPhotos(createAdminClient(), itemRows, (it) => (it as { data?: Record<string, unknown> }).data);
   const proofMap = await fetchPositiveVerdicts(createAdminClient(), itemRows.map((i) => i.id));
+  const { data: me } = await supabase.from("users").select("services").eq("id", user.id).maybeSingle();
+  const availMap = await availabilityMap(
+    itemRows.map((i) => ({ id: i.id, type: i.type, data: i.data })),
+    cleanServices(me?.services),
+  );
 
   const fromItems: Cand[] = itemRows
     .filter((i) => !queuedItems.has(i.id))
@@ -59,6 +66,7 @@ export default async function Tonight() {
       key: `i:${i.id}`, itemId: i.id, type: i.type, data: i.data ?? {},
       note: i.note, who: i.anon ? null : (i.users?.name ?? null),
       rating: i.rating_value, proof: proofLine(proofMap.get(i.id), [i.created_by, user.id]),
+      availability: availMap.get(i.id) ?? null,
     }));
 
   const fromCurate: Cand[] = ((cRaw ?? []) as unknown as CurateRow[])

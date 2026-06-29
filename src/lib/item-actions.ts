@@ -5,7 +5,7 @@
 
 import type { DropType } from "@/lib/item-render";
 
-export type Action = { label: string; url: string; kind: "play" | "watch" | "map" };
+export type Action = { label: string; url: string; kind: "play" | "watch" | "map" | "have" };
 
 type ActItem = { type: DropType; data: Record<string, unknown> | null | undefined };
 

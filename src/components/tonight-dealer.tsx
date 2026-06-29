@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
-import { actionsFor } from "@/lib/item-actions";
+import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 
 export type Cand = {
@@ -16,6 +16,7 @@ export type Cand = {
   moment?: string;
   rating?: string | null;        // the dropper's own take
   proof?: string | null;         // who else in the group is into it
+  availability?: Action | null;  // movie/tv: "you have it" / "on netflix" (server-resolved)
 };
 
 type Lens = "all" | DropType;
@@ -116,7 +117,7 @@ export default function TonightDealer({ pool }: { pool: Cand[] }) {
           </div>
           {current.note && <p className="text-sm mt-2 leading-snug italic">&ldquo;{current.note}&rdquo;</p>}
           {current.proof && <div className="font-m text-[12px] font-bold text-go mt-2">♥ {current.proof}</div>}
-          <ItemActions actions={actionsFor(current)} className="mt-3" />
+          <ItemActions actions={current.availability ? [current.availability] : actionsFor(current)} className="mt-3" />
 
           <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
             <button onClick={() => queueIt(current)} disabled={isQueued}
