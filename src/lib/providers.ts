@@ -3,7 +3,7 @@
 // stays fresh without a backfill, and works for every existing drop immediately.
 
 import type { Action } from "@/lib/item-actions";
-import { SERVICES } from "@/lib/services";
+import { SERVICES, serviceWatchUrl } from "@/lib/services";
 
 const BASE = "https://api.themoviedb.org/3";
 const REGION = "US";
@@ -31,12 +31,15 @@ const watchPage = (mediaType: "movie" | "tv", id: number | string) =>
   `https://www.themoviedb.org/${mediaType}/${id}/watch`;
 
 /** A "you have it" pill ONLY when the title streams on a service the viewer has.
- *  Every other case returns null → the surface keeps the plain "where to watch". */
-function youHaveIt(flatrate: number[] | null, mine: string[], url: string): Action | null {
+ *  Links straight INTO that service (search the title) when we have a reliable
+ *  URL, else the TMDB watch page. Returns null → surface keeps "where to watch". */
+function youHaveIt(flatrate: number[] | null, mine: string[], fallbackUrl: string, title: string | null): Action | null {
   if (!flatrate?.length) return null;
   const flat = new Set(flatrate);
   const yours = SERVICES.find((s) => mine.includes(s.slug) && s.ids.some((id) => flat.has(id)));
-  return yours ? { label: `${yours.name.toLowerCase()} · you have it`, url, kind: "have" } : null;
+  if (!yours) return null;
+  const direct = title ? serviceWatchUrl(yours.slug, title) : null;
+  return { label: `${yours.name.toLowerCase()} · you have it`, url: direct ?? fallbackUrl, kind: "have" };
 }
 
 /** For a set of (id, data) watch rows → a map of item id → availability pill.
@@ -51,7 +54,8 @@ export async function availabilityMap(
       const media = (typeof r.data?.media_type === "string" && r.data.media_type === "tv") ? "tv" : "movie";
       const tmdbId = r.data!.tmdb_id as number | string;
       const flatrate = await fetchFlatrate(media, tmdbId);
-      const a = youHaveIt(flatrate, mine, watchPage(media, tmdbId));
+      const title = typeof r.data?.title === "string" ? r.data.title : null;
+      const a = youHaveIt(flatrate, mine, watchPage(media, tmdbId), title);
       return a ? ([r.id, a] as const) : null;
     }),
   );
