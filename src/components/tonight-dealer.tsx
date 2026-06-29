@@ -35,7 +35,7 @@ function dealOrder<T>(arr: T[], seed: number): T[] {
   return [...arr.slice(s), ...arr.slice(0, s)];
 }
 
-export default function TonightDealer({ pool }: { pool: Cand[] }) {
+export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[]; musicApp?: string | null }) {
   const [lens, setLens] = useState<Lens | null>(null);
   const [idx, setIdx] = useState(0);
   const [queuedKey, setQueuedKey] = useState<string | null>(null);
@@ -117,7 +117,7 @@ export default function TonightDealer({ pool }: { pool: Cand[] }) {
           </div>
           {current.note && <p className="text-sm mt-2 leading-snug italic">&ldquo;{current.note}&rdquo;</p>}
           {current.proof && <div className="font-m text-[12px] font-bold text-go mt-2">♥ {current.proof}</div>}
-          <ItemActions actions={current.availability ? [current.availability] : actionsFor(current)} className="mt-3" />
+          <ItemActions actions={current.availability ? [current.availability] : actionsFor(current, musicApp)} className="mt-3" />
 
           <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
             <button onClick={() => queueIt(current)} disabled={isQueued}

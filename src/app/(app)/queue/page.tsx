@@ -48,7 +48,7 @@ export default async function Queue() {
 
   await signPhotos(createAdminClient(), (raw ?? []) as unknown as Raw[], (r) => (r as { items?: { data?: Record<string, unknown> } }).items?.data);
 
-  const { data: me } = await supabase.from("users").select("services").eq("id", user.id).maybeSingle();
+  const { data: me } = await supabase.from("users").select("services, music_app").eq("id", user.id).maybeSingle();
   const availMap = await availabilityMap(
     ((raw ?? []) as unknown as Raw[])
       .filter((r) => r.items && r.item_id)
@@ -106,7 +106,7 @@ export default async function Queue() {
           <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">go to home</Link>
         </div>
       ) : (
-        <QueueClient rows={rows} landedYou={landedCount} />
+        <QueueClient rows={rows} landedYou={landedCount} musicApp={me?.music_app ?? null} />
       )}
     </main>
   );

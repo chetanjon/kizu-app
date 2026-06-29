@@ -33,7 +33,7 @@ const VERDICTS: { key: "loved" | "liked" | "meh"; label: string }[] = [
   { key: "meh", label: "meh" },
 ];
 
-export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedYou: number }) {
+export default function QueueClient({ rows, landedYou, musicApp = null }: { rows: QRow[]; landedYou: number; musicApp?: string | null }) {
   const [state, setState] = useState<QRow[]>(rows);
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -69,7 +69,7 @@ export default function QueueClient({ rows, landedYou }: { rows: QRow[]; landedY
           <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: t.color }}>{t.label}</span>
           <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
           <div className="font-m text-[9px] text-muted truncate">{[sub(r), r.who ? `· ${r.who.toLowerCase()}` : ""].filter(Boolean).join(" ")}</div>
-          <ItemActions actions={r.availability ? [r.availability] : actionsFor(r)} className="mt-1.5" />
+          <ItemActions actions={r.availability ? [r.availability] : actionsFor(r, musicApp)} className="mt-1.5" />
         </div>
         <div className="ml-auto flex-none">
           {r.done ? (

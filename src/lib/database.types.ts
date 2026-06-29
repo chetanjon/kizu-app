@@ -46,6 +46,7 @@ export type Database = {
           email: string
           gender: string | null
           id: string
+          music_app: string | null
           mute_drop_pings: boolean
           name: string | null
           services: string[]
@@ -57,6 +58,7 @@ export type Database = {
           email: string
           gender?: string | null
           id: string
+          music_app?: string | null
           mute_drop_pings?: boolean
           name?: string | null
           services?: string[]
@@ -68,6 +70,7 @@ export type Database = {
           email?: string
           gender?: string | null
           id?: string
+          music_app?: string | null
           mute_drop_pings?: boolean
           name?: string | null
           services?: string[]

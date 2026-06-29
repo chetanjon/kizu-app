@@ -42,7 +42,7 @@ export default async function Home() {
   // (getMemberships is request-memoized, so this reuses the layout's call.)
   const [memberships, meRes, cRes, cqRes] = await Promise.all([
     getMemberships(user.id),
-    supabase.from("users").select("name, gender").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("name, gender, music_app").eq("id", user.id).maybeSingle(),
     supabase
       .from("curate_drops")
       .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
@@ -57,6 +57,7 @@ export default async function Home() {
   const g = active.groups!;
   const myName = meRes.data?.name ?? null;
   const myGender = meRes.data?.gender ?? null;
+  const myMusicApp = meRes.data?.music_app ?? null;
   const curate = ((cRes.data ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
   const queuedCurate = (cqRes.data ?? []).map((r) => r.curate_drop_id as string);
 
@@ -144,7 +145,7 @@ export default async function Home() {
                       {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
                       {proof && <div className="font-m text-[11px] text-go mt-2">♥ {proof}</div>}
-                      <ItemActions actions={actionsFor(it)} className="mt-2.5" />
+                      <ItemActions actions={actionsFor(it, myMusicApp)} className="mt-2.5" />
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
                           {/* attributed drops show who dropped it; a targeted drop adds

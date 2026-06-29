@@ -54,7 +54,7 @@ export default async function Tonight() {
   const itemRows = (iRaw ?? []) as unknown as ItemRow[];
   await signPhotos(createAdminClient(), itemRows, (it) => (it as { data?: Record<string, unknown> }).data);
   const proofMap = await fetchPositiveVerdicts(createAdminClient(), itemRows.map((i) => i.id));
-  const { data: me } = await supabase.from("users").select("services").eq("id", user.id).maybeSingle();
+  const { data: me } = await supabase.from("users").select("services, music_app").eq("id", user.id).maybeSingle();
   const availMap = await availabilityMap(
     itemRows.map((i) => ({ id: i.id, type: i.type, data: i.data })),
     cleanServices(me?.services),
@@ -82,7 +82,7 @@ export default async function Tonight() {
     <main className="max-w-[480px] mx-auto px-6 py-10">
       <div className="font-m text-[11px] tracking-widest uppercase text-muted">{new Date().toLocaleDateString(undefined, { weekday: "long" })}</div>
       <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1 leading-[1.02]">what are you<br />up for <span className="text-vibe">tonight?</span></h1>
-      <TonightDealer pool={pool} />
+      <TonightDealer pool={pool} musicApp={me?.music_app ?? null} />
     </main>
   );
 }

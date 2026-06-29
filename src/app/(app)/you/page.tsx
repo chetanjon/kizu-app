@@ -9,19 +9,22 @@ import InstallPrompt from "@/components/install-prompt";
 import PushToggle from "@/components/push-toggle";
 import MuteDropsToggle from "@/components/mute-drops-toggle";
 import ServicesSetter from "@/components/services-setter";
+import MusicAppSetter from "@/components/music-app-setter";
+import { cleanMusicApp } from "@/lib/music-apps";
 import { redirect } from "next/navigation";
 
 const MIN_SIGNALS = 5; // keep in sync with /api/read
 
 type Read = { signature: string; tags: string[] };
 
-export default async function You() {
+export default async function You({ searchParams }: { searchParams: Promise<{ music?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const admin = createAdminClient();
+  const incoming = cleanMusicApp((await searchParams)?.music);
 
   const [{ data: me }, signals, matches, { data: cachedRow }] = await Promise.all([
-    admin.from("users").select("name, mute_drop_pings, services").eq("id", user.id).maybeSingle(),
+    admin.from("users").select("name, mute_drop_pings, services, music_app").eq("id", user.id).maybeSingle(),
     getUserSignals(admin, user.id),
     getTasteMatches(admin, user.id),
     admin.from("taste_reads").select("card_data").eq("user_id", user.id)
@@ -107,6 +110,7 @@ export default async function You() {
       <div className="mt-12 max-w-[420px] flex flex-col gap-3">
         <InstallPrompt inline />
         <ServicesSetter initial={me?.services ?? []} />
+        <MusicAppSetter initial={me?.music_app ?? null} incoming={incoming} />
         <PushToggle />
         <MuteDropsToggle initialMuted={me?.mute_drop_pings ?? false} />
       </div>

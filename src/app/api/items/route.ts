@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { createRec } from "@/lib/recs";
 import { sendPushToUser } from "@/lib/push";
 import { isDropPhotoPath } from "@/lib/drop-photos";
+import { resolveListen } from "@/lib/odesli";
 import { NextResponse } from "next/server";
 
 // Create a drop. Authorize via getUser, verify group membership, write via admin.
@@ -37,6 +38,24 @@ export async function POST(req: Request) {
     const p = data["photo_url"];
     if (p != null && !(isDropPhotoPath(p) && p.startsWith(`groups/${group_id}/`))) {
       return NextResponse.json({ error: "bad photo" }, { status: 400 });
+    }
+  }
+
+  // Music: a song dropped by typed title only carries Apple (iTunes search gives
+  // nothing else). Enrich it through Odesli so the dropper's pick opens in every
+  // app — and "your music app" has a link to use. Pasted links already arrive
+  // enriched (they came through Odesli), so the !spotify guard skips them.
+  if (type === "listen") {
+    const pl = (data.platform_links && typeof data.platform_links === "object")
+      ? (data.platform_links as Record<string, string>) : {};
+    const seed = (typeof data.source_url === "string" && data.source_url) || pl.apple || pl.spotify || null;
+    if (!pl.spotify && seed) {
+      const enriched = await resolveListen(seed);
+      if (enriched && Object.keys(enriched.platform_links).length) {
+        // keep the original links, add the ones Odesli found.
+        data.platform_links = { ...enriched.platform_links, ...pl };
+        if (!data.odesli_url) data.odesli_url = enriched.odesli_url;
+      }
     }
   }
 
