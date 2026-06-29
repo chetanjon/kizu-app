@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (mem.length === 0) redirect("/groups/new");
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen">
       <div className="pb-24">{children}</div>
       <InstallPrompt />
       <AppNav gender={profile.gender} />

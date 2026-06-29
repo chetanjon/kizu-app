@@ -12,7 +12,7 @@ import NotificationsBell from "@/components/notifications-bell";
 import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import GroupSwitcher from "@/components/group-switcher";
-import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, detail, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
@@ -101,36 +101,41 @@ export default async function Home() {
     .eq("group_id", g.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
 
   return (
-    <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 border-b-[2px] border-ink bg-paper/85 backdrop-blur">
+    <div className="min-h-screen pb-28">
+      <header className="sticky top-0 z-20 flex items-center justify-between px-5 h-16 border-b border-hair bg-paper/70 backdrop-blur-md">
+        <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
         <div className="flex items-center gap-3">
-          <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
           <GroupSwitcher
               groups={memberships.map((m) => ({ id: m.groups!.id, name: m.groups!.name, color: m.groups!.color }))}
               activeId={g.id}
             />
+          <NotificationsBell />
         </div>
-        <NotificationsBell />
       </header>
 
-      <main className="max-w-[1100px] mx-auto px-6 py-8">
-        <div className="font-m text-[11px] tracking-widest uppercase text-muted">{g.name} · invite code <span className="text-ink font-bold">{g.invite_code}</span></div>
-        <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">what your <span className="text-vibe">people love</span></h1>
-        <div className="mt-4"><VibeRead groupId={g.id} initial={(latestRead?.card_data as VibeReadData) ?? null} /></div>
+      <main className="max-w-[600px] mx-auto px-5 py-6">
+        {/* the aurora read — the one showstopper, framed in cream on the dark stage */}
+        <VibeRead groupId={g.id} initial={(latestRead?.card_data as VibeReadData) ?? null} />
         <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
         {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}
 
         {items.length === 0 ? (
-          <div className="mt-8 border-[2px] border-dashed border-ink rounded-2xl p-14 text-center">
+          <div className="mt-8 border border-dashed border-hair rounded-2xl p-14 text-center">
             <div className="font-h text-xl font-bold">nothing here yet.</div>
             <p className="text-muted text-sm mt-1">drop the first movie, song, or place you love.</p>
-            <Link href="/drop" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">＋ drop something</Link>
+            <Link href="/drop" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#0D0B09]">＋ drop something</Link>
             <p className="text-muted text-xs mt-6 font-m">share to invite: send <b>/join/{g.invite_code}</b></p>
           </div>
         ) : (
           <>
-            <div className="mt-7 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-5">
+            <div className="flex items-center justify-between mt-7 mb-1">
+              <div className="flex items-center gap-2 font-h font-extrabold text-[17px] tracking-[-0.02em]">
+                <span className="text-vibe-2">✦</span> your people
+              </div>
+              <span className="font-m text-[12px] font-bold text-muted">{items.length} fresh</span>
+            </div>
+            <div className="flex flex-col">
               {items.map((it) => {
                 const t = TYPE[it.type];
                 const cover = img(it);
@@ -141,38 +146,46 @@ export default async function Home() {
                 const rx = mine
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
                   : it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id }));
+                const dropperName = (it.users?.name || "someone").toLowerCase();
+                const initial = (it.users?.name || "?").trim().charAt(0).toUpperCase() || "?";
                 return (
-                  <article key={it.id} className="bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_#14110F]">
-                    <div className="aspect-[4/3] relative border-b-[2.5px] border-ink overflow-hidden rounded-t-[13px]" style={{ background: cover ? undefined : t.color }}>
+                  // cinematic-brutalist row: cover art framed in cream with a hard
+                  // COLORED shadow tinted to its type (the signature move). type rides
+                  // a saturated bar above the title; quiet meta + actions below.
+                  <article key={it.id} className="flex gap-4 py-4 border-t border-hair first:border-t-0">
+                    <div className={`relative w-[80px] h-[106px] flex-none rounded-[10px] border-[2.5px] border-frame overflow-hidden ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" loading="lazy" decoding="async"
-                          width={Number((it.data as Record<string, unknown>)?.["photo_w"]) || undefined}
-                          height={Number((it.data as Record<string, unknown>)?.["photo_h"]) || undefined}
                           className="w-full h-full object-cover" />}
-                      {it.rating_value && <span className="absolute left-2.5 bottom-2.5 bg-ink text-white font-m text-xs font-bold rounded-md px-2 py-0.5">{it.rating_value}</span>}
+                      {it.rating_value && <span className="glass absolute top-1.5 right-1.5 font-h text-[10px] font-extrabold text-white rounded-md px-1.5 py-0.5 border border-white/40">★ {it.rating_value}</span>}
                     </div>
-                    <div className="p-3.5">
-                      <span className="inline-block font-m text-[9px] font-bold tracking-wide border-[2px] border-ink rounded-md px-2 py-0.5" style={{ background: t.color, color: "#fff" }}>{t.label}</span>
-                      <div className="font-h font-extrabold text-lg tracking-[-0.02em] mt-2 leading-tight">{title(it)}</div>
-                      {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
-                      {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
-                      {proof && <div className="font-m text-[11px] text-go mt-2">♥ {proof}</div>}
-                      <ItemActions actions={availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, it.id === firstListenId)} className="mt-2.5" />
-                      <div className="mt-3 pt-3 border-t-[2px] border-hair">
-                        <div className="flex items-center justify-between">
-                          {/* attributed drops show who dropped it; a targeted drop adds
-                              a "for you" tag on the recipient's card (option 3). an
-                              ANON drop hides the dropper from everyone — the dropper
-                              themselves sees "you · anon" so they know it posted. */}
-                          {it.anon ? (
-                            <span className="font-m text-[11px] text-muted">{mine ? "you · anon" : "someone"}</span>
-                          ) : forYou ? (
-                            <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()} <span className="text-vibe">· ✦ for you</span></span>
-                          ) : (
-                            <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>
-                          )}
-                          {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      {/* type bar — a saturated, full-width brutalist tag */}
+                      <span className="font-h text-[9px] font-black tracking-[0.05em] rounded-[5px] px-2 py-1 text-[#15110D] self-stretch" style={{ background: t.color }}>
+                        {t.label}{forYou && " · ✦ FOR YOU"}
+                      </span>
+                      <div className="font-h font-extrabold text-[18px] tracking-[-0.02em] mt-1.5 leading-[1.08]">{title(it)}</div>
+                      {it.note ? (
+                        <p className="text-[12.5px] text-ink-2 mt-1 leading-snug">&ldquo;{it.note}&rdquo;</p>
+                      ) : detail(it) ? (
+                        <div className="font-m text-[10px] text-muted mt-1 tracking-wide">{detail(it)}</div>
+                      ) : null}
+                      {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
+                      <div className="mt-auto pt-2.5 flex items-center gap-2 min-w-0">
+                        {it.anon ? (
+                          <span className="font-m text-[11px] text-muted">{mine ? "you · anon" : "someone"}</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 font-m text-[11px] text-muted min-w-0">
+                            <span className="w-[18px] h-[18px] rounded-full bg-surface-2 border border-hair flex items-center justify-center text-[9px] font-bold text-ink-2 shrink-0">{initial}</span>
+                            <span className="truncate">{dropperName}</span>
+                          </span>
+                        )}
+                        <div className="ml-auto flex-none">
+                          <ItemActions actions={availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, it.id === firstListenId)} />
                         </div>
-                        <div className="mt-2"><Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} /></div>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} />
+                        {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
                       </div>
                     </div>
                   </article>
@@ -186,8 +199,8 @@ export default async function Home() {
         {curate.length > 0 ? (
           <>
             <div className="relative mt-12 mb-2 text-center">
-              <div className="border-t-[2.5px] border-dashed border-ink" />
-              <span className="inline-block bg-paper px-3 -mt-3.5 relative font-m text-[11px] text-ink-2">
+              <div className="border-t border-dashed border-hair" />
+              <span className="inline-block bg-paper px-3 -mt-3 relative font-m text-[11px] text-ink-2">
                 ✦ <span className="font-h font-extrabold text-ink">you&apos;re caught up.</span> here&apos;s what the world&apos;s loving
               </span>
             </div>

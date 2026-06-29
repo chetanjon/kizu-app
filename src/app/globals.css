@@ -1,57 +1,88 @@
 @import "tailwindcss";
 
-/* kizu — taste-space design tokens (locked direction: neo-brutal, edited down,
-   purple accent, the red dot is precious). Fonts come from layout.tsx. */
+/* kizu — CINEMATIC-BRUTALIST-GLASS (dark). Locked direction:
+   - dark warm-black stage with a faint violet nebula at the top
+   - BRUTALIST cream frames + hard, blur-less shadows; the signature move is a
+     hard COLORED shadow behind cover art, tinted to its type
+   - GLASS only on floating layers (nav, chips over color)
+   The RED dot stays precious (kizu. wordmark only). Fonts come from layout.tsx. */
 @theme inline {
   /* Fonts */
   --font-h: var(--font-archivo);          /* headlines / numbers / titles / logo */
   --font-b: var(--font-plus-jakarta);     /* body */
   --font-m: var(--font-space-mono);       /* labels / ratings / tags */
 
-  /* Surfaces + ink */
-  --color-paper: #EDE3CE;
-  --color-surface: #FFFFFF;
-  --color-surface-2: #F7EFDD;
-  --color-ink: #14110F;
-  --color-ink-2: #46423A;
-  --color-muted: #8C8675;
-  --color-hair: #E2D8C2;
+  /* Surfaces + text (DARK).  paper = the stage; surface = an elevated dark card. */
+  --color-paper: #16130E;       /* warm black — the stage */
+  --color-stage: #0D0B09;       /* deepest black (cinematic base) */
+  --color-surface: #1B1610;     /* elevated dark card */
+  --color-surface-2: #241D15;   /* higher elevation / chips */
+  --color-ink: #F6F1EA;         /* primary text + default frame/border (warm off-white) */
+  --color-ink-2: #C7BEB0;       /* secondary text */
+  --color-muted: #948D7F;       /* muted text on dark */
+  --color-hair: rgba(246, 241, 234, 0.12); /* faint hairline on dark */
 
-  /* RED is PRECIOUS — only the kizu. dot. Never buttons/links/fills. */
-  --color-red: #FF2E4D;
+  /* the cream cover-frame (brutalist border around art) */
+  --color-frame: #EDE3CE;
 
-  /* Signature accent + the one gradient hero (vibe) */
-  --color-vibe: #6B4BD6;
+  /* RED is PRECIOUS — only the kizu. dot + a bare notification ping. */
+  --color-red: #FF3B5C;
 
-  /* Type colors (small functional tags) */
-  --color-watch: #2F6FE0;   /* movies — cobalt */
-  --color-listen: #E0567E;  /* music  — rose   */
-  --color-go: #1B8A6B;      /* outside — teal  */
+  /* Signature accent (violet) — buttons, nav tile, the vibe gradient. */
+  --color-vibe: #7C5CE6;
+  --color-vibe-2: #A98BFF;
 
-  /* Extended accent set (cards / marquee / vibe gradient) */
-  --color-indigo: #4035B8;
-  --color-grape: #6B4BD6;
-  --color-cobalt: #2F6FE0;
-  --color-clay: #D8552F;
-  --color-teal: #1B8A6B;
-  --color-rose: #E0567E;
-  --color-mustard: #F0B429;
+  /* Type colors — dark-tuned (brighter so they read + glow on black). */
+  --color-watch: #5B8DEF;   /* movies — blue */
+  --color-listen: #FF6F9C;  /* music  — pink */
+  --color-go: #5DCAA5;      /* outside — green */
+
+  /* Extended accent set (cards / marquee / aurora) */
+  --color-indigo: #6B5CE6;
+  --color-grape: #7C5CE6;
+  --color-cobalt: #5B8DEF;
+  --color-clay: #FF8A5B;
+  --color-teal: #5DCAA5;
+  --color-rose: #FF6F9C;
+  --color-mustard: #F2B23E;
   --color-chartreuse: #C2D24A;
-  --color-amber: #F0A23C;
+  --color-amber: #FF8A5B;
 }
 
 ::selection {
-  background: #14110F;
-  color: #EDE3CE;
+  background: #7C5CE6;
+  color: #fff;
 }
 
 body {
-  background: #EDE3CE;
-  color: #14110F;
+  /* the dark stage + a faint violet nebula glowing from the top */
+  background:
+    radial-gradient(120% 46% at 50% 0%, #1d1636 0%, rgba(22, 19, 14, 0) 60%),
+    #16130E;
+  background-attachment: fixed;
+  color: #F6F1EA;
   font-family: var(--font-plus-jakarta), sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
 }
 
 h1, h2, h3 {
   font-family: var(--font-archivo), sans-serif;
+}
+
+/* ---- signature: hard, blur-less COLORED shadow behind cover art ---- */
+.shadow-watch  { box-shadow: 5px 5px 0 0 var(--color-watch); }
+.shadow-listen { box-shadow: 5px 5px 0 0 var(--color-listen); }
+.shadow-go     { box-shadow: 5px 5px 0 0 var(--color-go); }
+.shadow-vibe   { box-shadow: 5px 5px 0 0 var(--color-vibe); }
+/* smaller offset for compact covers (queue rows, picks) */
+.shadow-watch-sm  { box-shadow: 4px 4px 0 0 var(--color-watch); }
+.shadow-listen-sm { box-shadow: 4px 4px 0 0 var(--color-listen); }
+.shadow-go-sm     { box-shadow: 4px 4px 0 0 var(--color-go); }
+
+/* ---- glass: only on floating layers (nav, chips over color) ---- */
+.glass {
+  background: rgba(255, 255, 255, 0.10);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }

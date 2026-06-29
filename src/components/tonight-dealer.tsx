@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, typeWord, detail, type DropType } from "@/lib/item-render";
 import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 
@@ -68,7 +68,7 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
       <div className="mt-6 grid grid-cols-2 gap-3">
         {LENSES.map((l) => (
           <button key={l.key} onClick={() => pick(l.key)}
-            className="font-h font-extrabold text-base border-[2.5px] border-ink rounded-2xl px-4 py-5 bg-surface text-left shadow-[4px_4px_0_#14110F] hover:bg-surface-2 transition-colors">
+            className="font-h font-extrabold text-base border-2 border-frame rounded-2xl px-4 py-5 bg-surface text-left shadow-[4px_4px_0_#7C5CE6] hover:bg-surface-2 transition-colors">
             {l.label}
           </button>
         ))}
@@ -80,10 +80,10 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
 
   if (!current) {
     return (
-      <div className="mt-8 text-center border-[2.5px] border-dashed border-ink rounded-2xl p-12">
+      <div className="mt-8 text-center border-2 border-dashed border-hair rounded-2xl p-12">
         <div className="font-h text-xl font-bold">that&apos;s the hand for tonight.</div>
         <p className="text-muted text-sm mt-1">queued what you liked. come back tomorrow.</p>
-        <button onClick={() => setLens(null)} className="mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F]">again</button>
+        <button onClick={() => setLens(null)} className="mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#7C5CE6]">again</button>
       </div>
     );
   }
@@ -97,20 +97,22 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
       <div className="flex gap-2 mb-5">
         {LENSES.map((l) => (
           <button key={l.key} onClick={() => pick(l.key)}
-            className={`font-m text-[11px] font-bold border-[2px] border-ink rounded-full px-3 py-1.5 ${lens === l.key ? "bg-ink text-paper" : "bg-surface"}`}>
+            className={`font-m text-[11px] font-bold border-2 border-frame rounded-full px-3 py-1.5 ${lens === l.key ? "bg-vibe text-white" : "bg-surface text-ink"}`}>
             {l.label.replace(/^[^ ]+ /, "")}
           </button>
         ))}
       </div>
 
-      <div className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[6px_7px_0_#14110F]">
-        <div className="aspect-[3/2] relative border-b-[2.5px] border-ink" style={{ background: cover ? undefined : t.color }}>
+      <div className={`bg-surface border-[2.5px] border-frame rounded-2xl overflow-hidden ${SHADOW[current.type]}`}>
+        <div className="aspect-[3/2] relative" style={{ background: cover ? undefined : t.color }}>
           {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
-          <span className="absolute top-2.5 left-2.5 font-m text-[9px] font-bold border-[2px] border-white text-white rounded px-2 py-0.5">{t.label}</span>
         </div>
         <div className="p-4">
           <div className="font-h font-extrabold text-xl tracking-[-0.02em] leading-tight">{title(current)}</div>
-          {sub(current) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(current)}</div>}
+          {/* type folded into the meta (treatment A), not a corner badge */}
+          <div className="font-m text-[10px] text-muted mt-0.5">
+            <span className="font-bold" style={{ color: t.color }}>{typeWord(current)}</span>{detail(current) && <> · {detail(current)}</>}
+          </div>
           <div className="font-m text-[11px] text-muted mt-2">
             {current.curateDropId ? "✦ kizu curate" : "from your people"}
             {current.who ? ` · ${current.who.toLowerCase()}` : ""}
@@ -123,10 +125,10 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
 
           <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
             <button onClick={() => queueIt(current)} disabled={isQueued}
-              className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full py-3 shadow-[3px_3px_0_#14110F]">
+              className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-3 shadow-[3px_3px_0_#0D0B09]">
               {isQueued ? "✓ queued" : "＋ queue it"}
             </button>
-            <button onClick={pass} className="font-h font-bold text-sm bg-surface border-[2.5px] border-ink rounded-full py-3">pass</button>
+            <button onClick={pass} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-full py-3">pass</button>
           </div>
         </div>
       </div>

@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "kizu", statusBarStyle: "default" },
 };
 
-export const viewport: Viewport = { themeColor: "#EDE3CE" };
+export const viewport: Viewport = { themeColor: "#16130E" };
 
 export default function RootLayout({
   children,

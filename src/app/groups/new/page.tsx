@@ -54,16 +54,16 @@ function NewGroupInner() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-7">
           <h1 className="font-h text-4xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></h1>
         </div>
-        <div className="bg-surface rounded-[22px] border-[3px] border-ink shadow-[8px_8px_0_#14110F] p-7">
-          <div className="flex gap-1 bg-[#ECE4D2] rounded-xl p-1 mb-5">
+        <div className="bg-surface rounded-[22px] border-[2.5px] border-frame shadow-[8px_8px_0_#7C5CE6] p-7">
+          <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-5">
             {(["create", "join"] as const).map((t) => (
               <button key={t} onClick={() => setTab(t)}
-                className={`flex-1 font-b font-semibold text-sm py-2.5 rounded-lg transition-colors ${tab === t ? "bg-surface text-ink shadow-sm" : "text-muted"}`}>
+                className={`flex-1 font-b font-semibold text-sm py-2.5 rounded-lg transition-colors ${tab === t ? "bg-vibe text-white" : "text-muted"}`}>
                 {t}
               </button>
             ))}
@@ -74,7 +74,7 @@ function NewGroupInner() {
               <div>
                 <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">group name</div>
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="the usual suspects" maxLength={40}
-                  className="w-full bg-paper border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
+                  className="w-full bg-surface-2 border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#7C5CE6]" />
               </div>
               <div>
                 <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2.5">accent color</div>
@@ -86,7 +86,7 @@ function NewGroupInner() {
                 </div>
               </div>
               <button onClick={create} disabled={busy}
-                className="font-h font-extrabold text-[15px] bg-vibe text-white border-[2.5px] border-ink rounded-xl py-3 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60">
+                className="font-h font-extrabold text-[15px] bg-vibe text-white border-[2.5px] border-frame rounded-xl py-3 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60">
                 {busy ? "creating…" : "create group"}
               </button>
               <p className="font-m text-[11px] text-muted text-center">you'll get an invite link to send your friends</p>
@@ -96,10 +96,10 @@ function NewGroupInner() {
               <div>
                 <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">invite code</div>
                 <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. AB3K9P" maxLength={6}
-                  className="w-full bg-paper border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[15px] font-m tracking-widest outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
+                  className="w-full bg-surface-2 border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[15px] font-m tracking-widest outline-none focus:shadow-[3px_3px_0_#7C5CE6]" />
               </div>
               <button onClick={join} disabled={busy}
-                className="font-h font-extrabold text-[15px] bg-vibe text-white border-[2.5px] border-ink rounded-xl py-3 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60">
+                className="font-h font-extrabold text-[15px] bg-vibe text-white border-[2.5px] border-frame rounded-xl py-3 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60">
                 {busy ? "joining…" : "join group"}
               </button>
             </div>

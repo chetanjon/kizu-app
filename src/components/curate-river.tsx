@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import QueueButton from "@/components/queue-button";
-import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW_SM, img, title, typeWord, detail, type DropType } from "@/lib/item-render";
 
 export type CDrop = {
   id: string;
@@ -68,9 +68,9 @@ export default function CurateRiver({
           const t = TYPE[d.type];
           const initials = (p?.name ?? "?").slice(0, 1).toUpperCase();
           return (
-            <article key={d.id} className="bg-surface border-[2.5px] border-ink rounded-2xl overflow-hidden shadow-[5px_6px_0_#14110F]">
+            <article key={d.id} className="bg-surface border-[2.5px] border-frame rounded-2xl overflow-hidden shadow-[5px_6px_0_#7C5CE6]">
               <div className="flex items-center gap-3 p-3.5">
-                <div className="w-12 h-12 flex-none rounded-full border-[2.5px] border-ink overflow-hidden flex items-center justify-center font-h font-extrabold text-white" style={{ background: t.color }}>
+                <div className="w-12 h-12 flex-none rounded-full border-[2.5px] border-frame overflow-hidden flex items-center justify-center font-h font-extrabold text-white" style={{ background: t.color }}>
                   {p?.photo_url ? <img src={p.photo_url} alt="" className="w-full h-full object-cover" /> : initials}
                 </div>
                 <div className="min-w-0">
@@ -82,14 +82,15 @@ export default function CurateRiver({
 
               {d.their_words && <p className="px-4 pb-3 text-[15px] italic leading-snug">&ldquo;{d.their_words}&rdquo;</p>}
 
-              <div className="mx-3.5 mb-3 flex items-center gap-3 bg-surface-2 border-[2px] border-ink rounded-xl p-2.5">
-                <div className="w-11 h-14 flex-none border-[2px] border-ink rounded-md overflow-hidden" style={{ background: cover ? undefined : t.color }}>
+              <div className="mx-3.5 mb-3 flex items-center gap-3.5 bg-surface-2 border border-hair rounded-xl p-2.5">
+                <div className={`w-11 h-14 flex-none border-2 border-frame rounded-md overflow-hidden ${SHADOW_SM[d.type]}`} style={{ background: cover ? undefined : t.color }}>
                   {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
                 </div>
                 <div className="min-w-0">
-                  <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: t.color }}>{t.label}</span>
                   <div className="font-h font-extrabold text-sm leading-tight truncate">{title(d)}</div>
-                  {sub(d) && <div className="font-m text-[9px] text-muted truncate">{sub(d)}</div>}
+                  <div className="font-m text-[9px] text-muted truncate mt-0.5">
+                    <span className="font-bold" style={{ color: t.color }}>{typeWord(d)}</span>{detail(d) && <> · {detail(d)}</>}
+                  </div>
                 </div>
                 <div className="ml-auto flex-none"><QueueButton curateDropId={d.id} initialQueued={queued.has(d.id)} /></div>
               </div>

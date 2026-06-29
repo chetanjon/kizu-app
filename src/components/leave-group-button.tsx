@@ -34,7 +34,7 @@ export default function LeaveGroupButton({ groupId, groupName }: { groupId: stri
     <div className="flex items-center gap-2">
       <span className="font-m text-[12px]">leave {groupName.toLowerCase()}?</span>
       <button onClick={leave} disabled={busy}
-        className="font-h font-bold text-xs text-white bg-ink rounded-full px-3 py-1.5">{busy ? "…" : "yes, leave"}</button>
+        className="font-h font-bold text-xs text-white bg-vibe border border-frame rounded-full px-3 py-1.5">{busy ? "…" : "yes, leave"}</button>
       <button onClick={() => setConfirm(false)} className="font-m text-[11px] text-muted">cancel</button>
     </div>
   );
