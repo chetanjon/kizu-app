@@ -81,7 +81,7 @@ function parseJson(text: string): VibeRead {
   };
 }
 
-async function generateGemini(prompt: string): Promise<VibeRead> {
+async function runGemini(prompt: string): Promise<string> {
   const k = process.env.GEMINI_API_KEY;
   if (!k) throw new Error("GEMINI_API_KEY is not set. Add it to .env.local / Vercel.");
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -100,26 +100,98 @@ async function generateGemini(prompt: string): Promise<VibeRead> {
   const j = await res.json();
   const text = j.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("Gemini returned no text");
-  return parseJson(text);
+  return text;
 }
 
-async function generateClaude(prompt: string): Promise<VibeRead> {
+async function runClaude(prompt: string): Promise<string> {
   const msg = await getAnthropic().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });
-  const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
-  return parseJson(text);
+  return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
 }
 
-/** Generate a vibe read for a group from its drops. Provider per VIBE_PROVIDER (default gemini). */
+/** Run the JSON-mode model. Provider per VIBE_PROVIDER (default FREE gemini). */
+async function runModel(prompt: string): Promise<string> {
+  const provider = (process.env.VIBE_PROVIDER || "gemini").toLowerCase();
+  return provider === "claude" ? runClaude(prompt) : runGemini(prompt);
+}
+
+/** Generate a vibe read for a group from its drops. */
 export async function generateVibe(
   groupName: string,
   members: string[],
   items: VibeItem[]
 ): Promise<VibeRead> {
-  const prompt = buildPrompt(groupName, members, items);
-  const provider = (process.env.VIBE_PROVIDER || "gemini").toLowerCase();
-  return provider === "claude" ? generateClaude(prompt) : generateGemini(prompt);
+  return parseJson(await runModel(buildPrompt(groupName, members, items)));
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// The taste SIGNATURE — one flattering line naming the AESTHETIC of a person's
+// taste (NOT their personality). Deliberately simple and safe: no body, no
+// "pattern you can't see", no diagnosis. We name a vibe, never read a soul —
+// kizu rates taste, not people.
+// ─────────────────────────────────────────────────────────────────────────
+
+export type TasteRead = {
+  signature: string;  // the one-line aesthetic label of their taste, lowercase
+  tags: string[];     // 2-3 short aesthetic tags
+};
+
+export type TasteSignal = {
+  type: "watch" | "listen" | "go_out";
+  title: string;
+  meta?: string;
+  rating?: string;
+  note?: string;
+  verdict?: "loved" | "liked" | "meh"; // present for queued things, absent for own drops
+  source: "drop" | "queue";            // did they drop it, or queue someone else's
+};
+
+function buildTastePrompt(name: string, signals: TasteSignal[]): string {
+  const lines = signals
+    .map((s) => {
+      const bits = [
+        `[${TYPE_LABEL[s.type]}]`,
+        s.title,
+        s.meta ? `(${s.meta})` : "",
+        s.rating ? `· rated ${s.rating}` : "",
+        s.source === "drop" ? "· they dropped this" : `· they queued this${s.verdict ? `, verdict: ${s.verdict}` : ""}`,
+        s.note ? `· "${s.note}"` : "",
+      ];
+      return "- " + bits.filter(Boolean).join(" ");
+    })
+    .join("\n");
+
+  return `You are the "taste signature" for kizu — a private space where friends drop the movies, music, and places they love. Give ${name} a SINGLE-LINE signature that names the AESTHETIC of their taste: the territory their drops live in. This describes their TASTE, never their personality.
+
+${name}'S DROPS & QUEUE:
+${lines}
+
+WRITE THE SIGNATURE. Rules:
+- ONE line. a vivid aesthetic label, max ~10 words. e.g. "main-character energy with a soft landing", "late-night heartbreak you can dance to", "prestige drama with a junk-food chaser".
+- describe the TASTE as a place or aesthetic, NOT the person. NEVER "you are", never "you crave/need/project/secretly want", no psychology, no diagnosis, no claim to know them. you are naming a vibe, not reading a soul.
+- flattering and true — celebrate it. lowercase, no exclamation marks, no emoji.
+- SPECIFIC to THEIR drops: the aesthetic must obviously come from their actual titles. generic filler ("eclectic", "good vibes", "varied taste") is an instant fail.
+
+Return ONLY valid JSON, no markdown:
+{
+  "signature": "the one-line aesthetic, lowercase, max ~10 words",
+  "tags": ["2-3 short lowercase aesthetic tags, e.g. 'comfort-rewatcher'"]
+}`;
+}
+
+function parseTaste(text: string): TasteRead {
+  const cleaned = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  const obj = JSON.parse(cleaned);
+  return {
+    signature: String(obj.signature || "").trim(),
+    tags: Array.isArray(obj.tags) ? obj.tags.map(String).slice(0, 3) : [],
+  };
+}
+
+/** Generate a one-line taste signature from one person's signals. */
+export async function generateTasteRead(name: string, signals: TasteSignal[]): Promise<TasteRead> {
+  return parseTaste(await runModel(buildTastePrompt(name, signals)));
 }

@@ -449,6 +449,35 @@ export type Database = {
           },
         ]
       }
+      taste_reads: {
+        Row: {
+          card_data: Json
+          generated_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          card_data?: Json
+          generated_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          card_data?: Json
+          generated_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taste_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vibe_reads: {
         Row: {
           card_data: Json
