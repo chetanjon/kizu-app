@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { actionsFor } from "@/lib/item-actions";
+import ItemActions from "@/components/item-actions";
 
 export type Cand = {
   key: string;
@@ -110,6 +112,7 @@ export default function TonightDealer({ pool }: { pool: Cand[] }) {
             {current.moment ? ` · for ${current.moment}` : ""}
           </div>
           {current.note && <p className="text-sm mt-2 leading-snug italic">&ldquo;{current.note}&rdquo;</p>}
+          <ItemActions actions={actionsFor(current)} className="mt-3" />
 
           <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
             <button onClick={() => queueIt(current)} disabled={isQueued}

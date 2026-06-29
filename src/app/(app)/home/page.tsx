@@ -13,6 +13,8 @@ import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import GroupSwitcher from "@/components/group-switcher";
 import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { actionsFor } from "@/lib/item-actions";
+import ItemActions from "@/components/item-actions";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 
@@ -137,6 +139,7 @@ export default async function Home() {
                       <div className="font-h font-extrabold text-lg tracking-[-0.02em] mt-2 leading-tight">{title(it)}</div>
                       {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
+                      <ItemActions actions={actionsFor(it)} className="mt-2.5" />
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
                           {/* attributed drops show who dropped it; a targeted drop adds
