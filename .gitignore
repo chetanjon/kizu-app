@@ -42,3 +42,6 @@ next-env.d.ts
 
 # brainstorm mockups (local only)
 .superpowers/
+
+# personal portfolio/résumé notes — local only, not for the public repo
+PORTFOLIO.md
