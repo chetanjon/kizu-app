@@ -18,6 +18,8 @@ import ItemActions from "@/components/item-actions";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
+import { availabilityMap } from "@/lib/providers";
+import { cleanServices } from "@/lib/services";
 
 const RIVER_PAGE = 12;
 
@@ -42,7 +44,7 @@ export default async function Home() {
   // (getMemberships is request-memoized, so this reuses the layout's call.)
   const [memberships, meRes, cRes, cqRes] = await Promise.all([
     getMemberships(user.id),
-    supabase.from("users").select("name, gender, music_app").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("name, gender, music_app, services").eq("id", user.id).maybeSingle(),
     supabase
       .from("curate_drops")
       .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
@@ -69,25 +71,28 @@ export default async function Home() {
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
   await signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>);
+  // only the first song in the feed shows the "pick your music app" prompt.
+  const firstListenId = items.find((it) => it.type === "listen")?.id ?? null;
+  // "you have it" for movies/tv you can stream on a service you picked.
+  const availMap = await availabilityMap(
+    items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
+    cleanServices(meRes.data?.services),
+  );
 
   const ids = items.map((i) => i.id);
   // who in the group is into each drop (loved/liked) — admin: verdicts are owner-scoped.
   const proofMap = await fetchPositiveVerdicts(createAdminClient(), ids);
   const { data: qRaw } = await supabase
     .from("queue_items")
-    .select("item_id")
+    .select("item_id, source_rec_id")
     .eq("user_id", user.id)
     .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
   const queued = new Set((qRaw ?? []).map((q) => q.item_id));
 
-  // which of these drops were left FOR me. recs_select_mine RLS returns only my
-  // own recs, so this is the recipient-side signal.
-  const { data: recRaw } = await supabase
-    .from("recs")
-    .select("item_id")
-    .eq("to_user", user.id)
-    .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-  const forMe = new Set((recRaw ?? []).map((r) => r.item_id as string));
+  // a drop is "for you" only if it reached your queue via a TARGETED rec
+  // (source_rec_id is set). Group-drop "it landed" credits also write a recs row
+  // with to_user = you, so reading recs.to_user here would wrongly tag those.
+  const forMe = new Set((qRaw ?? []).filter((q) => q.source_rec_id).map((q) => q.item_id as string));
 
   return (
     <div className="min-h-screen bg-paper">
@@ -145,7 +150,7 @@ export default async function Home() {
                       {sub(it) && <div className="font-m text-[10px] text-muted mt-0.5">{sub(it)}</div>}
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
                       {proof && <div className="font-m text-[11px] text-go mt-2">♥ {proof}</div>}
-                      <ItemActions actions={actionsFor(it, myMusicApp)} className="mt-2.5" />
+                      <ItemActions actions={availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, it.id === firstListenId)} className="mt-2.5" />
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
                           {/* attributed drops show who dropped it; a targeted drop adds

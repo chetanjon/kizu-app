@@ -40,21 +40,48 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const good = verdict === "loved" || verdict === "liked";
+  const now = new Date().toISOString();
   let landed = false;
+  let told: string | null = null; // dropper's name, to show "they'll know it landed"
   if (item_id && good) {
-    const { data: item } = await admin.from("items").select("created_by").eq("id", item_id).maybeSingle();
+    const { data: item } = await admin.from("items").select("created_by, anon").eq("id", item_id).maybeSingle();
     landed = !!item && item.created_by !== user.id;
 
-    // if this came from a rec, mark it landed + nudge the sender (north-star event).
-    if (row.source_rec_id) {
+    if (landed && row.source_rec_id) {
+      // came from a targeted rec → mark it landed + nudge the sender (north-star event).
       const { data: rec } = await admin
         .from("recs").select("from_user, landed_at").eq("id", row.source_rec_id).maybeSingle();
       if (rec && !rec.landed_at) {
-        await admin.from("recs").update({ landed_at: new Date().toISOString() }).eq("id", row.source_rec_id);
+        await admin.from("recs").update({ landed_at: now }).eq("id", row.source_rec_id);
         await notify(admin, rec.from_user, "it_landed", "it landed. they loved what you sent.", "/queue");
+      }
+    } else if (landed) {
+      // a GROUP drop you loved → credit the dropper so it counts toward their
+      // "took your word for it" number, and tell them. Reuses the recs/landed
+      // plumbing: one landed rec from dropper→you, created once (idempotent).
+      const dropper = item!.created_by;
+      const { data: existing } = await admin
+        .from("recs").select("id, landed_at")
+        .eq("from_user", dropper).eq("to_user", user.id).eq("item_id", item_id).maybeSingle();
+      let credited = false;
+      if (!existing) {
+        const { error: rerr } = await admin
+          .from("recs").insert({ item_id, from_user: dropper, to_user: user.id, landed_at: now });
+        credited = !rerr;
+      } else if (!existing.landed_at) {
+        await admin.from("recs").update({ landed_at: now }).eq("id", existing.id);
+        credited = true;
+      }
+      if (credited) {
+        await notify(admin, dropper, "it_landed", "it landed. someone loved what you dropped.", "/you");
+        // tell the queuer who'll hear about it — but never unmask an anon drop.
+        if (!item!.anon) {
+          const { data: who } = await admin.from("users").select("name").eq("id", dropper).maybeSingle();
+          told = who?.name ?? null;
+        }
       }
     }
   }
 
-  return NextResponse.json({ ok: true, landed });
+  return NextResponse.json({ ok: true, landed, told });
 }

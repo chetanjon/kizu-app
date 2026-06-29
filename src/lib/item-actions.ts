@@ -37,7 +37,10 @@ function appPill(slug: string, links: Record<string, unknown>, d: Record<string,
   return surl ? { label: app.pill, url: surl, kind: "play" } : null;
 }
 
-export function actionsFor(item: ActItem, musicApp?: string | null): Action[] {
+// suggestApp: whether to append the "pick your music app" prompt when no app is
+// picked. Surfaces pass true for only the FIRST song in a feed, so the nudge
+// shows once per list instead of on every music card.
+export function actionsFor(item: ActItem, musicApp?: string | null, suggestApp = true): Action[] {
   const d = item.data ?? {};
 
   if (item.type === "listen") {
@@ -71,8 +74,9 @@ export function actionsFor(item: ActItem, musicApp?: string | null): Action[] {
       const fallback = str(d.odesli_url) || str(d.source_url);
       if (fallback) out.push({ label: "listen", url: fallback, kind: "play" });
     }
-    // only nudge people who haven't picked yet (never on a fall-through above).
-    if (!musicApp) out.push({ label: "pick your music app", url: "/you#music", kind: "set" });
+    // only nudge people who haven't picked yet, and only on the first song in a
+    // feed (suggestApp) — never on a fall-through from the picked branch above.
+    if (!musicApp && suggestApp) out.push({ label: "pick your music app", url: "/you#music", kind: "set" });
     return out;
   }
 

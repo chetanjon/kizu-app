@@ -18,6 +18,7 @@ export type QRow = {
   who: string | null;          // who dropped / curated it
   mine: boolean;
   availability?: Action | null; // movie/tv: "you have it" / "on netflix" (server-resolved)
+  told?: string | null;         // set after a verdict: dropper who'll hear "it landed"
 };
 
 type Filter = "all" | DropType;
@@ -47,7 +48,10 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...target, verdict }),
       });
-      if (!res.ok) setState(prev);
+      if (!res.ok) { setState(prev); return; }
+      // if loving a group drop credited the dropper, show "they'll know it landed".
+      const { told } = await res.json().catch(() => ({ told: null }));
+      if (told) setState((s) => s.map((r) => (r.key === row.key ? { ...r, told } : r)));
     } catch {
       setState(prev);
     }
@@ -56,6 +60,8 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
   const shown = state.filter((r) => filter === "all" || r.type === filter);
   const want = shown.filter((r) => !r.done);
   const done = shown.filter((r) => r.done);
+  // only the first song shown carries the "pick your music app" prompt.
+  const firstListenKey = [...want, ...done].find((r) => r.type === "listen")?.key;
 
   const Row = ({ r }: { r: QRow }) => {
     const t = TYPE[r.type];
@@ -69,7 +75,8 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
           <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: t.color }}>{t.label}</span>
           <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
           <div className="font-m text-[9px] text-muted truncate">{[sub(r), r.who ? `· ${r.who.toLowerCase()}` : ""].filter(Boolean).join(" ")}</div>
-          <ItemActions actions={r.availability ? [r.availability] : actionsFor(r, musicApp)} className="mt-1.5" />
+          <ItemActions actions={r.availability ? [r.availability] : actionsFor(r, musicApp, r.key === firstListenKey)} className="mt-1.5" />
+          {r.told && <div className="font-m text-[10px] text-vibe mt-1.5">✦ {r.told.toLowerCase()} will know it landed</div>}
         </div>
         <div className="ml-auto flex-none">
           {r.done ? (
