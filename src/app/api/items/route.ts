@@ -40,12 +40,18 @@ export async function POST(req: Request) {
     }
   }
 
-  // recipients of a targeted (anonymous) drop. Array now; tolerate the legacy
-  // single-string shape so an in-flight old client mid-deploy still works.
+  // recipients of a targeted drop (attributed — option 3). Array now; tolerate the
+  // legacy single-string shape so an in-flight old client mid-deploy still works.
   const recTo: string[] = Array.isArray(b.rec_to)
     ? b.rec_to.map((x: unknown) => String(x))
     : b.rec_to ? [String(b.rec_to)] : [];
   const targets = [...new Set(recTo)].filter((id) => id && id !== user.id);
+
+  // anon is an EXPLICIT group-wide choice, decoupled from targeting: a targeted
+  // drop is always attributed (you're vouching for it), so anon only applies when
+  // there are no recipients. One missed surface = an identity leak, so every read
+  // path (feed/queue/tonight/vibe/taste-match) checks items.anon.
+  const anon = targets.length === 0 && b.anon === true;
 
   const { data: item, error } = await admin
     .from("items")
@@ -57,7 +63,7 @@ export async function POST(req: Request) {
       rating_style,
       note,
       data,
-      anon: targets.length > 0,
+      anon,
     })
     .select("id")
     .single();

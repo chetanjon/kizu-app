@@ -24,6 +24,9 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   // recMode: "everyone" (group-wide, attributed) | "people" (anonymous, one rec per id) | "link"
   const [recMode, setRecMode] = useState<"everyone" | "people" | "link">("everyone");
   const [recipients, setRecipients] = useState<Set<string>>(new Set());
+  // group-wide only — a targeted drop is always attributed, so anon turns off the
+  // moment you pick a recipient or the link mode.
+  const [anon, setAnon] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("watch");
   const [q, setQ] = useState("");
@@ -53,6 +56,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
     if (next.has(id)) next.delete(id); else next.add(id);
     setRecipients(next);
     setRecMode(next.size === 0 ? "everyone" : "people");
+    if (next.size > 0) setAnon(false); // targeted = attributed
   }
 
   // Shrink large photos in the browser before upload: faster upload + avoids the
@@ -179,6 +183,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         rating_style: ratingValue ? ratingStyle : null,
         note: note.trim() || null,
         rec_to: recMode === "people" ? [...recipients] : [],
+        anon: recMode === "everyone" && anon,
       }),
     });
     const j = await res.json();
@@ -200,6 +205,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
     : recMode === "link" ? "drop + make a link"
     : recMode === "people" && recCount === 1 ? `send it to ${oneName}`
     : recMode === "people" && recCount > 1 ? `send it to ${recCount} people`
+    : anon ? "drop it anonymously"
     : "drop it to the group";
 
   const accent = TABS.find((t) => t.key === tab)!.color;
@@ -314,9 +320,20 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             <button key={m.id} onClick={() => toggleRecipient(m.id)}
               className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
           ))}
-          <button onClick={() => { setRecMode("link"); setRecipients(new Set()); }}
+          <button onClick={() => { setRecMode("link"); setRecipients(new Set()); setAnon(false); }}
             className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
         </div>
+
+        {/* anonymous — group-wide only. a targeted/link drop is always attributed. */}
+        {recMode === "everyone" && (
+          <div className="mt-3">
+            <button onClick={() => setAnon(!anon)}
+              className={`inline-flex items-center gap-1.5 font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${anon ? "bg-ink text-paper" : "bg-surface"}`}>
+              🕶 {anon ? "anonymous · on" : "drop without my name"}
+            </button>
+            {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
+          </div>
+        )}
       </div>
 
       {shareUrl ? (

@@ -34,13 +34,13 @@ export async function POST(req: Request) {
 
   const { data: rows } = await admin
     .from("items")
-    .select("type, rating_value, note, data, users!items_created_by_fkey(name)")
+    .select("type, rating_value, note, data, anon, users!items_created_by_fkey(name)")
     .eq("group_id", group_id)
     .order("created_at", { ascending: false })
     .limit(60);
   const items = (rows ?? []) as unknown as {
     type: string; rating_value: string | null; note: string | null;
-    data: Record<string, any>; users: { name: string | null } | null;
+    data: Record<string, any>; anon: boolean; users: { name: string | null } | null;
   }[];
 
   if (items.length < MIN_DROPS) {
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     meta: metaFor(it.type, it.data || {}),
     rating: it.rating_value || undefined,
     note: it.note || undefined,
-    who: it.users?.name || "someone",
+    who: it.anon ? "someone" : (it.users?.name || "someone"),
   }));
 
   try {

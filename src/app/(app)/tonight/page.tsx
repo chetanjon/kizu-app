@@ -8,7 +8,7 @@ import { signPhotos } from "@/lib/drop-photos";
 
 type ItemRow = {
   id: string; type: DropType; data: Record<string, unknown>; note: string | null;
-  created_by: string; users: { name: string | null } | null;
+  anon: boolean; created_by: string; users: { name: string | null } | null;
 };
 type CurateRow = {
   id: string; type: DropType; moment: string; their_words: string | null;
@@ -29,7 +29,7 @@ export default async function Tonight() {
   // pool = your people's drops (not your own) + the curated world.
   const { data: iRaw } = await supabase
     .from("items")
-    .select("id, type, data, note, created_by, users!items_created_by_fkey(name)")
+    .select("id, type, data, note, anon, created_by, users!items_created_by_fkey(name)")
     .eq("group_id", active.group_id)
     .neq("created_by", user.id)
     .order("created_at", { ascending: false })
@@ -54,7 +54,7 @@ export default async function Tonight() {
     .filter((i) => !queuedItems.has(i.id))
     .map((i) => ({
       key: `i:${i.id}`, itemId: i.id, type: i.type, data: i.data ?? {},
-      note: i.note, who: i.users?.name ?? null,
+      note: i.note, who: i.anon ? null : (i.users?.name ?? null),
     }));
 
   const fromCurate: Cand[] = ((cRaw ?? []) as unknown as CurateRow[])

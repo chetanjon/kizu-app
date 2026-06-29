@@ -139,11 +139,13 @@ export default async function Home() {
                       {it.note && <p className="text-sm text-ink-2 mt-2 leading-snug">{it.note}</p>}
                       <div className="mt-3 pt-3 border-t-[2px] border-hair">
                         <div className="flex items-center justify-between">
-                          {/* every drop shows who dropped it; a targeted drop adds a
-                              "for you" tag on the recipient's own card (option 3 —
-                              attributed, not anonymous). it.anon stays in the data but
-                              no longer changes the feed render. */}
-                          {forYou ? (
+                          {/* attributed drops show who dropped it; a targeted drop adds
+                              a "for you" tag on the recipient's card (option 3). an
+                              ANON drop hides the dropper from everyone — the dropper
+                              themselves sees "you · anon" so they know it posted. */}
+                          {it.anon ? (
+                            <span className="font-m text-[11px] text-muted">{mine ? "you · anon" : "someone"}</span>
+                          ) : forYou ? (
                             <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()} <span className="text-vibe">· ✦ for you</span></span>
                           ) : (
                             <span className="font-m text-[11px] text-muted">{(it.users?.name || "someone").toLowerCase()}</span>

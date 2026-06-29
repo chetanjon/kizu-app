@@ -33,8 +33,8 @@ export async function getTasteMatches(admin: Admin, userId: string): Promise<Tas
 
   // 2. All drops in the group → per-user "dropped" set + an id→title map.
   const { data: itemRows } = await admin
-    .from("items").select("id, created_by, data").eq("group_id", groupId);
-  const items = (itemRows ?? []) as unknown as { id: string; created_by: string; data: Record<string, unknown> | null }[];
+    .from("items").select("id, created_by, data, anon").eq("group_id", groupId);
+  const items = (itemRows ?? []) as unknown as { id: string; created_by: string; data: Record<string, unknown> | null; anon: boolean }[];
 
   const titleById = new Map<string, string>();
   const positive = new Map<string, Set<string>>(); // user_id → set of item_ids they love
@@ -44,7 +44,9 @@ export async function getTasteMatches(admin: Admin, userId: string): Promise<Tas
   };
   for (const it of items) {
     titleById.set(it.id, titleOf(it.data));
-    add(it.created_by, it.id); // you dropping it counts as loving it
+    // an anon drop must NOT attribute taste to its dropper — that's the whole
+    // point of anon. (It can still enter a set via someone's own queue-love below.)
+    if (!it.anon) add(it.created_by, it.id);
   }
 
   // 3. loved/liked verdicts on those items → add to each person's positive set.

@@ -17,6 +17,7 @@ type Raw = {
     data: Record<string, unknown>;
     note: string | null;
     rating_value: string | null;
+    anon: boolean;
     created_by: string;
     users: { name: string | null } | null;
   } | null;
@@ -37,7 +38,7 @@ export default async function Queue() {
     .from("queue_items")
     .select(
       "item_id, curate_drop_id, verdict, done_at, " +
-      "items!queue_items_item_id_fkey(type, data, note, rating_value, created_by, users!items_created_by_fkey(name)), " +
+      "items!queue_items_item_id_fkey(type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)), " +
       "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words, curate_people!curate_drops_person_id_fkey(name))"
     )
     .eq("user_id", user.id)
@@ -57,7 +58,7 @@ export default async function Queue() {
           ratingValue: r.items.rating_value,
           verdict: (r.verdict as QRow["verdict"]) ?? null,
           done: !!r.done_at,
-          who: r.items.users?.name ?? null,
+          who: r.items.anon ? null : (r.items.users?.name ?? null),
           mine: r.items.created_by === user.id,
         };
       }
