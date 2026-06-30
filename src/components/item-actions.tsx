@@ -26,15 +26,14 @@ export default function ItemActions({ actions, className = "" }: { actions: Acti
             href={a.url}
             target="_blank"
             rel="noreferrer"
-            className={`inline-flex items-center gap-1 font-m text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 transition-all hover:-translate-y-[1px] ${
-              // their picked music app → filled violet + brutalist shadow, so it
-              // reads as "this one's yours". "have" (movie you-own) → green. Every
-              // other action → flat neutral, so the highlighted pill leads the eye.
+            className={`inline-flex items-center gap-1 font-m text-[10px] font-bold rounded-full px-2.5 py-1 transition-all hover:-translate-y-[1px] ${
+              // airy outlined pills, tinted to meaning: their music app → violet,
+              // "have" (you own it) → green, everything else → neutral cream.
               a.primary
-                ? "bg-vibe text-white shadow-[2px_2px_0_#14110F] hover:shadow-[3px_3px_0_#14110F]"
+                ? "text-vibe-2 border-[1.5px] border-vibe/50"
                 : a.kind === "have"
-                ? "bg-go text-white shadow-[2px_2px_0_#14110F] hover:shadow-[3px_3px_0_#14110F]"
-                : "bg-surface text-ink"
+                ? "text-go border-[1.5px] border-go/40"
+                : "text-ink border-[1.5px] border-frame"
             }`}
           >
             <span aria-hidden className="text-[9px] leading-none">{GLYPH[a.kind]}</span>
