@@ -22,7 +22,7 @@ const CHIPS: { k: "all" | DropType; l: string }[] = [
 
 function fmtDay(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }).toLowerCase();
   } catch {
     return "";
   }
@@ -67,31 +67,37 @@ export default function LogList({ rows }: { rows: LogRow[] }) {
       </div>
 
       {months.map((m) => (
-        <section key={m.key} className="mb-7">
+        <section key={m.key} className="mb-8">
           {/* month header — the spine of the shelf */}
-          <div className="flex items-baseline gap-2 mb-1">
-            <h2 className="font-h font-extrabold text-[15px] tracking-[-0.02em] lowercase">{m.key}</h2>
-            <span className="font-m text-[10px] text-muted">{m.rows.length}</span>
+          <div className="flex items-baseline justify-between border-b border-hair pb-2 mb-3">
+            <h2 className="font-h font-extrabold text-[14px] tracking-[-0.01em] lowercase">{m.key}</h2>
+            <span className="font-m text-[10px] text-muted">{m.rows.length} {m.rows.length === 1 ? "entry" : "entries"}</span>
           </div>
           <div className="flex flex-col">
             {m.rows.map((r) => {
               const t = TYPE[r.type];
               const cover = img(r);
               return (
-                <div key={r.id} className="flex gap-4 items-center py-3.5 border-t border-hair first:border-t-0">
-                  <div className={`w-[48px] h-[68px] flex-none rounded-lg border-2 border-frame overflow-hidden bg-surface-2 ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
+                <div key={r.id} className="flex gap-4 py-4 border-t border-hair first:border-t-0">
+                  <div className={`w-[56px] h-[84px] flex-none rounded-lg border-2 border-frame overflow-hidden bg-surface-2 ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
                     {cover && <img src={cover} alt="" className="w-full h-full object-cover object-center" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-h font-bold text-[16px] truncate">{title(r)}</div>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="font-h font-bold text-[16px] truncate">{title(r)}</h3>
+                      <span className="font-m text-[10px] text-muted flex-none ml-auto">{fmtDay(r.date)}</span>
+                    </div>
                     <div className="text-[12px] text-muted truncate mt-0.5">
                       <span className="font-semibold" style={{ color: t.color }}>{typeWord(r)}</span>{detail(r) && <> · {detail(r)}</>}
                     </div>
-                    <div className="font-m text-[10px] text-muted mt-1 flex items-center gap-2">
-                      {r.rating && <span className="text-vibe-2">{ratingMark(r.rating)}</span>}
-                      <span>{fmtDay(r.date)}</span>
-                      {r.shared && <span className="text-go">· shared</span>}
-                    </div>
+                    {/* your own take — this is what makes it a log, not a list */}
+                    {r.note && <p className="text-[13px] text-ink-2 mt-1.5 leading-snug line-clamp-2">&ldquo;{r.note}&rdquo;</p>}
+                    {(r.rating || r.shared) && (
+                      <div className="font-m text-[10px] mt-1.5 flex items-center gap-2.5">
+                        {r.rating && <span className="text-vibe-2">{ratingMark(r.rating)}</span>}
+                        {r.shared && <span className="text-go">shared with the crew</span>}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
