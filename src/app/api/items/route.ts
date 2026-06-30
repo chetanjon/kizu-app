@@ -70,7 +70,9 @@ export async function POST(req: Request) {
   // drop is always attributed (you're vouching for it), so anon only applies when
   // there are no recipients. One missed surface = an identity leak, so every read
   // path (feed/queue/tonight/vibe/taste-match) checks items.anon.
-  const anon = targets.length === 0 && b.anon === true;
+  // a private log is creator-only: never targeted, never anon, no group ping.
+  const isPrivate = b.private === true;
+  const anon = !isPrivate && targets.length === 0 && b.anon === true;
 
   const { data: item, error } = await admin
     .from("items")
@@ -83,10 +85,14 @@ export async function POST(req: Request) {
       note,
       data,
       anon,
+      private: isPrivate,
     })
     .select("id")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // a private log stops here — no recs, no group push. it's just yours.
+  if (isPrivate) return NextResponse.json({ id: item.id });
 
   // one rec per valid member target. Each gets its own queue row + cryptic ping
   // (createRec handles all three). Non-members skip silently. Remember who was

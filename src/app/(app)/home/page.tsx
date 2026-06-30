@@ -68,6 +68,7 @@ export default async function Home() {
     .from("items")
     .select("id, type, anon, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
     .eq("group_id", g.id)
+    .eq("private", false)
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
   await signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>);

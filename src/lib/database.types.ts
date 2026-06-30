@@ -158,6 +158,7 @@ export type Database = {
           group_id: string
           id: string
           note: string | null
+          private: boolean
           rating_style: string | null
           rating_value: string | null
           type: string
@@ -170,6 +171,7 @@ export type Database = {
           group_id: string
           id?: string
           note?: string | null
+          private?: boolean
           rating_style?: string | null
           rating_value?: string | null
           type: string
@@ -182,6 +184,7 @@ export type Database = {
           group_id?: string
           id?: string
           note?: string | null
+          private?: boolean
           rating_style?: string | null
           rating_value?: string | null
           type?: string

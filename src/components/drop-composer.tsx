@@ -27,6 +27,8 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   // group-wide only — a targeted drop is always attributed, so anon turns off the
   // moment you pick a recipient or the link mode.
   const [anon, setAnon] = useState(false);
+  // log = keep it private (a personal log), don't share with the crew.
+  const [log, setLog] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("watch");
   const [q, setQ] = useState("");
@@ -182,26 +184,28 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         rating_value: ratingValue || null,
         rating_style: ratingValue ? ratingStyle : null,
         note: note.trim() || null,
-        rec_to: recMode === "people" ? [...recipients] : [],
-        anon: recMode === "everyone" && anon,
+        rec_to: log ? [] : (recMode === "people" ? [...recipients] : []),
+        anon: !log && recMode === "everyone" && anon,
+        private: log,
       }),
     });
     const j = await res.json();
     if (!res.ok) { setMsg(j.error || "couldn't drop"); setBusy(false); return; }
 
     // shareable link for someone not in the group → show the /r link to copy.
-    if (recMode === "link") {
+    if (!log && recMode === "link") {
       const rr = await (await fetch("/api/recs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: j.id }) })).json();
       if (rr.url) { setShareUrl(window.location.origin + rr.url); setBusy(false); return; }
     }
 
-    router.push("/home");
+    router.push(log ? "/log" : "/home");
     router.refresh();
   }
 
   const recCount = recipients.size;
   const oneName = recCount === 1 ? (members.find((m) => recipients.has(m.id))?.name || "them").toLowerCase() : "";
-  const dropLabel = busy ? "dropping…"
+  const dropLabel = busy ? (log ? "logging…" : "dropping…")
+    : log ? "log it · just for you"
     : recMode === "link" ? "drop + make a link"
     : recMode === "people" && recCount === 1 ? `send it to ${oneName}`
     : recMode === "people" && recCount > 1 ? `send it to ${recCount} people`
@@ -213,8 +217,16 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   return (
     <div className="w-full max-w-[460px] bg-surface border-[2.5px] border-frame rounded-[24px] shadow-[8px_8px_0_#7C5CE6] p-6">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="font-h text-2xl font-extrabold tracking-[-0.03em]">drop something</h2>
+        <h2 className="font-h text-2xl font-extrabold tracking-[-0.03em]">{log ? "log something" : "drop something"}</h2>
         <button onClick={() => router.push("/home")} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-lg">×</button>
+      </div>
+
+      {/* share with the crew, or keep it as a private log */}
+      <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-4">
+        <button onClick={() => setLog(false)}
+          className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg transition-colors ${!log ? "bg-vibe text-white" : "text-muted"}`}>share with the crew</button>
+        <button onClick={() => setLog(true)}
+          className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg transition-colors ${log ? "bg-vibe text-white" : "text-muted"}`}>just me</button>
       </div>
 
       <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-4">
@@ -311,6 +323,9 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
       <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="one-line take (optional)…"
         className="w-full mt-4 bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
 
+      {log ? (
+        <p className="mt-4 font-m text-[11px] text-muted">a private log — only you see it. it still shapes your taste signature.</p>
+      ) : (
       <div className="mt-4">
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
         <div className="flex gap-2 flex-wrap">
@@ -335,6 +350,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
           {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
         </div>
       </div>
+      )}
 
       {shareUrl ? (
         <div className="mt-5 bg-surface border-[2.5px] border-ink rounded-xl p-3.5">
