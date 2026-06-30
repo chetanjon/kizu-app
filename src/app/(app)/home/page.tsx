@@ -154,13 +154,13 @@ export default async function Home() {
                   // glow IS the type signal) · title hero · one quiet meta line ·
                   // one act-on-it pill · quiet engage strip. No type banner, no
                   // double pills, no floating badge.
-                  <article key={it.id} className="flex gap-4 py-5 border-t border-hair first:border-t-0">
-                    <div className={`w-[68px] h-[92px] flex-none rounded-[10px] border-[2px] border-frame overflow-hidden ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
+                  <article key={it.id} className="flex gap-[18px] py-6 border-t border-hair first:border-t-0">
+                    <div className={`w-[80px] h-[120px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" loading="lazy" decoding="async"
-                          className="w-full h-full object-cover" />}
+                          className="w-full h-full object-cover object-center" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-h font-bold text-[18px] tracking-[-0.02em] leading-[1.12] truncate">{title(it)}</h3>
+                      <h3 className="font-h font-bold text-[19px] tracking-[-0.02em] leading-[1.12] truncate">{title(it)}</h3>
                       {/* one quiet meta line — type as a small colored word, then detail */}
                       <div className="text-[13px] text-muted mt-0.5 truncate">
                         <span className="font-semibold" style={{ color: t.color }}>{typeWord(it)}</span>
