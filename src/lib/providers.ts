@@ -39,7 +39,8 @@ function youHaveIt(flatrate: number[] | null, mine: string[], fallbackUrl: strin
   const yours = SERVICES.find((s) => mine.includes(s.slug) && s.ids.some((id) => flat.has(id)));
   if (!yours) return null;
   const direct = title ? serviceWatchUrl(yours.slug, title) : null;
-  return { label: `${yours.name.toLowerCase()} · you have it`, url: direct ?? fallbackUrl, kind: "have" };
+  // label = just the service name; the green ✓ "have" pill conveys ownership.
+  return { label: yours.name.toLowerCase(), url: direct ?? fallbackUrl, kind: "have" };
 }
 
 /** For a set of (id, data) watch rows → a map of item id → availability pill.

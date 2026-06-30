@@ -11,8 +11,9 @@ import GenderSetter from "@/components/gender-setter";
 import NotificationsBell from "@/components/notifications-bell";
 import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
+import FeedTabs from "@/components/feed-tabs";
 import GroupSwitcher from "@/components/group-switcher";
-import { TYPE, SHADOW, img, title, detail, typeWord, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, detail, typeWord, ratingMark, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
@@ -117,7 +118,7 @@ export default async function Home() {
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
         {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}
 
-        {items.length === 0 ? (
+        {items.length === 0 && curate.length === 0 ? (
           <div className="mt-8 border border-dashed border-hair rounded-2xl p-14 text-center">
             <div className="font-h text-xl font-bold">nothing here yet.</div>
             <p className="text-muted text-sm mt-1">drop the first movie, song, or place you love.</p>
@@ -125,14 +126,17 @@ export default async function Home() {
             <p className="text-muted text-xs mt-6 font-m">share to invite: send <b>/join/{g.invite_code}</b></p>
           </div>
         ) : (
-          <>
-            <div className="flex items-center justify-between mt-7 mb-1">
-              <div className="flex items-center gap-2 font-h font-extrabold text-[17px] tracking-[-0.02em]">
-                <span className="text-vibe-2">✦</span> your people
-              </div>
-              <span className="font-m text-[12px] font-bold text-muted">{items.length} fresh</span>
-            </div>
-            <div className="flex flex-col">
+          <FeedTabs
+            fresh={items.length}
+            people={
+              items.length === 0 ? (
+                <div className="mt-10 text-center">
+                  <div className="font-h text-lg font-bold">nothing from your people yet.</div>
+                  <p className="text-muted text-sm mt-1">drop something, or peek at <span className="text-vibe-2">curate</span>.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col">
               {items.map((it) => {
                 const t = TYPE[it.type];
                 const cover = img(it);
@@ -154,13 +158,13 @@ export default async function Home() {
                   // glow IS the type signal) · title hero · one quiet meta line ·
                   // one act-on-it pill · quiet engage strip. No type banner, no
                   // double pills, no floating badge.
-                  <article key={it.id} className="flex gap-[18px] py-6 border-t border-hair first:border-t-0">
-                    <div className={`w-[80px] h-[120px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
+                  <article key={it.id} className="flex gap-5 py-6 border-t border-hair first:border-t-0">
+                    <div className={`w-[96px] h-[144px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" loading="lazy" decoding="async"
                           className="w-full h-full object-cover object-center" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-h font-bold text-[19px] tracking-[-0.02em] leading-[1.12] truncate">{title(it)}</h3>
+                      <h3 className="font-h font-bold text-[20px] tracking-[-0.02em] leading-[1.1] truncate">{title(it)}</h3>
                       {/* one quiet meta line — type as a small colored word, then detail */}
                       <div className="text-[13px] text-muted mt-0.5 truncate">
                         <span className="font-semibold" style={{ color: t.color }}>{typeWord(it)}</span>
@@ -173,7 +177,7 @@ export default async function Home() {
                       {/* rating · dropper ........ open in their app */}
                       <div className="mt-2.5 flex items-center gap-2.5 min-w-0">
                         <span className="font-m text-[11px] text-muted truncate min-w-0 flex items-center gap-2">
-                          {it.rating_value && <span className="text-vibe-2 flex-none">★ {it.rating_value}</span>}
+                          {it.rating_value && <span className="text-vibe-2 flex-none">{ratingMark(it.rating_value)}</span>}
                           <span className="truncate">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
                         </span>
                         {act && (
@@ -197,27 +201,24 @@ export default async function Home() {
                   </article>
                 );
               })}
-            </div>
-          </>
+                  </div>
+                  {/* the closer — your people end here */}
+                  <div className="mt-10 text-center">
+                    <div className="font-h text-lg font-bold">that&apos;s everyone.</div>
+                    <div className="font-m text-[11px] text-muted mt-1">you&apos;re all caught up · <span className="font-h font-extrabold">kizu<span className="text-red">.</span></span></div>
+                  </div>
+                </>
+              )
+            }
+            curate={
+              curate.length > 0 ? (
+                <CurateRiver initial={curate} queuedIds={queuedCurate} nextOffset={RIVER_PAGE} done={curate.length < RIVER_PAGE} />
+              ) : (
+                <div className="mt-10 text-center font-m text-[12px] text-muted">nothing curated yet — check back.</div>
+              )
+            }
+          />
         )}
-
-        {/* the threshold: your people end here; the curated world begins. */}
-        {curate.length > 0 ? (
-          <>
-            <div className="relative mt-12 mb-2 text-center">
-              <div className="border-t border-dashed border-hair" />
-              <span className="inline-block bg-paper px-3 -mt-3 relative font-m text-[11px] text-ink-2">
-                ✦ <span className="font-h font-extrabold text-ink">you&apos;re caught up.</span> here&apos;s what the world&apos;s loving
-              </span>
-            </div>
-            <CurateRiver initial={curate} queuedIds={queuedCurate} nextOffset={RIVER_PAGE} done={curate.length < RIVER_PAGE} />
-          </>
-        ) : items.length > 0 ? (
-          <div className="mt-10 text-center">
-            <div className="font-h text-lg font-bold">that&apos;s everyone.</div>
-            <div className="font-m text-[11px] text-muted mt-1">you&apos;re all caught up · <span className="font-h font-extrabold">kizu<span className="text-red">.</span></span></div>
-          </div>
-        ) : null}
       </main>
     </div>
   );
