@@ -81,36 +81,39 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
     // to watch" for film, "maps" for places.
     const act = r.availability ?? actionsFor(r, musicApp, false).find((a) => a.kind !== "set") ?? null;
     return (
-      <div className="flex gap-3.5 items-center bg-surface border border-hair rounded-xl p-2.5">
-        <div className={`w-[54px] h-[80px] flex-none rounded-lg border-2 border-frame overflow-hidden ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
+      <div className="flex gap-3.5 bg-surface border border-hair rounded-2xl p-3.5">
+        <div className={`w-[56px] h-[84px] flex-none rounded-lg border-2 border-frame overflow-hidden bg-surface-2 ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
           {cover && <img src={cover} alt="" className="w-full h-full object-cover object-center" />}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {/* "up next" stays loud — a reserved kizu signal, not chrome */}
           {r.key === upNextKey && <span title="easiest to start right now — a song plays instantly, a movie you have is one tap" className="inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 mb-1">↑ up next</span>}
-          <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
-          <div className="font-m text-[9px] text-muted truncate">
+          <h3 className="font-h font-extrabold text-[16px] leading-tight line-clamp-1">{title(r)}</h3>
+          <div className="font-m text-[10px] text-muted truncate mt-0.5">
             <span className="font-bold" style={{ color: t.color }}>{typeWord(r)}</span>{detail(r) && <> · {detail(r)}</>}{r.who ? ` · ${r.who.toLowerCase()}` : ""}
           </div>
-          {act && <ItemActions actions={[act]} className="mt-1.5" />}
-          {r.told && <div className="font-m text-[10px] text-vibe mt-1.5">✦ {r.told.toLowerCase()} will know it landed</div>}
-        </div>
-        <div className="ml-auto flex-none">
-          {r.done ? (
-            <span className="font-m text-[11px] font-bold text-go">{r.verdict === "loved" ? "♥ loved" : r.verdict}</span>
-          ) : (
-            <div className="flex gap-1.5">
-              {VERDICTS.map((v) => (
-                <button
-                  key={v.key}
-                  onClick={() => setVerdict(r, v.key)}
-                  className="font-h text-[10px] font-bold border-2 border-frame rounded-full px-2.5 py-1 bg-surface hover:bg-vibe hover:text-white transition-colors"
-                >
-                  {v.label}
-                </button>
-              ))}
-            </div>
-          )}
+          {r.note && <p className="text-[12.5px] text-ink-2 mt-1 leading-snug line-clamp-1">&ldquo;{r.note}&rdquo;</p>}
+
+          {/* act on it ........ how'd it land? — verdict drops below the title so it never crowds */}
+          <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+            {act && <ItemActions actions={[act]} />}
+            {r.done ? (
+              <span className="font-m text-[11px] font-bold text-go ml-auto">{r.verdict === "loved" ? "♥ loved" : r.verdict}</span>
+            ) : (
+              <div className="flex gap-1.5 ml-auto">
+                {VERDICTS.map((v) => (
+                  <button
+                    key={v.key}
+                    onClick={() => setVerdict(r, v.key)}
+                    className="font-h text-[10px] font-bold border-2 border-frame rounded-full px-2.5 py-1 bg-surface hover:bg-vibe hover:text-white transition-colors"
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {r.told && <div className="font-m text-[10px] text-vibe mt-2">✦ {r.told.toLowerCase()} will know it landed</div>}
         </div>
       </div>
     );
