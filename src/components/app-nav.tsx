@@ -11,26 +11,26 @@ import { usePathname } from "next/navigation";
 
 // ---- custom glyphs (filled, chunky; currentColor) ----
 const Home = () => (
-  <svg width="25" height="25" viewBox="0 0 24 24" aria-hidden>
+  <svg width="27" height="27" viewBox="0 0 24 24" aria-hidden>
     <rect x="8" y="4" width="12" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="2.3" />
     <rect x="4" y="8" width="12" height="12" rx="3" fill="currentColor" />
   </svg>
 );
 const Pick = () => (
-  <svg width="25" height="25" viewBox="0 0 24 24" aria-hidden>
+  <svg width="27" height="27" viewBox="0 0 24 24" aria-hidden>
     <rect x="8" y="5" width="9" height="12.5" rx="2" fill="none" stroke="currentColor" strokeWidth="2.2" transform="rotate(11 12 11)" />
     <rect x="7" y="7" width="9" height="12.5" rx="2" fill="currentColor" transform="rotate(-9 11 13)" />
   </svg>
 );
 const Queue = () => (
-  <svg width="25" height="25" viewBox="0 0 24 24" aria-hidden>
+  <svg width="27" height="27" viewBox="0 0 24 24" aria-hidden>
     <rect x="4" y="5.5" width="16" height="3.3" rx="1.65" fill="currentColor" />
     <rect x="4" y="10.4" width="16" height="3.3" rx="1.65" fill="currentColor" />
     <rect x="4" y="15.3" width="10" height="3.3" rx="1.65" fill="currentColor" />
   </svg>
 );
 const Plus = () => (
-  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" aria-hidden>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" aria-hidden>
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
@@ -38,7 +38,7 @@ const Plus = () => (
 // "profile" — a clean person mark (head + shoulders), matching the reference
 // design's ic-user. Gender-neutral; chunky stroke to sit with the other glyphs.
 const User = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <circle cx="12" cy="8" r="3.6" />
     <path d="M5.5 20.5a6.5 6.5 0 0 1 13 0" />
   </svg>
@@ -50,7 +50,7 @@ function Tab({ href, on, children }: { href: string; on: boolean; children: Reac
   return (
     <Link
       href={href}
-      className={`flex w-11 flex-col items-center gap-[5px] active:scale-95 transition-transform ${on ? "text-vibe-2" : "text-muted"}`}
+      className={`flex w-[52px] flex-col items-center gap-[6px] active:scale-95 transition-transform ${on ? "text-vibe-2" : "text-muted"}`}
     >
       {children}
       <span className={`h-[5px] w-[5px] rounded-full ${on ? "bg-vibe-2" : "bg-transparent"}`} />
@@ -64,14 +64,14 @@ export default function AppNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none">
-      <div className="glass pointer-events-auto flex items-center gap-1.5 rounded-full border-2 border-frame px-3 py-2 shadow-[5px_5px_0_#7C5CE6]">
+      <div className="glass pointer-events-auto flex items-center gap-2 rounded-full border-2 border-frame px-4 py-2.5 shadow-[5px_5px_0_#7C5CE6]">
         <Tab href="/home" on={isOn("/home")}><Home /></Tab>
         <Tab href="/tonight" on={isOn("/tonight")}><Pick /></Tab>
 
         {/* drop — the raised violet action, framed in cream */}
         <Link
           href="/drop"
-          className="mx-0.5 flex h-11 w-11 items-center justify-center rounded-full border-2 border-frame bg-vibe text-white shadow-[2px_3px_0_#0D0B09] transition active:translate-y-[1px] active:shadow-[1px_1px_0_#0D0B09]"
+          className="mx-0.5 flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 border-frame bg-vibe text-white shadow-[2px_3px_0_#0D0B09] transition active:translate-y-[1px] active:shadow-[1px_1px_0_#0D0B09]"
         >
           <Plus />
         </Link>

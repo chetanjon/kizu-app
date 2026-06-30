@@ -60,6 +60,13 @@ export function typeWord(it: RenderItem): string {
   return (s(it.data?.["media_type"])?.toLowerCase() === "tv") ? "tv" : "movie";
 }
 
+// a rating ready to render: prepend a ★ UNLESS the value is already stars
+// (so star ratings read "★★★★★", not "★ ★★★★★"; number/word read "★ 8" / "★ obsessed").
+export function ratingMark(v: string): string {
+  const t = v.trim();
+  return t.startsWith("★") ? t : `★ ${t}`;
+}
+
 export function detail(it: RenderItem): string {
   const d = it.data ?? {};
   if (it.type === "watch") return s(d["year"]) ?? "";

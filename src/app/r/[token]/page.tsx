@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { notFound } from "next/navigation";
 import RecCard from "@/components/rec-card";
-import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { TYPE, img, title, sub, ratingMark, type DropType } from "@/lib/item-render";
 import { signPhotos } from "@/lib/drop-photos";
 
 // Public, no-wall rec page. Reads the rec by EXACT token via the service-role
@@ -43,7 +43,7 @@ export default async function RecPage({ params }: { params: Promise<{ token: str
           <div className="aspect-[3/2] relative border-b-[3px] border-ink" style={{ background: cover ? undefined : t.color }}>
             {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
             <span className="absolute top-3 left-3 font-m text-[10px] font-bold border-[2px] border-white text-white rounded px-2 py-0.5">{t.label}</span>
-            {item.rating_value && <span className="glass absolute left-3 bottom-3 text-white font-m text-xs font-bold rounded-md px-2 py-0.5 border border-white/40">★ {item.rating_value}</span>}
+            {item.rating_value && <span className="glass absolute left-3 bottom-3 text-white font-m text-xs font-bold rounded-md px-2 py-0.5 border border-white/40">{ratingMark(item.rating_value)}</span>}
           </div>
           <div className="p-5">
             <div className="font-m text-[11px] text-vibe font-bold">{fromName.toLowerCase()} sent you this</div>

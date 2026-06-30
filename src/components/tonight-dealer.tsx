@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TYPE, SHADOW, img, title, typeWord, detail, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, typeWord, detail, ratingMark, type DropType } from "@/lib/item-render";
 import { actionsFor, type Action } from "@/lib/item-actions";
-import ItemActions from "@/components/item-actions";
 
 export type Cand = {
   key: string;
@@ -104,34 +103,48 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
         ))}
       </div>
 
-      <div className={`bg-surface border-[2.5px] border-frame rounded-2xl overflow-hidden ${SHADOW[current.type]}`}>
-        <div className="aspect-[3/2] relative" style={{ background: cover ? undefined : t.color }}>
-          {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
-        </div>
-        <div className="p-4">
-          <div className="font-h font-extrabold text-xl tracking-[-0.02em] leading-tight">{title(current)}</div>
-          {/* type folded into the meta (treatment A), not a corner badge */}
-          <div className="font-m text-[10px] text-muted mt-0.5">
-            <span className="font-bold" style={{ color: t.color }}>{typeWord(current)}</span>{detail(current) && <> · {detail(current)}</>}
-          </div>
-          <div className="font-m text-[11px] text-muted mt-2">
-            {current.curateDropId ? "✦ kizu curate" : "from your people"}
-            {current.who ? ` · ${current.who.toLowerCase()}` : ""}
-            {current.rating ? ` · rated ${current.rating}` : ""}
-            {current.moment ? ` · for ${current.moment}` : ""}
-          </div>
-          {current.note && <p className="text-sm mt-2 leading-snug italic">&ldquo;{current.note}&rdquo;</p>}
-          {current.proof && <div className="font-m text-[12px] font-bold text-go mt-2">♥ {current.proof}</div>}
-          {act && <ItemActions actions={[act]} className="mt-3" />}
+      {/* cinematic: the poster IS the card, with a scrim caption over the bottom */}
+      <div className={`relative rounded-2xl overflow-hidden border-[2.5px] border-frame ${SHADOW[current.type]}`}>
+        <div className="relative aspect-[2/3]" style={{ background: cover ? undefined : t.color }}>
+          {cover
+            ? <img src={cover} alt="" className="w-full h-full object-cover object-center" />
+            : <div className="absolute inset-0 flex items-center justify-center p-6 text-center"><span className="font-h font-extrabold text-2xl text-[#15110D] leading-tight">{title(current)}</span></div>}
 
-          <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
-            <button onClick={() => queueIt(current)} disabled={isQueued}
-              className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-3 shadow-[3px_3px_0_#0D0B09]">
-              {isQueued ? "✓ queued" : "＋ queue it"}
-            </button>
-            <button onClick={pass} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-full py-3">pass</button>
+          <div className="absolute inset-x-0 bottom-0 p-4 pt-24 bg-gradient-to-t from-black/95 via-black/55 to-transparent">
+            <div className="font-m text-[10px] text-white/65 mb-1">
+              {current.curateDropId ? "✦ kizu curate" : "from your people"}
+              {current.who ? ` · ${current.who.toLowerCase()}` : ""}
+              {current.rating ? ` · ${ratingMark(current.rating)}` : ""}
+              {current.moment ? ` · for ${current.moment}` : ""}
+            </div>
+            <h2 className="font-h font-extrabold text-2xl tracking-[-0.02em] leading-[1.05] text-white">{title(current)}</h2>
+            <div className="font-m text-[11px] mt-1 text-white/80">
+              <span className="font-bold" style={{ color: t.color }}>{typeWord(current)}</span>
+              {detail(current) && <> · {detail(current)}</>}
+              {current.proof && <span className="text-go"> · ♥ {current.proof}</span>}
+            </div>
+            {current.note && <p className="text-[13px] mt-2 leading-snug italic text-white/90 line-clamp-2">&ldquo;{current.note}&rdquo;</p>}
+            {act && (
+              <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
+                className={`inline-flex items-center mt-3 font-m text-[11px] font-bold rounded-full px-3.5 py-1.5 transition-transform active:scale-95 ${
+                  act.kind === "have" ? "bg-go text-[#15110D]"
+                  : act.primary ? "bg-vibe text-white"
+                  : "glass text-white border border-white/30"
+                }`}>
+                {act.kind === "have" ? `✓ ${act.label}` : act.label}
+              </a>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* the tonight decision */}
+      <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
+        <button onClick={() => queueIt(current)} disabled={isQueued}
+          className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-3.5 shadow-[3px_3px_0_#0D0B09] active:translate-y-[1px] transition-transform">
+          {isQueued ? "✓ queued" : "＋ queue it"}
+        </button>
+        <button onClick={pass} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-full py-3.5">pass</button>
       </div>
 
       <div className="text-center font-m text-[11px] text-muted mt-4">{idx + 1} of {hand.length} tonight</div>
