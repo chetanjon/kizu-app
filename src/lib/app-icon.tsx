@@ -10,10 +10,12 @@ function archivo(): Buffer {
   return fontCache;
 }
 
-// Framed neo-brutalist icon: cream field, an INSET rounded ink line-frame, and a
-// bold "k." with the precious red dot. The frame is inset (not flush to the
-// edge) so it reads as a clean rounded line, not a square border, once the OS
-// rounds the icon. maskable → larger inset so the round crop never touches it.
+// Cinematic-brutalist icon (dark rebrand): a warm-black field with a faint
+// violet nebula glowing from the top (echoing the app body), an INSET rounded
+// CREAM line-frame, and a bold light "k" with the precious red dot. The frame is
+// inset (not flush to the edge) so it reads as a clean rounded line, not a square
+// border, once the OS rounds the icon. maskable → larger inset so the round crop
+// never touches it.
 export function kizuIconResponse(size: number, opts?: { maskable?: boolean }) {
   const maskable = opts?.maskable ?? false;
   const pad = Math.round(size * (maskable ? 0.2 : 0.1));
@@ -31,7 +33,7 @@ export function kizuIconResponse(size: number, opts?: { maskable?: boolean }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#EDE3CE",
+          background: "radial-gradient(120% 120% at 50% 0%, #2A1F52 0%, #16130E 58%)",
         }}
       >
         <div
@@ -41,14 +43,14 @@ export function kizuIconResponse(size: number, opts?: { maskable?: boolean }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            border: `${border}px solid #14110F`,
+            border: `${border}px solid #EDE3CE`,
             borderRadius: radius,
             boxSizing: "border-box",
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", fontFamily: "Archivo", fontWeight: 800, lineHeight: 1 }}>
-            <span style={{ fontSize: glyph, color: "#14110F" }}>k</span>
-            <span style={{ fontSize: glyph, color: "#FF2E4D" }}>.</span>
+            <span style={{ fontSize: glyph, color: "#F6F1EA" }}>k</span>
+            <span style={{ fontSize: glyph, color: "#FF3B5C" }}>.</span>
           </div>
         </div>
       </div>
