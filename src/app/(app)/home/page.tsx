@@ -169,12 +169,19 @@ export default async function Home() {
                   // glow IS the type signal) · title hero · one quiet meta line ·
                   // one act-on-it pill · quiet engage strip. No type banner, no
                   // double pills, no floating badge.
-                  <article key={it.id} className="flex gap-5 py-6 border-t border-hair first:border-t-0">
+                  <article key={it.id} className="relative flex gap-5 py-6 border-t border-hair first:border-t-0">
+                    {/* top-right corner = this card's one affordance:
+                        ⋯ (delete) on your own drops · bookmark (save→queue) on others' */}
+                    <div className="absolute top-6 right-0 z-10">
+                      {mine
+                        ? <DeleteDrop itemId={it.id} />
+                        : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} variant="icon" />}
+                    </div>
                     <div className={`w-[96px] h-[144px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" loading="lazy" decoding="async"
                           className="w-full h-full object-cover object-center" />}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-9">
                       <h3 className="font-h font-bold text-[20px] tracking-[-0.02em] leading-[1.1] truncate">{title(it)}</h3>
                       {/* one quiet meta line — type as a small colored word, then detail */}
                       <div className="text-[13px] text-muted mt-0.5 truncate">
@@ -203,10 +210,10 @@ export default async function Home() {
                         )}
                       </div>
 
-                      {/* quiet engage strip — acknowledgment + save */}
-                      <div className="mt-2 flex items-center justify-between gap-2">
+                      {/* quiet engage strip — just the acknowledgment layer now
+                          (save/delete live in the card's top-right corner) */}
+                      <div className="mt-2">
                         <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} />
-                        {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
                       </div>
                     </div>
                   </article>

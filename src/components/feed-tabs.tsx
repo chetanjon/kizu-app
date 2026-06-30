@@ -4,24 +4,11 @@ import { useState } from "react";
 
 type TabId = "people" | "curate";
 
-function Tab({ label, active, onSelect }: { label: string; active: boolean; onSelect: () => void }) {
-  return (
-    <button
-      onClick={onSelect}
-      className={`relative pb-2.5 font-h font-extrabold text-[17px] tracking-[-0.02em] transition-colors ${
-        active ? "text-ink" : "text-muted"
-      }`}
-    >
-      {label}
-      {active && <span className="absolute left-0 -bottom-px h-[2px] w-full bg-vibe-2 rounded-full" />}
-    </button>
-  );
-}
-
-// Segmented toggle at the top of Home: "✦ your people" | "✦ curate".
-// Both feeds are rendered server-side and passed in as slots; this only
-// switches which one is mounted. your-people is the default (the trust circle
-// stays the hero); curate is one tap away.
+// Segmented toggle at the top of Home: "your people" | "the world". A violet
+// tile SLIDES between the two — the same one-motion-violet-tile language as the
+// bottom nav, so it reads as kizu, not a generic underline. Both feeds are
+// rendered server-side and passed in as slots; this only switches which mounts.
+// your-people is the default (the trust circle stays the hero).
 export default function FeedTabs({
   fresh,
   people,
@@ -35,12 +22,25 @@ export default function FeedTabs({
 
   return (
     <div className="mt-7">
-      <div className="flex items-center gap-5 border-b border-hair">
-        <Tab label="your people" active={tab === "people"} onSelect={() => setTab("people")} />
-        <Tab label="the world" active={tab === "curate"} onSelect={() => setTab("curate")} />
-        {tab === "people" && <span className="ml-auto font-m text-[12px] font-bold text-muted">{fresh} fresh</span>}
+      <div className="flex items-center gap-3">
+        <div className="relative flex w-[244px] rounded-full border border-hair bg-surface overflow-hidden select-none">
+          {/* the sliding violet tile — fills the active half */}
+          <span aria-hidden
+            className={`absolute inset-y-0 left-0 w-1/2 bg-vibe transition-transform duration-300 ease-out ${tab === "curate" ? "translate-x-full" : ""}`} />
+          <button onClick={() => setTab("people")}
+            className={`relative z-10 flex-1 py-2 font-h font-extrabold text-[13px] tracking-[-0.02em] transition-colors ${tab === "people" ? "text-white" : "text-muted"}`}>
+            your people
+          </button>
+          <button onClick={() => setTab("curate")}
+            className={`relative z-10 flex-1 py-2 font-h font-extrabold text-[13px] tracking-[-0.02em] transition-colors ${tab === "curate" ? "text-white" : "text-muted"}`}>
+            the world
+          </button>
+        </div>
+        {tab === "people" && fresh > 0 && (
+          <span className="ml-auto font-m text-[11px] font-bold text-vibe-2">{fresh} fresh</span>
+        )}
       </div>
-      <div className="mt-1">{tab === "people" ? people : curate}</div>
+      <div className="mt-2">{tab === "people" ? people : curate}</div>
     </div>
   );
 }
