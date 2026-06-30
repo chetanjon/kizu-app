@@ -7,7 +7,6 @@ import Reactions from "@/components/reactions";
 import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
 import QueueButton from "@/components/queue-button";
-import GenderSetter from "@/components/gender-setter";
 import NotificationsBell from "@/components/notifications-bell";
 import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
@@ -44,7 +43,7 @@ export default async function Home() {
   // (getMemberships is request-memoized, so this reuses the layout's call.)
   const [memberships, meRes, cRes, cqRes] = await Promise.all([
     getMemberships(user.id),
-    supabase.from("users").select("name, gender, music_app, services").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("name, music_app, services").eq("id", user.id).maybeSingle(),
     supabase
       .from("curate_drops")
       .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, photo_url, where_met, consent)")
@@ -58,7 +57,6 @@ export default async function Home() {
   const active = memberships.find((m) => m.is_home) ?? memberships[0];
   const g = active.groups!;
   const myName = meRes.data?.name ?? null;
-  const myGender = meRes.data?.gender ?? null;
   const myMusicApp = meRes.data?.music_app ?? null;
   const curate = ((cRes.data ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
   const queuedCurate = (cqRes.data ?? []).map((r) => r.curate_drop_id as string);
@@ -117,7 +115,6 @@ export default async function Home() {
         <VibeRead groupId={g.id} initial={(latestRead?.card_data as VibeReadData) ?? null} />
         <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
-        {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}
 
         {/* quick decide — jump straight into tonight's shuffle, pre-lensed */}
         <div className="mt-6">
@@ -187,7 +184,7 @@ export default async function Home() {
                       <div className="text-[13px] text-muted mt-0.5 truncate">
                         <span className="font-semibold" style={{ color: t.color }}>{typeWord(it)}</span>
                         {detail(it) && <span> · {detail(it)}</span>}
-                        {forYou && <span className="text-vibe-2"> · ✦ for you</span>}
+                        {forYou && <span className="text-vibe-2" title="someone sent this to you directly"> · ✦ for you</span>}
                       </div>
                       {it.note && <p className="text-[12.5px] text-ink-2 mt-1.5 leading-snug line-clamp-1">&ldquo;{it.note}&rdquo;</p>}
                       {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}

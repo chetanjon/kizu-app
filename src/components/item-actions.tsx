@@ -15,7 +15,7 @@ export default function ItemActions({ actions, className = "" }: { actions: Acti
           <a
             key={i}
             href={a.url}
-            className="inline-flex items-center gap-1 font-m text-[10px] font-bold border-[2px] border-dashed border-hair text-muted rounded-full px-2.5 py-1 hover:border-ink hover:text-ink transition-colors"
+            className="inline-flex items-center gap-1 font-m text-[10px] font-bold border-[2px] border-dashed border-hair text-muted rounded-full px-2.5 py-1 hover:border-frame hover:text-ink transition-colors"
           >
             <span aria-hidden className="text-[9px] leading-none">♪</span>
             {a.label}

@@ -24,7 +24,7 @@ export default async function ManageGroup() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="flex items-center gap-3 px-6 h-16 border-b-[2px] border-ink">
+      <header className="flex items-center gap-3 px-6 h-16 border-b-[2px] border-frame">
         <Link href="/home" className="font-m text-sm font-bold">← back</Link>
         <span className="font-h text-xl font-extrabold tracking-[-0.05em]">manage group</span>
       </header>
@@ -44,7 +44,7 @@ export default async function ManageGroup() {
           <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-3">members · {members.length}</div>
           <div className="flex flex-col gap-2">
             {members.map((m) => (
-              <div key={m.user_id} className="flex items-center gap-2 bg-surface border-[2px] border-ink rounded-xl px-3 py-2.5">
+              <div key={m.user_id} className="flex items-center gap-2 bg-surface border-[2px] border-frame rounded-xl px-3 py-2.5">
                 <span className="font-b font-semibold text-sm">{(m.users?.name || "someone").toLowerCase()}</span>
                 {m.user_id === user.id && <span className="font-m text-[10px] text-muted">you</span>}
                 {m.user_id === groupRow?.created_by && <span className="ml-auto font-m text-[10px] font-bold text-vibe">founder</span>}

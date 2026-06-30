@@ -120,8 +120,11 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
           <InstallPrompt inline />
           <ServicesSetter initial={me?.services ?? []} />
           <MusicAppSetter initial={me?.music_app ?? null} incoming={incoming} />
-          <PushToggle />
-          <MuteDropsToggle initialMuted={me?.mute_drop_pings ?? false} />
+          {/* notifications — one group: the master switch, then what it pings about */}
+          <div className="flex flex-col gap-1">
+            <PushToggle />
+            <MuteDropsToggle initialMuted={me?.mute_drop_pings ?? false} />
+          </div>
         </div>
       </div>
 

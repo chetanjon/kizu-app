@@ -47,24 +47,24 @@ export default function InstallPrompt({ inline = false }: { inline?: boolean }) 
   const installBtn = (
     <button
       onClick={onInstall}
-      className="font-h font-bold text-xs bg-vibe text-white border-[2px] border-ink rounded-full px-3.5 py-1.5 shrink-0"
+      className="font-h font-bold text-xs bg-vibe text-white border-[2px] border-frame rounded-full px-3.5 py-1.5 shrink-0"
     >
       install
     </button>
   );
 
   const howtoBox = howto ? (
-    <div className="mt-2 bg-surface text-ink border-[2.5px] border-ink rounded-2xl px-4 py-3.5 shadow-[3px_3px_0_#14110F]">
+    <div className="mt-2 bg-surface text-ink border-[2.5px] border-frame rounded-2xl px-4 py-3.5 shadow-[3px_3px_0_#0D0B09]">
       <div className="font-h font-extrabold text-sm">add kizu<span className="text-red">.</span> to your home screen</div>
       <div className="mt-2.5 flex flex-col gap-2.5 font-m text-[12px]">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[2px] border-ink bg-surface-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[2px] border-frame bg-surface-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 14V4" /><path d="M8.5 7.5 12 4l3.5 3.5" /><path d="M6 12v6.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V12" /></svg>
           </span>
           <span>tap <b>Share</b> — the box-with-an-arrow at the <b>bottom</b> of Safari</span>
         </div>
         <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[2px] border-ink bg-surface-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[2px] border-frame bg-surface-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M12 8v8M8 12h8" /></svg>
           </span>
           <span>choose <b>Add to Home Screen</b></span>

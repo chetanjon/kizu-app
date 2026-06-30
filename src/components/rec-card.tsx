@@ -38,7 +38,7 @@ export default function RecCard({
     return (
       <a
         href={`/login?next=${encodeURIComponent(`/r/${token}`)}`}
-        className="block text-center font-h font-extrabold text-[15px] text-white bg-vibe border-[2.5px] border-ink rounded-xl py-3.5 shadow-[4px_4px_0_#14110F]"
+        className="block text-center font-h font-extrabold text-[15px] text-white bg-vibe border-[2.5px] border-frame rounded-xl py-3.5 shadow-[4px_4px_0_#0D0B09]"
       >
         sign in to save it
       </a>
@@ -49,9 +49,9 @@ export default function RecCard({
     <button
       onClick={claim}
       disabled={busy || saved}
-      className="w-full font-h font-extrabold text-[15px] text-white bg-vibe border-[2.5px] border-ink rounded-xl py-3.5 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
+      className="w-full font-h font-extrabold text-[15px] text-white bg-vibe border-[2.5px] border-frame rounded-xl py-3.5 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
     >
-      {saved ? "✓ saved to your queue" : busy ? "saving…" : "＋ add to my queue"}
+      {saved ? "✓ queued" : busy ? "queuing…" : "＋ queue this"}
     </button>
   );
 }

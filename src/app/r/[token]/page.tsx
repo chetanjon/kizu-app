@@ -39,8 +39,8 @@ export default async function RecPage({ params }: { params: Promise<{ token: str
         <div className="text-center mb-5">
           <span className="font-h text-3xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
         </div>
-        <div className="bg-surface border-[3px] border-ink rounded-[24px] overflow-hidden shadow-[8px_8px_0_#14110F]">
-          <div className="aspect-[3/2] relative border-b-[3px] border-ink" style={{ background: cover ? undefined : t.color }}>
+        <div className="bg-surface border-[3px] border-frame rounded-[24px] overflow-hidden shadow-[8px_8px_0_#0D0B09]">
+          <div className="aspect-[3/2] relative border-b-[3px] border-frame" style={{ background: cover ? undefined : t.color }}>
             {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
             <span className="absolute top-3 left-3 font-m text-[10px] font-bold border-[2px] border-white text-white rounded px-2 py-0.5">{t.label}</span>
             {item.rating_value && <span className="glass absolute left-3 bottom-3 text-white font-m text-xs font-bold rounded-md px-2 py-0.5 border border-white/40">{ratingMark(item.rating_value)}</span>}

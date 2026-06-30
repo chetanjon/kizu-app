@@ -125,7 +125,7 @@ export default function CurateAdmin() {
     load();
   }
 
-  const field = "w-full border-[2.5px] border-ink rounded-xl px-3 py-2 font-b text-sm bg-surface";
+  const field = "w-full border-[2.5px] border-frame rounded-xl px-3 py-2 font-b text-sm bg-surface";
   const label = "font-m text-[10px] tracking-widest uppercase text-muted";
 
   return (
@@ -134,7 +134,7 @@ export default function CurateAdmin() {
       <h1 className="font-h text-3xl font-extrabold tracking-[-0.04em] mt-1">kizu<span className="text-red">.</span> curate</h1>
       <p className="text-muted text-sm mt-1 font-b">real people, real consent. each pick is one human + one thing, tagged to a moment.</p>
 
-      <div className="mt-6 bg-surface border-[2.5px] border-ink rounded-2xl p-5 shadow-[5px_5px_0_#14110F] flex flex-col gap-4">
+      <div className="mt-6 bg-surface border-[2.5px] border-frame rounded-2xl p-5 shadow-[5px_5px_0_#0D0B09] flex flex-col gap-4">
         <div className="font-h font-extrabold text-sm">the person</div>
         <div className="grid grid-cols-2 gap-3">
           <div><div className={label}>name</div><input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Rui" /></div>
@@ -144,9 +144,9 @@ export default function CurateAdmin() {
           <div className={label}>photo</div>
           <div className="flex items-center gap-3 mt-1">
             {photoUrl
-              ? <img src={photoUrl} alt="" className="w-14 h-14 rounded-full border-[2.5px] border-ink object-cover" />
-              : <div className="w-14 h-14 rounded-full border-[2.5px] border-dashed border-ink flex-none" />}
-            <label className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-ink rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap">
+              ? <img src={photoUrl} alt="" className="w-14 h-14 rounded-full border-[2.5px] border-frame object-cover" />
+              : <div className="w-14 h-14 rounded-full border-[2.5px] border-dashed border-frame flex-none" />}
+            <label className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-frame rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap">
               {uploading ? "uploading…" : photoUrl ? "change photo" : "upload / take photo"}
               <input type="file" accept="image/*" capture="environment" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
@@ -164,13 +164,13 @@ export default function CurateAdmin() {
         <div className="flex gap-2">
           {TYPES.map((t) => (
             <button key={t} onClick={() => setType(t)}
-              className={`font-m text-[11px] font-bold border-[2px] border-ink rounded-full px-3 py-1.5 ${type === t ? "text-white" : "bg-surface"}`}
+              className={`font-m text-[11px] font-bold border-[2px] border-frame rounded-full px-3 py-1.5 ${type === t ? "text-white" : "bg-surface"}`}
               style={type === t ? { background: TYPE[t].color } : {}}>{TYPE[t].label}</button>
           ))}
         </div>
         <div className="flex gap-2">
           <input className={field} value={link} onChange={(e) => setLink(e.target.value)} placeholder="paste a link (tmdb / spotify / maps…)" />
-          <button onClick={resolveLink} className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-ink rounded-xl px-4 whitespace-nowrap">resolve</button>
+          <button onClick={resolveLink} className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-frame rounded-xl px-4 whitespace-nowrap">resolve</button>
         </div>
         {resolved ? (
           <div className="font-m text-xs text-go">✓ {resolved}</div>
@@ -190,7 +190,7 @@ export default function CurateAdmin() {
         <div><div className={label}>their words</div><textarea className={field} value={words} onChange={(e) => setWords(e.target.value)} rows={2} placeholder="the only film i rewatch every winter." /></div>
 
         <button onClick={submit} disabled={busy}
-          className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-3 shadow-[3px_3px_0_#14110F] disabled:opacity-50">
+          className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-3 shadow-[3px_3px_0_#0D0B09] disabled:opacity-50">
           {busy ? "adding…" : "add to curate"}
         </button>
         {msg && <div className="font-m text-xs text-center text-ink-2">{msg}</div>}
@@ -199,16 +199,16 @@ export default function CurateAdmin() {
       <div className="mt-8 font-m text-[11px] tracking-widest uppercase text-muted">existing · {drops.length}</div>
       <div className="mt-3 flex flex-col gap-2">
         {drops.map((d) => (
-          <div key={d.id} className="flex items-center gap-3 bg-surface border-[2px] border-ink rounded-xl p-2.5">
-            <span className="font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: TYPE[d.type].color }}>{TYPE[d.type].label}</span>
+          <div key={d.id} className="flex items-center gap-3 bg-surface border-[2px] border-frame rounded-xl p-2.5">
+            <span className="font-m text-[8px] font-bold border-[1.5px] border-frame rounded px-1.5 py-0.5 text-white" style={{ background: TYPE[d.type].color }}>{TYPE[d.type].label}</span>
             <div className="min-w-0">
               <div className="font-h font-bold text-sm truncate">{String(d.data?.title ?? d.data?.place_name ?? "untitled")}</div>
               <div className="font-m text-[9px] text-muted truncate">{d.curate_people?.name} · {d.moment}{d.curate_people?.consent ? "" : " · ⚠ no consent"}</div>
             </div>
             <div className="ml-auto flex gap-1.5">
-              <button onClick={() => toggleConsent(d)} className={`font-m text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 ${d.curate_people?.consent ? "bg-ink text-paper" : "bg-surface text-red"}`}>{d.curate_people?.consent ? "consent ✓" : "consent ✗"}</button>
-              <button onClick={() => togglePublish(d)} className={`font-m text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 ${d.published ? "bg-go text-white" : "bg-surface"}`}>{d.published ? "live" : "draft"}</button>
-              <button onClick={() => remove(d.id)} className="font-m text-[10px] font-bold text-red border-[2px] border-ink rounded-full px-2.5 py-1">del</button>
+              <button onClick={() => toggleConsent(d)} className={`font-m text-[10px] font-bold border-[2px] border-frame rounded-full px-2.5 py-1 ${d.curate_people?.consent ? "bg-ink text-paper" : "bg-surface text-red"}`}>{d.curate_people?.consent ? "consent ✓" : "consent ✗"}</button>
+              <button onClick={() => togglePublish(d)} className={`font-m text-[10px] font-bold border-[2px] border-frame rounded-full px-2.5 py-1 ${d.published ? "bg-go text-white" : "bg-surface"}`}>{d.published ? "live" : "draft"}</button>
+              <button onClick={() => remove(d.id)} className="font-m text-[10px] font-bold text-red border-[2px] border-frame rounded-full px-2.5 py-1">del</button>
             </div>
           </div>
         ))}

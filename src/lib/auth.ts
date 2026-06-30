@@ -22,10 +22,10 @@ export const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("users")
-    .select("name, gender")
+    .select("name")
     .eq("id", userId)
     .maybeSingle();
-  return (data ?? { name: null, gender: null }) as { name: string | null; gender: string | null };
+  return (data ?? { name: null }) as { name: string | null };
 });
 
 export const getMemberships = cache(async (userId: string): Promise<Membership[]> => {
