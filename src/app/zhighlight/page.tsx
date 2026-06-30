@@ -39,7 +39,7 @@ const ITEMS: HL[] = [
 function Tile({ h }: { h: HL }) {
   return (
     <div
-      className="kz-card group relative w-[212px] aspect-[3/4] rounded-[18px] overflow-hidden border-[2.5px] border-frame flex-none"
+      className="kz-card group relative w-[214px] aspect-[3/4] rounded-[20px] overflow-hidden flex-none"
       style={{ background: ART[h.type], ["--glow" as string]: GLOW[h.type] }}
     >
       {/* cinematic scrim — dark at the foot, lets the art breathe up top */}
@@ -69,14 +69,14 @@ export default function ZHighlight() {
         @keyframes kz-marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
         .kz-track { animation: kz-marquee 50s linear infinite; }
         .kz-track:hover { animation-play-state: paused; }
-        /* the signature: a hard blur-less COLORED shadow + a gentle living glow */
+        /* no frame — the art bleeds and emits a soft colored glow, like a lit poster */
         .kz-card {
-          box-shadow: 6px 7px 0 0 var(--glow), 0 0 26px -6px color-mix(in srgb, var(--glow) 70%, transparent);
+          box-shadow: 0 14px 50px -14px color-mix(in srgb, var(--glow) 70%, transparent);
           animation: kz-breathe 5.5s ease-in-out infinite;
         }
         @keyframes kz-breathe {
-          0%, 100% { box-shadow: 6px 7px 0 0 var(--glow), 0 0 22px -8px color-mix(in srgb, var(--glow) 55%, transparent); }
-          50%      { box-shadow: 6px 7px 0 0 var(--glow), 0 0 40px -4px color-mix(in srgb, var(--glow) 85%, transparent); }
+          0%, 100% { box-shadow: 0 12px 40px -16px color-mix(in srgb, var(--glow) 52%, transparent); }
+          50%      { box-shadow: 0 18px 66px -10px color-mix(in srgb, var(--glow) 88%, transparent); }
         }
         .kz-sheen {
           background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.10) 47%, rgba(255,255,255,0.02) 54%, transparent 70%);
@@ -99,7 +99,7 @@ export default function ZHighlight() {
       </h2>
 
       <div className="overflow-visible -mx-5 px-5">
-        <div className="flex gap-5 w-max kz-track py-3">
+        <div className="flex gap-6 w-max kz-track py-6">
           {[...ITEMS, ...ITEMS].map((h, k) => <Tile key={k} h={h} />)}
         </div>
       </div>
