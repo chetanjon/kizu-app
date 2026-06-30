@@ -36,8 +36,6 @@ function dealOrder<T>(arr: T[], seed: number): T[] {
 }
 
 export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[]; musicApp?: string | null }) {
-  // only the first song in the pool carries the "pick your music app" prompt.
-  const firstListenKey = pool.find((c) => c.type === "listen")?.key;
   const [lens, setLens] = useState<Lens | null>(null);
   const [idx, setIdx] = useState(0);
   const [queuedKey, setQueuedKey] = useState<string | null>(null);
@@ -91,6 +89,9 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
   const t = TYPE[current.type];
   const cover = img(current);
   const isQueued = queuedKey === current.key;
+  // one act-on-it — their subscription app for music, "you have it" / "where to
+  // watch" for film, "maps" for places.
+  const act = current.availability ?? actionsFor(current, musicApp, false).find((a) => a.kind !== "set") ?? null;
 
   return (
     <div className="mt-6">
@@ -121,7 +122,7 @@ export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[];
           </div>
           {current.note && <p className="text-sm mt-2 leading-snug italic">&ldquo;{current.note}&rdquo;</p>}
           {current.proof && <div className="font-m text-[12px] font-bold text-go mt-2">♥ {current.proof}</div>}
-          <ItemActions actions={current.availability ? [current.availability] : actionsFor(current, musicApp, current.key === firstListenKey)} className="mt-3" />
+          {act && <ItemActions actions={[act]} className="mt-3" />}
 
           <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
             <button onClick={() => queueIt(current)} disabled={isQueued}

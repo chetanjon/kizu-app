@@ -69,8 +69,6 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
   const shown = state.filter((r) => filter === "all" || r.type === filter);
   const want = shown.filter((r) => !r.done);
   const done = shown.filter((r) => r.done);
-  // only the first song shown carries the "pick your music app" prompt.
-  const firstListenKey = [...want, ...done].find((r) => r.type === "listen")?.key;
   // the single easiest win among things you still want to get to.
   const upNextKey = want.length
     ? want.reduce((best, r) => (easeScore(r) > easeScore(best) ? r : best)).key
@@ -79,10 +77,13 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
   const Row = ({ r }: { r: QRow }) => {
     const t = TYPE[r.type];
     const cover = img(r);
+    // one act-on-it — their subscription app for music, "you have it" / "where
+    // to watch" for film, "maps" for places.
+    const act = r.availability ?? actionsFor(r, musicApp, false).find((a) => a.kind !== "set") ?? null;
     return (
       <div className="flex gap-3.5 items-center bg-surface border border-hair rounded-xl p-2.5">
-        <div className={`w-[52px] h-[68px] flex-none rounded-lg border-2 border-frame overflow-hidden ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
-          {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
+        <div className={`w-[54px] h-[80px] flex-none rounded-lg border-2 border-frame overflow-hidden ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
+          {cover && <img src={cover} alt="" className="w-full h-full object-cover object-center" />}
         </div>
         <div className="min-w-0">
           {/* "up next" stays loud — a reserved kizu signal, not chrome */}
@@ -91,7 +92,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
           <div className="font-m text-[9px] text-muted truncate">
             <span className="font-bold" style={{ color: t.color }}>{typeWord(r)}</span>{detail(r) && <> · {detail(r)}</>}{r.who ? ` · ${r.who.toLowerCase()}` : ""}
           </div>
-          <ItemActions actions={r.availability ? [r.availability] : actionsFor(r, musicApp, r.key === firstListenKey)} className="mt-1.5" />
+          {act && <ItemActions actions={[act]} className="mt-1.5" />}
           {r.told && <div className="font-m text-[10px] text-vibe mt-1.5">✦ {r.told.toLowerCase()} will know it landed</div>}
         </div>
         <div className="ml-auto flex-none">
