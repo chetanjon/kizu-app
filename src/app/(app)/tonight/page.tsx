@@ -40,6 +40,7 @@ export default async function Tonight({ searchParams }: { searchParams: Promise<
     .select("id, type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)")
     .eq("group_id", active.group_id)
     .neq("created_by", user.id)
+    .eq("private", false)
     .order("created_at", { ascending: false })
     .limit(40);
 
