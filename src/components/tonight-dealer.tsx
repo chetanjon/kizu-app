@@ -38,15 +38,19 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
   // a lens passed from the Home "what's good tonight" chips skips the picker.
   const [lens, setLens] = useState<Lens | null>(initialLens);
   const [idx, setIdx] = useState(0);
+  // bumped on each (re)deal so the hand actually reshuffles; kept out of render
+  // so it never desyncs hydration (only changes from user taps).
+  const [deal, setDeal] = useState(0);
   const [queuedKey, setQueuedKey] = useState<string | null>(null);
 
   const hand = useMemo(() => {
     if (!lens) return [];
     const filtered = lens === "all" ? pool : pool.filter((c) => c.type === lens);
-    return dealOrder(filtered, idx === 0 ? 0 : 0).slice(0, 8); // small hand
-  }, [lens, pool, idx]);
+    return dealOrder(filtered, deal).slice(0, 8); // small hand, rotated by the deal seed
+  }, [lens, pool, deal]);
 
-  function pick(l: Lens) { setLens(l); setIdx(0); setQueuedKey(null); }
+  function pick(l: Lens) { setLens(l); setIdx(0); setDeal((d) => d + 1); setQueuedKey(null); }
+  function reshuffle() { setIdx(0); setDeal((d) => d + 1); setQueuedKey(null); }
 
   async function queueIt(c: Cand) {
     setQueuedKey(c.key);
@@ -79,9 +83,9 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
   if (!current) {
     return (
       <div className="mt-8 text-center border-2 border-dashed border-hair rounded-2xl p-12">
-        <div className="font-h text-xl font-bold">that&apos;s the hand for tonight.</div>
-        <p className="text-muted text-sm mt-1">queued what you liked. come back tomorrow.</p>
-        <button onClick={() => setLens(null)} className="mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#7C5CE6]">again</button>
+        <div className="font-h text-xl font-bold">that&apos;s the hand.</div>
+        <p className="text-muted text-sm mt-1">queued what you liked. deal again, or switch the lens.</p>
+        <button onClick={reshuffle} className="mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#7C5CE6]">deal again</button>
       </div>
     );
   }
@@ -143,7 +147,7 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
       <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
         <button onClick={() => queueIt(current)} disabled={isQueued}
           className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-3.5 shadow-[3px_3px_0_#0D0B09] active:translate-y-[1px] transition-transform">
-          {isQueued ? "✓ queued" : "＋ queue it"}
+          {isQueued ? "✓ queued" : "＋ queue"}
         </button>
         <button onClick={pass} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-full py-3.5">pass</button>
       </div>

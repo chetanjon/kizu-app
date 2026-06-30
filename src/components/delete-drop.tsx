@@ -30,7 +30,7 @@ export default function DeleteDrop({ itemId }: { itemId: string }) {
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-9 z-20 min-w-[124px] bg-surface border border-hair rounded-xl shadow-[3px_3px_0_#0D0B09] overflow-hidden">
             <button onClick={del} disabled={busy}
-              className="block w-full text-left font-m text-[12px] text-listen px-3.5 py-2.5 hover:bg-surface-2 disabled:opacity-60">
+              className="block w-full text-left font-m text-[12px] text-ink-2 hover:text-red px-3.5 py-2.5 hover:bg-surface-2 disabled:opacity-60">
               {busy ? "deleting…" : "delete drop"}
             </button>
           </div>

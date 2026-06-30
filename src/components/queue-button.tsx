@@ -47,7 +47,7 @@ export default function QueueButton({
         onClick={toggle}
         disabled={busy}
         aria-pressed={queued}
-        aria-label={queued ? "queued — tap to remove from your queue" : "save to your queue"}
+        aria-label={queued ? "queued — tap to remove from your queue" : "add to your queue"}
         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 disabled:opacity-60 ${
           queued ? "text-vibe-2" : "text-ink-2 hover:text-vibe-2"
         }`}
@@ -64,11 +64,11 @@ export default function QueueButton({
     <button
       onClick={toggle}
       disabled={busy}
-      className={`font-h text-[11px] font-bold border-[2px] border-ink rounded-full px-3 py-1.5 transition-colors ${
+      className={`font-h text-[11px] font-bold border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${
         queued ? "bg-vibe text-white" : "bg-surface text-ink hover:bg-surface-2"
       }`}
     >
-      {queued ? "✓ queued" : "＋ want"}
+      {queued ? "✓ queued" : "＋ queue"}
     </button>
   );
 }

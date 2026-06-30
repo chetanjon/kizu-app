@@ -43,15 +43,15 @@ export default function NotificationsBell() {
 
   return (
     <div className="relative">
-      <button onClick={toggle} aria-label="notifications" className="relative w-9 h-9 flex items-center justify-center rounded-full border-[2px] border-ink bg-surface">
+      <button onClick={toggle} aria-label="notifications" className="relative w-9 h-9 flex items-center justify-center rounded-full border-[2px] border-frame bg-surface">
         <span className="text-[18px] leading-none" aria-hidden="true">🔔</span>
-        {unread > 0 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-vibe text-white font-m text-[10px] font-bold flex items-center justify-center border-[1.5px] border-ink">{unread}</span>}
+        {unread > 0 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-vibe text-white font-m text-[10px] font-bold flex items-center justify-center border-[1.5px] border-frame">{unread}</span>}
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-2 w-[280px] z-40 bg-surface border-[2.5px] border-ink rounded-2xl shadow-[5px_5px_0_#14110F] overflow-hidden">
+          <div className="absolute right-0 mt-2 w-[280px] z-40 bg-surface border-[2.5px] border-frame rounded-2xl shadow-[5px_5px_0_#0D0B09] overflow-hidden">
             <div className="px-4 py-3 border-b-[2px] border-hair flex items-center justify-between gap-3">
               <span className="font-m text-[10px] tracking-widest uppercase text-muted">kizu<span className="text-red">.</span> noticed</span>
               {items.length > 0 && (

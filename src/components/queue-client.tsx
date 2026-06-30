@@ -87,7 +87,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
         </div>
         <div className="min-w-0">
           {/* "up next" stays loud — a reserved kizu signal, not chrome */}
-          {r.key === upNextKey && <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 mb-1">↑ up next</span>}
+          {r.key === upNextKey && <span title="easiest to start right now — a song plays instantly, a movie you have is one tap" className="inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 mb-1">↑ up next</span>}
           <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
           <div className="font-m text-[9px] text-muted truncate">
             <span className="font-bold" style={{ color: t.color }}>{typeWord(r)}</span>{detail(r) && <> · {detail(r)}</>}{r.who ? ` · ${r.who.toLowerCase()}` : ""}

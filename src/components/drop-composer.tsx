@@ -241,22 +241,22 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
       {tab === "go_out" ? (
         <div className="flex flex-col gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="place name — e.g. Cafe Mogador"
-            className="w-full bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
+            className="w-full bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
           <div className="flex gap-2 flex-wrap">
             {SUBTYPES.map((s) => (
               <button key={s} onClick={() => setSubtype(s)}
-                className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${subtype === s ? "bg-ink text-paper" : "bg-surface"}`}>{s}</button>
+                className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${subtype === s ? "bg-vibe text-white" : "bg-surface"}`}>{s}</button>
             ))}
           </div>
           {["bar", "brewery", "pub"].includes(subtype) && (
             <input value={musicNote} onChange={(e) => setMusicNote(e.target.value)} placeholder="music vibe (optional) — e.g. italo + funk"
-              className="w-full bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
+              className="w-full bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
           )}
           <div className="flex items-center gap-3 mt-1">
             {photoPreview
-              ? <img src={photoPreview} alt="" className="w-16 h-16 rounded-lg border-[2.5px] border-ink object-cover" />
-              : <div className="w-16 h-16 rounded-lg border-[2.5px] border-dashed border-ink flex-none" />}
-            <label className="font-h font-bold text-sm bg-ink text-paper border-[2.5px] border-ink rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap">
+              ? <img src={photoPreview} alt="" className="w-16 h-16 rounded-lg border-[2.5px] border-frame object-cover" />
+              : <div className="w-16 h-16 rounded-lg border-[2.5px] border-dashed border-frame flex-none" />}
+            <label className="font-h font-bold text-sm bg-surface-2 text-ink border-[2.5px] border-frame rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap">
               {uploadingPhoto ? "uploading…" : photoPreview ? "change photo" : "add a photo"}
               <input type="file" accept="image/*" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
@@ -269,12 +269,12 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
           <div className="flex gap-2">
             <input value={q} onChange={(e) => onInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && lookUp()}
               placeholder={tab === "listen" ? "paste a spotify / apple / youtube link" : "paste a link, or type a title"}
-              className="flex-1 bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
-            <button onClick={() => lookUp()} disabled={busy} className="font-h font-bold text-[13px] bg-ink text-paper border-[2.5px] border-ink rounded-xl px-4 disabled:opacity-60">{busy ? "…" : "look up"}</button>
+              className="flex-1 bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
+            <button onClick={() => lookUp()} disabled={busy} className="font-h font-bold text-[13px] bg-surface-2 text-ink border-[2.5px] border-frame rounded-xl px-4 disabled:opacity-60">{busy ? "resolving…" : "look up"}</button>
           </div>
           {picked && (
-            <div className="flex gap-3 items-center bg-surface border-[2.5px] border-ink rounded-xl p-2.5">
-              <div className="w-14 h-14 rounded-lg border-[2px] border-ink overflow-hidden shrink-0" style={{ background: accent }}>
+            <div className="flex gap-3 items-center bg-surface border-[2.5px] border-frame rounded-xl p-2.5">
+              <div className="w-14 h-14 rounded-lg border-[2px] border-frame overflow-hidden shrink-0" style={{ background: accent }}>
                 {picked.img && <img src={picked.img} alt="" className="w-full h-full object-cover" />}
               </div>
               <div className="min-w-0">
@@ -287,8 +287,8 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             <div className="flex flex-col gap-2 max-h-[240px] overflow-auto">
               {results.map((r, i) => (
                 <button key={i} onClick={() => { setPicked(r); setResults(null); }}
-                  className="flex gap-3 items-center text-left bg-surface border-[2.5px] border-ink rounded-xl p-2.5 hover:shadow-[3px_3px_0_#6B4BD6] transition-shadow">
-                  <div className="w-12 h-12 rounded-lg border-[2px] border-ink overflow-hidden shrink-0" style={{ background: accent }}>
+                  className="flex gap-3 items-center text-left bg-surface border-[2.5px] border-frame rounded-xl p-2.5 hover:shadow-[3px_3px_0_#6B4BD6] transition-shadow">
+                  <div className="w-12 h-12 rounded-lg border-[2px] border-frame overflow-hidden shrink-0" style={{ background: accent }}>
                     {r.img && <img src={r.img} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="min-w-0">
@@ -304,10 +304,10 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
 
       <div className="mt-5">
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">rate it your way (optional)</div>
-        <div className="flex gap-1 bg-[#ECE4D2] rounded-xl p-1 mb-2.5">
+        <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-2.5">
           {(Object.keys(RATINGS) as (keyof typeof RATINGS)[]).map((s) => (
             <button key={s} onClick={() => { setRatingStyle(s); setRatingValue(""); }}
-              className={`flex-1 font-b font-semibold text-[12px] py-2 rounded-lg ${ratingStyle === s ? "bg-surface text-ink shadow-sm" : "text-muted"}`}>
+              className={`flex-1 font-b font-semibold text-[12px] py-2 rounded-lg transition-colors ${ratingStyle === s ? "bg-vibe text-white" : "text-muted"}`}>
               {s === "number" ? "number" : s === "stars" ? "stars" : "a word"}
             </button>
           ))}
@@ -315,28 +315,28 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         <div className="flex gap-2 flex-wrap">
           {RATINGS[ratingStyle].map((v) => (
             <button key={v} onClick={() => setRatingValue(ratingValue === v ? "" : v)}
-              className={`font-m font-bold text-[13px] border-[2px] border-ink rounded-lg px-3 py-1.5 ${ratingValue === v ? "bg-vibe text-white" : "bg-surface"}`}>{v}</button>
+              className={`font-m font-bold text-[13px] border-[2px] border-frame rounded-lg px-3 py-1.5 ${ratingValue === v ? "bg-vibe text-white" : "bg-surface"}`}>{v}</button>
           ))}
         </div>
       </div>
 
       <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="one-line take (optional)…"
-        className="w-full mt-4 bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
+        className="w-full mt-4 bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
 
       {log ? (
-        <p className="mt-4 font-m text-[11px] text-muted">a private log — only you see it. it still shapes your taste signature.</p>
+        <p className="mt-4 font-m text-[11px] text-muted">kept in your <b className="text-ink-2">log</b> — only you see it. it still shapes your taste signature.</p>
       ) : (
       <div className="mt-4">
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => { setRecMode("everyone"); setRecipients(new Set()); }}
-            className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recMode === "everyone" ? "bg-ink text-paper" : "bg-surface"}`}>everyone</button>
+            className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${recMode === "everyone" ? "bg-vibe text-white" : "bg-surface"}`}>everyone</button>
           {members.map((m) => (
             <button key={m.id} onClick={() => toggleRecipient(m.id)}
-              className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
+              className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
           ))}
           <button onClick={() => { setRecMode("link"); setRecipients(new Set()); setAnon(false); }}
-            className={`font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
+            className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
         </div>
 
         {/* anonymous is a group-wide modifier — turning it ON implies "everyone"
@@ -344,7 +344,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             picking a person or the link turns it back off (targeted = attributed). */}
         <div className="mt-3">
           <button onClick={() => { const next = !anon; setAnon(next); if (next) { setRecMode("everyone"); setRecipients(new Set()); } }}
-            className={`inline-flex items-center gap-1.5 font-b font-semibold text-[12px] border-[2px] border-ink rounded-full px-3 py-1.5 ${anon ? "bg-ink text-paper" : "bg-surface"}`}>
+            className={`inline-flex items-center gap-1.5 font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${anon ? "bg-vibe text-white" : "bg-surface"}`}>
             🕶 {anon ? "anonymous · on" : "drop without my name"}
           </button>
           {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
@@ -353,18 +353,18 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
       )}
 
       {shareUrl ? (
-        <div className="mt-5 bg-surface border-[2.5px] border-ink rounded-xl p-3.5">
+        <div className="mt-5 bg-surface border-[2.5px] border-frame rounded-xl p-3.5">
           <div className="font-h font-bold text-sm">your rec link — send it to them.</div>
           <div className="font-m text-[10px] text-muted mt-0.5">they see just this one thing, can react, and join if they want.</div>
-          <input readOnly value={shareUrl} onClick={(e) => e.currentTarget.select()} className="w-full mt-2 bg-surface-2 border-[2px] border-ink rounded-lg px-2.5 py-2 text-[12px] font-m" />
+          <input readOnly value={shareUrl} onClick={(e) => e.currentTarget.select()} className="w-full mt-2 bg-surface-2 border-[2px] border-frame rounded-lg px-2.5 py-2 text-[12px] font-m" />
           <div className="flex gap-2 mt-2">
-            <button onClick={() => navigator.clipboard?.writeText(shareUrl)} className="flex-1 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-lg py-2">copy</button>
-            <button onClick={() => { router.push("/home"); router.refresh(); }} className="font-h font-bold text-sm bg-surface border-[2.5px] border-ink rounded-lg px-4">done</button>
+            <button onClick={() => navigator.clipboard?.writeText(shareUrl)} className="flex-1 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-lg py-2">copy</button>
+            <button onClick={() => { router.push("/home"); router.refresh(); }} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-lg px-4">done</button>
           </div>
         </div>
       ) : (
         <button onClick={drop} disabled={busy}
-          className="w-full mt-5 font-h font-extrabold text-[15px] text-[#15110D] border-[2.5px] border-frame rounded-xl py-3.5 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
+          className="w-full mt-5 font-h font-extrabold text-[15px] text-white border-[2.5px] border-frame rounded-xl py-3.5 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
           style={{ background: accent }}>
           {dropLabel}
         </button>
