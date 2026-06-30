@@ -36,7 +36,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
 
   return (
     <main className="max-w-[600px] mx-auto px-6 py-12">
-      <div className="font-m text-[11px] tracking-widest uppercase text-muted">you</div>
+      <div className="font-m text-[11px] tracking-widest uppercase text-muted">profile</div>
       <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">
         {(me?.name ?? "you").toLowerCase()}
       </h1>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser, getMemberships, getProfile } from "@/lib/auth";
+import { getCurrentUser, getMemberships } from "@/lib/auth";
 import AppNav from "@/components/app-nav";
 import InstallPrompt from "@/components/install-prompt";
 
@@ -10,14 +10,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [mem, profile] = await Promise.all([getMemberships(user.id), getProfile(user.id)]);
+  const mem = await getMemberships(user.id);
   if (mem.length === 0) redirect("/groups/new");
 
   return (
     <div className="min-h-screen">
       <div className="pb-24">{children}</div>
       <InstallPrompt />
-      <AppNav gender={profile.gender} />
+      <AppNav />
     </div>
   );
 }

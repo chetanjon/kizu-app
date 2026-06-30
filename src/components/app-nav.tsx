@@ -35,45 +35,14 @@ const Plus = () => (
   </svg>
 );
 
-// "you" — dancing figure, right hand up + motion lines (emoji-like energy),
-// swapped by gender. man/neutral = "groove solid" (F); woman = "groove" (G).
-function Figure({ gender }: { gender: string | null | undefined }) {
-  if (gender === "female") {
-    return (
-      <svg width="24" height="27" viewBox="0 0 24 28" aria-hidden>
-        <circle cx="13" cy="5" r="2.9" fill="currentColor" />
-        <g fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12.6 8.5 19.4 3.8" />
-          <path d="M11.7 10 6.6 12.2" />
-          <path d="M11.4 18 13.8 23.4" />
-          <path d="M11.4 18 7.6 22.4" />
-        </g>
-        <path d="M12.7 8 8 18.6h7.8z" fill="currentColor" />
-        <g fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" opacity={0.55}>
-          <path d="M20.4 5q1.3.7 1.4 2.1" />
-          <path d="M5.6 20.6q-1.1.7-1.1 2" />
-        </g>
-      </svg>
-    );
-  }
-  // man / neutral — fuller body, bent knee, kicked leg, motion ticks
-  return (
-    <svg width="24" height="27" viewBox="0 0 24 28" aria-hidden>
-      <circle cx="13.6" cy="4.8" r="3.1" fill="currentColor" />
-      <g fill="none" stroke="currentColor" strokeWidth={4.2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12.9 8.2 9.7 15.2" />
-        <path d="M12.4 9.2 19.7 3.6" />
-        <path d="M11.8 10.6 6.4 12" />
-        <path d="M9.7 15.2 12 18.4 14.4 23" />
-        <path d="M9.7 15.2 6.2 18 7.9 22.2" />
-      </g>
-      <g fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" opacity={0.55}>
-        <path d="M20.8 5.4q1.4.7 1.5 2.2" />
-        <path d="M4.8 20.9q-1.2.7-1.2 2.1" />
-      </g>
-    </svg>
-  );
-}
+// "profile" — a clean person mark (head + shoulders), matching the reference
+// design's ic-user. Gender-neutral; chunky stroke to sit with the other glyphs.
+const User = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <circle cx="12" cy="8" r="3.6" />
+    <path d="M5.5 20.5a6.5 6.5 0 0 1 13 0" />
+  </svg>
+);
 
 // a floating glass pill (thumb zone). active slot = violet icon + a violet dot
 // beneath it. drop is the raised violet action, never marked active.
@@ -89,7 +58,7 @@ function Tab({ href, on, children }: { href: string; on: boolean; children: Reac
   );
 }
 
-export default function AppNav({ gender }: { gender?: string | null }) {
+export default function AppNav() {
   const path = usePathname();
   const isOn = (href: string) => path === href || path.startsWith(href + "/");
 
@@ -108,7 +77,7 @@ export default function AppNav({ gender }: { gender?: string | null }) {
         </Link>
 
         <Tab href="/queue" on={isOn("/queue")}><Queue /></Tab>
-        <Tab href="/you" on={isOn("/you")}><Figure gender={gender} /></Tab>
+        <Tab href="/you" on={isOn("/you")}><User /></Tab>
       </div>
     </nav>
   );

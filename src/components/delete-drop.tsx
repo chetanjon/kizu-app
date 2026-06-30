@@ -20,7 +20,7 @@ export default function DeleteDrop({ itemId }: { itemId: string }) {
   }
 
   return (
-    <button onClick={del} disabled={busy} className="font-m text-[10px] text-listen hover:underline">
+    <button onClick={del} disabled={busy} className="font-m text-[10px] text-muted hover:text-listen hover:underline transition-colors">
       {busy ? "…" : "delete"}
     </button>
   );
