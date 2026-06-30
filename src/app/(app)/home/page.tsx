@@ -11,8 +11,9 @@ import NotificationsBell from "@/components/notifications-bell";
 import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import FeedTabs from "@/components/feed-tabs";
+import FeedReveal from "@/components/feed-reveal";
 import GroupSwitcher from "@/components/group-switcher";
-import { TYPE, SHADOW, img, title, detail, typeWord, ratingMark, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, ratingMark, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
@@ -118,7 +119,7 @@ export default async function Home() {
 
         {/* quick decide — jump straight into tonight's shuffle, pre-lensed */}
         <div className="mt-6">
-          <div className="font-m text-[11px] tracking-widest uppercase text-muted mb-2.5">what&apos;s good tonight?</div>
+          <div className="font-m text-[11px] tracking-widest uppercase text-muted mb-2.5">in the mood for&hellip;</div>
           <div className="flex gap-2">
             <Link href="/tonight?lens=watch" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🎬 watch</Link>
             <Link href="/tonight?lens=listen" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🎧 listen</Link>
@@ -140,11 +141,11 @@ export default async function Home() {
               items.length === 0 ? (
                 <div className="mt-10 text-center">
                   <div className="font-h text-lg font-bold">nothing from your people yet.</div>
-                  <p className="text-muted text-sm mt-1">drop something, or peek at <span className="text-vibe-2">curate</span>.</p>
+                  <p className="text-muted text-sm mt-1">drop something, or peek at <span className="text-vibe-2">kizu curate</span>.</p>
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col">
+                  <FeedReveal>
               {items.map((it) => {
                 const t = TYPE[it.type];
                 const cover = img(it);
@@ -156,67 +157,65 @@ export default async function Home() {
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
                   : it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id }));
                 const dropperName = (it.users?.name || "someone").toLowerCase();
+                const avatarCh = it.anon ? (mine ? "Y" : "?") : dropperName.slice(0, 1).toUpperCase();
                 // the single "act on it" — for music this resolves to THEIR picked
                 // subscription app (actionsFor returns it as the primary); for film
                 // "where to watch" / "you have it", for places "open in maps".
                 const acts = availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, false);
                 const act = acts.find((a) => a.kind !== "set") ?? null;
                 return (
-                  // minimal row: cover (cream frame + signature colored glow — that
-                  // glow IS the type signal) · title hero · one quiet meta line ·
-                  // one act-on-it pill · quiet engage strip. No type banner, no
-                  // double pills, no floating badge.
-                  <article key={it.id} className="relative flex gap-5 py-6 border-t border-hair first:border-t-0">
-                    {/* top-right corner = this card's one affordance:
-                        ⋯ (delete) on your own drops · bookmark (save→queue) on others' */}
-                    <div className="absolute top-6 right-0 z-10">
-                      {mine
-                        ? <DeleteDrop itemId={it.id} />
-                        : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} variant="icon" />}
-                    </div>
-                    <div className={`w-[96px] h-[144px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
+                  // bigger card: the colored type kicker bar fills the row (the type
+                  // signal), big cover with the one corner affordance on a dark scrim,
+                  // title hero, the take, an avatar+name footer, one filled act-on-it.
+                  <article key={it.id} className="relative flex gap-4 py-6 border-t border-hair first:border-t-0">
+                    <div className={`relative w-[116px] h-[174px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" loading="lazy" decoding="async"
                           className="w-full h-full object-cover object-center" />}
-                    </div>
-                    <div className="flex-1 min-w-0 pr-9">
-                      <h3 className="font-h font-bold text-[20px] tracking-[-0.02em] leading-[1.1] truncate">{title(it)}</h3>
-                      {/* one quiet meta line — type as a small colored word, then detail */}
-                      <div className="text-[13px] text-muted mt-0.5 truncate">
-                        <span className="font-semibold" style={{ color: t.color }}>{typeWord(it)}</span>
-                        {detail(it) && <span> · {detail(it)}</span>}
-                        {forYou && <span className="text-vibe-2" title="someone sent this to you directly"> · ✦ for you</span>}
+                      {/* the card's one affordance, on a dark scrim so it reads over any art:
+                          ⋯ delete on your own drops · bookmark (save→watchlist) on others' */}
+                      <div className="absolute top-1.5 right-1.5 z-10 rounded-full bg-black/45 backdrop-blur-sm">
+                        {mine
+                          ? <DeleteDrop itemId={it.id} />
+                          : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} variant="icon" />}
                       </div>
-                      {it.note && <p className="text-[12.5px] text-ink-2 mt-1.5 leading-snug line-clamp-1">&ldquo;{it.note}&rdquo;</p>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {/* the colored type kicker — fills the row, black type word on the color */}
+                      <div className="rounded-lg px-3 py-1.5 mb-2.5" style={{ background: t.color }}>
+                        <span className="font-h font-extrabold text-[12px] tracking-[0.07em] text-[#15110D]">{t.label}</span>
+                      </div>
+                      <h3 className="font-h font-bold text-[22px] tracking-[-0.02em] leading-[1.08] line-clamp-2">{title(it)}</h3>
+                      {forYou && <div className="font-m text-[11px] text-vibe-2 mt-1" title="someone sent this to you directly">✦ for you</div>}
+                      {it.note && <p className="text-[14px] text-ink-2 mt-1.5 leading-snug line-clamp-2">&ldquo;{it.note}&rdquo;</p>}
                       {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
 
-                      {/* rating · dropper ........ open in their app */}
-                      <div className="mt-2.5 flex items-center gap-2.5 min-w-0">
-                        <span className="font-m text-[11px] text-muted truncate min-w-0 flex items-center gap-2">
+                      {/* avatar · dropper · rating ........ act on it */}
+                      <div className="mt-3 flex items-center gap-2.5 min-w-0">
+                        <span className="w-7 h-7 flex-none rounded-full border-[1.5px] border-frame flex items-center justify-center font-h font-extrabold text-[11px] text-[#15110D]" style={{ background: t.color }}>{avatarCh}</span>
+                        <span className="font-m text-[12px] text-muted truncate min-w-0 flex items-center gap-2">
+                          <span className="truncate text-ink-2">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
                           {it.rating_value && <span className="text-vibe-2 flex-none">{ratingMark(it.rating_value)}</span>}
-                          <span className="truncate">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
                         </span>
                         {act && (
                           <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
-                            className={`ml-auto flex-none font-m text-[11px] font-bold rounded-full px-3 py-1.5 transition-all active:scale-95 ${
-                              act.primary ? "text-vibe-2 border-[1.5px] border-vibe/50"
-                              : act.kind === "have" ? "text-go border-[1.5px] border-go/40"
-                              : "text-ink border-[1.5px] border-frame"
+                            className={`ml-auto flex-none font-h text-[12px] font-bold rounded-full px-4 py-2 transition-all active:scale-95 ${
+                              act.kind === "have" ? "bg-go text-[#15110D]"
+                              : act.primary ? "bg-vibe text-white"
+                              : "bg-surface-2 text-ink border-[1.5px] border-frame"
                             }`}>
-                            {act.label}
+                            {act.kind === "have" ? `✓ ${act.label}` : act.label}
                           </a>
                         )}
                       </div>
 
-                      {/* quiet engage strip — just the acknowledgment layer now
-                          (save/delete live in the card's top-right corner) */}
-                      <div className="mt-2">
+                      <div className="mt-2.5">
                         <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} />
                       </div>
                     </div>
                   </article>
                 );
               })}
-                  </div>
+                  </FeedReveal>
                   {/* the closer — your people end here */}
                   <div className="mt-10 text-center">
                     <div className="font-h text-lg font-bold">that&apos;s everyone.</div>

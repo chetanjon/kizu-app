@@ -51,7 +51,7 @@ export default function RecCard({
       disabled={busy || saved}
       className="w-full font-h font-extrabold text-[15px] text-white bg-vibe border-[2.5px] border-frame rounded-xl py-3.5 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
     >
-      {saved ? "✓ queued" : busy ? "queuing…" : "＋ queue this"}
+      {saved ? "✓ saved" : busy ? "saving…" : "＋ save this"}
     </button>
   );
 }

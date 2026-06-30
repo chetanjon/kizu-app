@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type TabId = "people" | "curate";
 
-// Segmented toggle at the top of Home: "your people" | "curate". A violet
+// Segmented toggle at the top of Home: "your people" | "kizu curate". A violet
 // tile SLIDES between the two — the same one-motion-violet-tile language as the
 // bottom nav, so it reads as kizu, not a generic underline. Both feeds are
 // rendered server-side and passed in as slots; this only switches which mounts.
@@ -32,8 +32,8 @@ export default function FeedTabs({
             your people
           </button>
           <button onClick={() => setTab("curate")}
-            className={`relative z-10 flex-1 py-2 font-h font-extrabold text-[13px] tracking-[-0.02em] transition-colors ${tab === "curate" ? "text-white" : "text-muted"}`}>
-            curate
+            className={`relative z-10 flex-1 py-2 font-h font-extrabold text-[12.5px] tracking-[-0.02em] transition-colors ${tab === "curate" ? "text-white" : "text-muted"}`}>
+            kizu curate
           </button>
         </div>
         {tab === "people" && fresh > 0 && (
