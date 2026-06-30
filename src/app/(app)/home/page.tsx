@@ -12,9 +12,8 @@ import NotificationsBell from "@/components/notifications-bell";
 import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
 import GroupSwitcher from "@/components/group-switcher";
-import { TYPE, SHADOW, img, title, detail, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, detail, typeWord, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
-import ItemActions from "@/components/item-actions";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
@@ -71,8 +70,6 @@ export default async function Home() {
     .order("created_at", { ascending: false });
   const items = (iRaw ?? []) as unknown as Item[];
   await signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>);
-  // only the first song in the feed shows the "pick your music app" prompt.
-  const firstListenId = items.find((it) => it.type === "listen")?.id ?? null;
   // "you have it" for movies/tv you can stream on a service you picked.
   const availMap = await availabilityMap(
     items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
@@ -147,42 +144,51 @@ export default async function Home() {
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
                   : it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id }));
                 const dropperName = (it.users?.name || "someone").toLowerCase();
-                const initial = (it.users?.name || "?").trim().charAt(0).toUpperCase() || "?";
+                // the single "act on it" — for music this resolves to THEIR picked
+                // subscription app (actionsFor returns it as the primary); for film
+                // "where to watch" / "you have it", for places "open in maps".
+                const acts = availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, false);
+                const act = acts.find((a) => a.kind !== "set") ?? null;
                 return (
-                  // cinematic-brutalist row: cover art framed in cream with a hard
-                  // COLORED shadow tinted to its type (the signature move). type rides
-                  // a saturated bar above the title; quiet meta + actions below.
-                  <article key={it.id} className="flex gap-4 py-4 border-t border-hair first:border-t-0">
-                    <div className={`relative w-[80px] h-[106px] flex-none rounded-[10px] border-[2.5px] border-frame overflow-hidden ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
+                  // minimal row: cover (cream frame + signature colored glow — that
+                  // glow IS the type signal) · title hero · one quiet meta line ·
+                  // one act-on-it pill · quiet engage strip. No type banner, no
+                  // double pills, no floating badge.
+                  <article key={it.id} className="flex gap-4 py-5 border-t border-hair first:border-t-0">
+                    <div className={`w-[68px] h-[92px] flex-none rounded-[10px] border-[2px] border-frame overflow-hidden ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
                       {cover && <img src={cover} alt="" loading="lazy" decoding="async"
                           className="w-full h-full object-cover" />}
-                      {it.rating_value && <span className="glass absolute top-1.5 right-1.5 font-h text-[10px] font-extrabold text-white rounded-md px-1.5 py-0.5 border border-white/40">★ {it.rating_value}</span>}
                     </div>
-                    <div className="flex-1 min-w-0 flex flex-col">
-                      {/* type bar — a saturated, full-width brutalist tag */}
-                      <span className="font-h text-[9px] font-black tracking-[0.05em] rounded-[5px] px-2 py-1 text-[#15110D] self-stretch" style={{ background: t.color }}>
-                        {t.label}{forYou && " · ✦ FOR YOU"}
-                      </span>
-                      <div className="font-h font-extrabold text-[18px] tracking-[-0.02em] mt-1.5 leading-[1.08]">{title(it)}</div>
-                      {it.note ? (
-                        <p className="text-[12.5px] text-ink-2 mt-1 leading-snug">&ldquo;{it.note}&rdquo;</p>
-                      ) : detail(it) ? (
-                        <div className="font-m text-[10px] text-muted mt-1 tracking-wide">{detail(it)}</div>
-                      ) : null}
-                      {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
-                      <div className="mt-auto pt-2.5 flex items-center gap-2 min-w-0">
-                        {it.anon ? (
-                          <span className="font-m text-[11px] text-muted">{mine ? "you · anon" : "someone"}</span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 font-m text-[11px] text-muted min-w-0">
-                            <span className="w-[18px] h-[18px] rounded-full bg-surface-2 border border-hair flex items-center justify-center text-[9px] font-bold text-ink-2 shrink-0">{initial}</span>
-                            <span className="truncate">{dropperName}</span>
-                          </span>
-                        )}
-                        <div className="ml-auto flex-none">
-                          <ItemActions actions={availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, it.id === firstListenId)} />
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-h font-bold text-[18px] tracking-[-0.02em] leading-[1.12] truncate">{title(it)}</h3>
+                      {/* one quiet meta line — type as a small colored word, then detail */}
+                      <div className="text-[13px] text-muted mt-0.5 truncate">
+                        <span className="font-semibold" style={{ color: t.color }}>{typeWord(it)}</span>
+                        {detail(it) && <span> · {detail(it)}</span>}
+                        {forYou && <span className="text-vibe-2"> · ✦ for you</span>}
                       </div>
+                      {it.note && <p className="text-[12.5px] text-ink-2 mt-1.5 leading-snug line-clamp-1">&ldquo;{it.note}&rdquo;</p>}
+                      {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
+
+                      {/* rating · dropper ........ open in their app */}
+                      <div className="mt-2.5 flex items-center gap-2.5 min-w-0">
+                        <span className="font-m text-[11px] text-muted truncate min-w-0 flex items-center gap-2">
+                          {it.rating_value && <span className="text-vibe-2 flex-none">★ {it.rating_value}</span>}
+                          <span className="truncate">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
+                        </span>
+                        {act && (
+                          <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
+                            className={`ml-auto flex-none font-m text-[11px] font-bold rounded-full px-3 py-1.5 transition-all active:scale-95 ${
+                              act.primary ? "bg-vibe text-white"
+                              : act.kind === "have" ? "text-go border-[1.5px] border-go/40"
+                              : "text-ink border-[1.5px] border-frame"
+                            }`}>
+                            {act.label}
+                          </a>
+                        )}
+                      </div>
+
+                      {/* quiet engage strip — acknowledgment + save */}
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} />
                         {mine ? <DeleteDrop itemId={it.id} /> : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} />}
