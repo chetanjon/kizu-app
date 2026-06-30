@@ -1,33 +1,62 @@
 "use client";
 
-// THROWAWAY — motion 3 with RICHER, editorial content (not "who dropped what").
-import { TYPE, type DropType } from "@/lib/item-render";
+// THROWAWAY — cinematic "obsession" reel. Motion 3 (gentle scroll, pause on hover).
+// Real poster/album/place art fills the tiles in prod; here a rich duotone stands in.
+import { type DropType } from "@/lib/item-render";
 
 type HL = {
   type: DropType;
-  reason: string;   // the editorial hook — WHY it's a highlight (kizu voice)
-  col: string;      // hook color
+  hook: string;     // the editorial reason — kizu voice
+  hookCol: string;
   title: string;
-  body: string;     // the substance: a take, a story, or social proof
+  take: string;     // a real take / story / consensus
+  who: string;
 };
 
+const GLOW: Record<DropType, string> = {
+  watch: "#5B8DEF",
+  listen: "#FF6F9C",
+  go_out: "#5DCAA5",
+};
+
+// rich abstract "art" stand-in per type — looks designed, not like a flat block
+const ART: Record<DropType, string> = {
+  listen: "radial-gradient(120% 90% at 28% 18%, #FFB3CC 0%, transparent 55%), linear-gradient(150deg, #FF6F9C 0%, #7A2E5B 62%, #220B18 100%)",
+  watch: "radial-gradient(120% 90% at 28% 18%, #B7CCFF 0%, transparent 55%), linear-gradient(150deg, #5B8DEF 0%, #2E3C7A 62%, #0C1426 100%)",
+  go_out: "radial-gradient(120% 90% at 28% 18%, #ABF2D6 0%, transparent 55%), linear-gradient(150deg, #5DCAA5 0%, #1E6B52 62%, #06201A 100%)",
+};
+
+const TYPEWORD: Record<DropType, string> = { watch: "movie", listen: "music", go_out: "outside" };
+
 const ITEMS: HL[] = [
-  { type: "listen", reason: "what sam can't stop playing", col: "#A98BFF", title: "Blonde", body: "“the only album i finished all month.”" },
-  { type: "watch", reason: "✦ it landed", col: "#A98BFF", title: "Past Lives", body: "maya watched the one you sent — and loved it." },
-  { type: "go_out", reason: "the group agrees", col: "#5DCAA5", title: "Tartine Bakery", body: "♥ sam · maya · arjun are into it" },
-  { type: "watch", reason: "arjun swears by it", col: "#A98BFF", title: "The Bear", body: "“rewatched s1. still perfect.”" },
-  { type: "listen", reason: "✦ it landed", col: "#A98BFF", title: "channel ORANGE", body: "sam ran with your pick" },
+  { type: "watch", hook: "✦ it landed", hookCol: "#A98BFF", title: "Past Lives", take: "maya watched the one you sent — and couldn't stop thinking about it.", who: "your rec" },
+  { type: "listen", hook: "on repeat all week", hookCol: "#FFB3CC", title: "Blonde", take: "“the only album i finished all month.”", who: "sam" },
+  { type: "go_out", hook: "the group agrees", hookCol: "#ABF2D6", title: "Tartine Bakery", take: "sam, maya & arjun are all in. that never happens.", who: "3 of your people" },
+  { type: "watch", hook: "arjun swears by it", hookCol: "#B7CCFF", title: "The Bear", take: "“rewatched s1. still perfect. don't @ me.”", who: "arjun" },
+  { type: "listen", hook: "✦ it landed", hookCol: "#A98BFF", title: "channel ORANGE", take: "sam ran with the pick you left them.", who: "your rec" },
 ];
 
 function Tile({ h }: { h: HL }) {
-  const t = TYPE[h.type];
   return (
-    <div className="relative w-[290px] h-[190px] rounded-2xl overflow-hidden border-[2.5px] border-frame flex-none" style={{ background: t.color }}>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/45 to-black/10" />
-      <div className="absolute inset-x-0 bottom-0 p-4">
-        <div className="font-m text-[10px] font-bold tracking-wide mb-1.5" style={{ color: h.col }}>{h.reason}</div>
-        <div className="font-h font-extrabold text-[22px] leading-[1.05] text-white">{h.title}</div>
-        <p className="font-b text-[13px] text-white/85 mt-1.5 leading-snug line-clamp-2">{h.body}</p>
+    <div
+      className="kz-card group relative w-[212px] aspect-[3/4] rounded-[18px] overflow-hidden border-[2.5px] border-frame flex-none"
+      style={{ background: ART[h.type], ["--glow" as string]: GLOW[h.type] }}
+    >
+      {/* cinematic scrim — dark at the foot, lets the art breathe up top */}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,4,0.95) 0%, rgba(8,6,4,0.45) 38%, transparent 68%)" }} />
+      {/* a soft sheen that sweeps on the slow scroll */}
+      <div className="kz-sheen absolute inset-0" />
+
+      {/* glass type chip, floating top-left */}
+      <div className="glass absolute top-2.5 left-2.5 rounded-full px-2.5 py-1 font-m text-[9px] font-bold tracking-wide text-white/90">
+        {TYPEWORD[h.type]}
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 p-3.5">
+        <div className="font-m text-[9.5px] font-bold tracking-[0.08em] uppercase mb-1.5" style={{ color: h.hookCol }}>{h.hook}</div>
+        <div className="font-h font-extrabold text-[23px] leading-[1.02] text-white drop-shadow-sm">{h.title}</div>
+        <p className="font-b text-[12px] text-white/80 mt-2 leading-snug line-clamp-3">{h.take}</p>
+        <div className="font-m text-[9px] text-white/45 mt-2">{h.who}</div>
       </div>
     </div>
   );
@@ -35,26 +64,47 @@ function Tile({ h }: { h: HL }) {
 
 export default function ZHighlight() {
   return (
-    <main className="max-w-[600px] mx-auto px-5 py-10 min-h-screen">
+    <main className="max-w-[600px] mx-auto px-5 py-12 min-h-screen">
       <style>{`
         @keyframes kz-marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-        .kz-slow { animation: kz-marquee 46s linear infinite; }
-        .kz-slow:hover { animation-play-state: paused; }
+        .kz-track { animation: kz-marquee 50s linear infinite; }
+        .kz-track:hover { animation-play-state: paused; }
+        /* the signature: a hard blur-less COLORED shadow + a gentle living glow */
+        .kz-card {
+          box-shadow: 6px 7px 0 0 var(--glow), 0 0 26px -6px color-mix(in srgb, var(--glow) 70%, transparent);
+          animation: kz-breathe 5.5s ease-in-out infinite;
+        }
+        @keyframes kz-breathe {
+          0%, 100% { box-shadow: 6px 7px 0 0 var(--glow), 0 0 22px -8px color-mix(in srgb, var(--glow) 55%, transparent); }
+          50%      { box-shadow: 6px 7px 0 0 var(--glow), 0 0 40px -4px color-mix(in srgb, var(--glow) 85%, transparent); }
+        }
+        .kz-sheen {
+          background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.10) 47%, rgba(255,255,255,0.02) 54%, transparent 70%);
+          background-size: 220% 100%;
+          animation: kz-shine 7s linear infinite;
+        }
+        @keyframes kz-shine { from { background-position: 140% 0 } to { background-position: -140% 0 } }
+        @media (prefers-reduced-motion: reduce) {
+          .kz-track, .kz-card, .kz-sheen { animation: none !important; }
+        }
       `}</style>
 
-      {/* a small section header — gives the reel a name, not a generic strip */}
-      <div className="flex items-baseline justify-between mb-3">
-        <h2 className="font-h font-extrabold text-[17px] tracking-[-0.02em]">worth your while</h2>
-        <span className="font-m text-[10px] text-muted">from your people</span>
-      </div>
+      {/* a named, earned section — aurora headline ties it to the vibe read */}
+      <div className="mb-1 font-m text-[10px] font-bold tracking-[0.2em] uppercase text-vibe-2">✦ from your people</div>
+      <h2
+        className="font-h font-extrabold text-[28px] tracking-[-0.03em] leading-none mb-5"
+        style={{ background: "linear-gradient(110deg,#A98BFF,#FF6F9C,#FF8A5B)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}
+      >
+        worth losing sleep over
+      </h2>
 
-      <div className="overflow-hidden -mx-5 px-5">
-        <div className="flex gap-3 w-max kz-slow">
+      <div className="overflow-visible -mx-5 px-5">
+        <div className="flex gap-5 w-max kz-track py-3">
           {[...ITEMS, ...ITEMS].map((h, k) => <Tile key={k} h={h} />)}
         </div>
       </div>
 
-      <div className="h-24" />
+      <div className="h-32" />
     </main>
   );
 }
