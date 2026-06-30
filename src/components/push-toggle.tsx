@@ -87,7 +87,7 @@ export default function PushToggle() {
   if (state === "loading" || state === "hidden") return null;
 
   const shell =
-    "flex items-center gap-2 bg-surface border-[2.5px] border-ink rounded-xl px-3 py-2.5 shadow-[3px_3px_0_#14110F]";
+    "flex items-center gap-3 bg-surface border border-hair rounded-2xl px-4 py-3.5";
 
   if (state === "ios-needs-install") {
     return (
@@ -104,22 +104,18 @@ export default function PushToggle() {
     );
   }
 
+  const on = state === "on";
   return (
     <div className={shell}>
-      <span className="font-m text-[12px] font-bold flex-1">get notified when it lands</span>
-      {state === "on" ? (
-        <button onClick={disable} className="font-h font-bold text-xs border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface">
-          on · turn off
-        </button>
-      ) : (
-        <button
-          onClick={enable}
-          disabled={state === "busy"}
-          className="font-h font-bold text-xs bg-vibe text-white border-[2px] border-ink rounded-full px-3.5 py-1.5"
-        >
-          {state === "busy" ? "…" : "turn on"}
-        </button>
-      )}
+      <span className="font-b font-semibold text-[14px] flex-1">push notifications</span>
+      <button
+        onClick={on ? disable : enable}
+        disabled={state === "busy"}
+        aria-pressed={on}
+        className={`relative h-[26px] w-[46px] rounded-full transition-colors shrink-0 disabled:opacity-60 ${on ? "bg-vibe" : "bg-surface-2 border border-hair"}`}
+      >
+        <span className={`absolute top-[3px] h-[18px] w-[18px] rounded-full bg-white transition-all ${on ? "left-[24px]" : "left-[3px]"}`} />
+      </button>
     </div>
   );
 }
