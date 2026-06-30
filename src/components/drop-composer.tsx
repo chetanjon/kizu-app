@@ -16,7 +16,7 @@ const RATINGS: Record<string, string[]> = {
   word: ["a vibe", "elite", "obsessed", "mid", "fine"],
 };
 
-type Picked = { data: Record<string, any>; title: string; sub: string; img: string | null };
+type Picked = { data: Record<string, unknown>; title: string; sub: string; img: string | null };
 type Member = { id: string; name: string | null };
 
 export default function DropComposer({ groupId, members = [] }: { groupId: string; members?: Member[] }) {
@@ -153,8 +153,8 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
 
   async function drop() {
     if (busy || uploadingPhoto) return;
-    let type: Tab = tab;
-    let data: Record<string, any> = {};
+    const type: Tab = tab;
+    let data: Record<string, unknown> = {};
 
     if (tab === "go_out") {
       const name = q.trim();
