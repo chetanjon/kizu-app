@@ -26,30 +26,19 @@ export default function MuteDropsToggle({ initialMuted }: { initialMuted: boolea
     }
   }
 
-  const shell =
-    "flex items-center gap-2 bg-surface border-[2.5px] border-ink rounded-xl px-3 py-2.5 shadow-[3px_3px_0_#14110F]";
-
+  const on = !muted; // switch ON = pings enabled
   return (
     <div>
-      <div className={shell}>
-        <span className="font-m text-[12px] font-bold flex-1">ping me when someone drops</span>
-        {muted ? (
-          <button
-            onClick={() => set(false)}
-            disabled={busy}
-            className="font-h font-bold text-xs bg-vibe text-white border-[2px] border-ink rounded-full px-3.5 py-1.5"
-          >
-            {busy ? "…" : "turn on"}
-          </button>
-        ) : (
-          <button
-            onClick={() => set(true)}
-            disabled={busy}
-            className="font-h font-bold text-xs border-[2px] border-ink rounded-full px-3 py-1.5 bg-surface"
-          >
-            {busy ? "…" : "on · turn off"}
-          </button>
-        )}
+      <div className="flex items-center gap-3 bg-surface border border-hair rounded-2xl px-4 py-3.5">
+        <span className="font-b font-semibold text-[14px] flex-1">ping me when someone drops</span>
+        <button
+          onClick={() => set(on)}
+          disabled={busy}
+          aria-pressed={on}
+          className={`relative h-[26px] w-[46px] rounded-full transition-colors shrink-0 disabled:opacity-60 ${on ? "bg-vibe" : "bg-surface-2 border border-hair"}`}
+        >
+          <span className={`absolute top-[3px] h-[18px] w-[18px] rounded-full bg-white transition-all ${on ? "left-[24px]" : "left-[3px]"}`} />
+        </button>
       </div>
       <p className="font-m text-[11px] text-muted mt-1.5 px-1">
         only the drop pings — you&apos;ll still hear when something lands.

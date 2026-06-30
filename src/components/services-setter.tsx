@@ -4,10 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SERVICES } from "@/lib/services";
 
-// Pick the streaming services you have → movie drops can say "you have it".
+// A clean settings row: shows a one-line summary ("Netflix +2") and expands to
+// the chip picker on tap. Pick the streaming services you have → movie drops can
+// say "you have it".
 export default function ServicesSetter({ initial }: { initial: string[] }) {
   const router = useRouter();
   const [sel, setSel] = useState<Set<string>>(new Set(initial));
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function toggle(slug: string) {
@@ -28,20 +31,34 @@ export default function ServicesSetter({ initial }: { initial: string[] }) {
     }
   }
 
+  const chosen = SERVICES.filter((s) => sel.has(s.slug));
+  const summary =
+    chosen.length === 0 ? "none yet"
+    : chosen.length === 1 ? chosen[0].name
+    : `${chosen[0].name} +${chosen.length - 1}`;
+
   return (
-    <div className="bg-surface border-[2.5px] border-ink rounded-xl px-3.5 py-3 shadow-[3px_3px_0_#14110F]">
-      <div className="font-m text-[11px] text-muted">what you have — so kizu can say &ldquo;you have it&rdquo;</div>
-      <div className="flex flex-wrap gap-2 mt-2.5">
-        {SERVICES.map((s) => {
-          const on = sel.has(s.slug);
-          return (
-            <button key={s.slug} onClick={() => toggle(s.slug)} disabled={busy}
-              className={`font-m text-[11px] font-bold border-[2px] border-ink rounded-full px-3 py-1.5 transition-transform hover:-translate-y-[1px] ${on ? "bg-ink text-paper" : "bg-surface"}`}>
-              {s.name}
-            </button>
-          );
-        })}
-      </div>
+    <div className="border border-hair rounded-2xl bg-surface overflow-hidden">
+      <button onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left">
+        <span className="font-b font-semibold text-[14px]">your streaming services</span>
+        <span className="flex items-center gap-1.5 font-m text-[12px] font-bold text-vibe-2 shrink-0">
+          {summary}<span className={`transition-transform ${open ? "rotate-90" : ""}`}>›</span>
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 flex flex-wrap gap-2">
+          {SERVICES.map((s) => {
+            const on = sel.has(s.slug);
+            return (
+              <button key={s.slug} onClick={() => toggle(s.slug)} disabled={busy}
+                className={`font-m text-[11px] font-bold border-[1.5px] rounded-full px-3 py-1.5 transition-colors ${on ? "bg-vibe text-white border-vibe" : "bg-surface-2 border-hair text-ink"}`}>
+                {s.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

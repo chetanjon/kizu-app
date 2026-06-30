@@ -77,8 +77,8 @@ export default function InstallPrompt({ inline = false }: { inline?: boolean }) 
   if (inline) {
     return (
       <div>
-        <div className="flex items-center gap-2 bg-surface border-[2.5px] border-ink rounded-xl px-3 py-2.5 shadow-[3px_3px_0_#14110F]">
-          <span className="font-m text-[12px] font-bold flex-1">
+        <div className="flex items-center gap-3 bg-surface border border-hair rounded-2xl px-4 py-3">
+          <span className="font-b font-semibold text-[14px] flex-1">
             use kizu<span className="text-red">.</span> like an app
           </span>
           {installBtn}
