@@ -13,7 +13,7 @@ import CurateRiver, { type CDrop } from "@/components/curate-river";
 import FeedTabs from "@/components/feed-tabs";
 import FeedReveal from "@/components/feed-reveal";
 import GroupSwitcher from "@/components/group-switcher";
-import { TYPE, SHADOW, img, title, ratingMark, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, img, title, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
@@ -179,26 +179,25 @@ export default async function Home() {
                           : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} variant="icon" />}
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      {/* the colored type kicker — fills the row, black type word on the color */}
-                      <div className="rounded-lg px-3 py-1.5 mb-2.5" style={{ background: t.color }}>
-                        <span className="font-h font-extrabold text-[12px] tracking-[0.07em] text-[#15110D]">{t.label}</span>
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      {/* the type line — fills the row, but thin (a colored line, not a slab) */}
+                      <div className="rounded-md px-2.5 py-1" style={{ background: t.color }}>
+                        <span className="font-h font-extrabold text-[10px] tracking-[0.12em] text-[#15110D]">{t.label}</span>
                       </div>
-                      <h3 className="font-h font-bold text-[22px] tracking-[-0.02em] leading-[1.08] line-clamp-2">{title(it)}</h3>
+                      <h3 className="font-h font-bold text-[21px] tracking-[-0.02em] leading-[1.1] line-clamp-2 mt-2">{title(it)}</h3>
                       {forYou && <div className="font-m text-[11px] text-vibe-2 mt-1" title="someone sent this to you directly">✦ for you</div>}
-                      {it.note && <p className="text-[14px] text-ink-2 mt-1.5 leading-snug line-clamp-2">&ldquo;{it.note}&rdquo;</p>}
+                      {it.note && <p className="text-[13.5px] text-ink-2 mt-1 leading-snug line-clamp-2">&ldquo;{it.note}&rdquo;</p>}
                       {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
 
-                      {/* avatar · dropper · rating ........ act on it */}
-                      <div className="mt-3 flex items-center gap-2.5 min-w-0">
-                        <span className="w-7 h-7 flex-none rounded-full border-[1.5px] border-frame flex items-center justify-center font-h font-extrabold text-[11px] text-[#15110D]" style={{ background: t.color }}>{avatarCh}</span>
-                        <span className="font-m text-[12px] text-muted truncate min-w-0 flex items-center gap-2">
-                          <span className="truncate text-ink-2">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
-                          {it.rating_value && <span className="text-vibe-2 flex-none">{ratingMark(it.rating_value)}</span>}
-                        </span>
+                      {/* one engagement line, bottom-aligned to the cover:
+                          avatar · who · their reactions ........ act on it */}
+                      <div className="mt-auto pt-3 flex items-center gap-1.5 min-w-0">
+                        <span className="w-[26px] h-[26px] flex-none rounded-full bg-surface-2 border border-hair flex items-center justify-center font-h font-extrabold text-[11px] text-ink-2">{avatarCh}</span>
+                        <span className="font-m text-[12px] text-ink-2 truncate min-w-0">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
+                        <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} compact />
                         {act && (
                           <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
-                            className={`ml-auto flex-none font-h text-[12px] font-bold rounded-full px-4 py-2 transition-all active:scale-95 ${
+                            className={`ml-auto flex-none font-h text-[12px] font-bold rounded-full px-3 py-2 transition-all active:scale-95 ${
                               act.kind === "have" ? "bg-go text-[#15110D]"
                               : act.primary ? "bg-vibe text-white"
                               : "bg-surface-2 text-ink border-[1.5px] border-frame"
@@ -206,10 +205,6 @@ export default async function Home() {
                             {act.kind === "have" ? `✓ ${act.label}` : act.label}
                           </a>
                         )}
-                      </div>
-
-                      <div className="mt-2.5">
-                        <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} />
                       </div>
                     </div>
                   </article>
