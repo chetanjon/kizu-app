@@ -34,8 +34,9 @@ function dealOrder<T>(arr: T[], seed: number): T[] {
   return [...arr.slice(s), ...arr.slice(0, s)];
 }
 
-export default function TonightDealer({ pool, musicApp = null }: { pool: Cand[]; musicApp?: string | null }) {
-  const [lens, setLens] = useState<Lens | null>(null);
+export default function TonightDealer({ pool, musicApp = null, initialLens = null }: { pool: Cand[]; musicApp?: string | null; initialLens?: Lens | null }) {
+  // a lens passed from the Home "what's good tonight" chips skips the picker.
+  const [lens, setLens] = useState<Lens | null>(initialLens);
   const [idx, setIdx] = useState(0);
   const [queuedKey, setQueuedKey] = useState<string | null>(null);
 

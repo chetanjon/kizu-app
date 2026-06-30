@@ -12,7 +12,7 @@ function Tab({ label, active, onSelect }: { label: string; active: boolean; onSe
         active ? "text-ink" : "text-muted"
       }`}
     >
-      <span className="text-vibe-2">✦</span> {label}
+      {label}
       {active && <span className="absolute left-0 -bottom-px h-[2px] w-full bg-vibe-2 rounded-full" />}
     </button>
   );
@@ -37,7 +37,7 @@ export default function FeedTabs({
     <div className="mt-7">
       <div className="flex items-center gap-5 border-b border-hair">
         <Tab label="your people" active={tab === "people"} onSelect={() => setTab("people")} />
-        <Tab label="curate" active={tab === "curate"} onSelect={() => setTab("curate")} />
+        <Tab label="the world" active={tab === "curate"} onSelect={() => setTab("curate")} />
         {tab === "people" && <span className="ml-auto font-m text-[12px] font-bold text-muted">{fresh} fresh</span>}
       </div>
       <div className="mt-1">{tab === "people" ? people : curate}</div>

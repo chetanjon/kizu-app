@@ -35,16 +35,13 @@ export default function VibeRead({ groupId, initial = null }: { groupId: string;
   return (
     <>
       {read ? (
-        // the showstopper, inline: aurora card framed in cream with a hard violet shadow
+        // collapsed by default — a slim aurora teaser; the full read opens on tap
         <button onClick={() => setOpen(true)}
-          className="block w-full text-left rounded-[20px] overflow-hidden border-[2.5px] border-frame shadow-[6px_6px_0_#7C5CE6]"
+          className="flex items-center gap-3 w-full text-left rounded-full overflow-hidden border-[2px] border-frame shadow-[4px_4px_0_#7C5CE6] px-4 py-3"
           style={{ background: AURORA }}>
-          <div className="p-5" style={{ background: "linear-gradient(180deg,rgba(13,11,9,.10),rgba(13,11,9,.30))" }}>
-            <div className="font-m text-[11px] font-bold tracking-[0.14em] text-white/90">✦ THIS WEEK&apos;S READ</div>
-            <div className="font-h text-[22px] font-black text-white mt-1.5 leading-[1.12]" style={{ textShadow: "0 1px 8px rgba(0,0,0,.3)" }}>{read.title}</div>
-            <p className="text-[13.5px] text-white/90 mt-1.5 line-clamp-2 leading-snug">{read.body}</p>
-            <span className="inline-block mt-3 font-h font-black text-[13px] text-white underline underline-offset-2">read it →</span>
-          </div>
+          <span className="font-m text-[11px] font-bold tracking-[0.13em] text-white whitespace-nowrap" style={{ textShadow: "0 1px 6px rgba(0,0,0,.35)" }}>this week&apos;s read</span>
+          <span className="font-h text-[12.5px] text-white/90 truncate min-w-0">· {read.title}</span>
+          <span className="ml-auto font-h font-black text-[13px] text-white whitespace-nowrap">read it →</span>
         </button>
       ) : (
         <button onClick={generate} disabled={busy}

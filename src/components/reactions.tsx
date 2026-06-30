@@ -30,10 +30,12 @@ export default function Reactions({
   }
 
   // Names grouped by emoji — only built/shown when the viewer is the dropper.
+  // Skip the viewer themselves: "you reacted" is noise; the dropper cares who ELSE did.
   const who: Record<string, string[]> = {};
   if (canSeeWho) {
     for (const r of rx) {
-      (who[r.emoji] ??= []).push(r.user_id === userId ? "you" : (r.name ?? "someone"));
+      if (r.user_id === userId) continue;
+      (who[r.emoji] ??= []).push(r.name ?? "someone");
     }
   }
 

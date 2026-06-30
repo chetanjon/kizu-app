@@ -118,6 +118,16 @@ export default async function Home() {
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
         {!myGender && <div className="mt-4 max-w-[420px]"><GenderSetter /></div>}
 
+        {/* quick decide — jump straight into tonight's shuffle, pre-lensed */}
+        <div className="mt-6">
+          <div className="font-m text-[11px] tracking-widest uppercase text-muted mb-2.5">what&apos;s good tonight?</div>
+          <div className="flex gap-2">
+            <Link href="/tonight?lens=watch" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🎬 watch</Link>
+            <Link href="/tonight?lens=listen" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🎧 listen</Link>
+            <Link href="/tonight?lens=go_out" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🌅 outside</Link>
+          </div>
+        </div>
+
         {items.length === 0 && curate.length === 0 ? (
           <div className="mt-8 border border-dashed border-hair rounded-2xl p-14 text-center">
             <div className="font-h text-xl font-bold">nothing here yet.</div>
@@ -183,7 +193,7 @@ export default async function Home() {
                         {act && (
                           <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
                             className={`ml-auto flex-none font-m text-[11px] font-bold rounded-full px-3 py-1.5 transition-all active:scale-95 ${
-                              act.primary ? "bg-vibe text-white"
+                              act.primary ? "text-vibe-2 border-[1.5px] border-vibe/50"
                               : act.kind === "have" ? "text-go border-[1.5px] border-go/40"
                               : "text-ink border-[1.5px] border-frame"
                             }`}>
@@ -212,9 +222,15 @@ export default async function Home() {
             }
             curate={
               curate.length > 0 ? (
-                <CurateRiver initial={curate} queuedIds={queuedCurate} nextOffset={RIVER_PAGE} done={curate.length < RIVER_PAGE} />
+                <>
+                  <div className="mt-5 mb-1">
+                    <div className="font-h font-extrabold text-[15px] tracking-[-0.02em]">kizu curate</div>
+                    <div className="font-m text-[11px] text-muted mt-0.5">picks from real people, beyond your crew</div>
+                  </div>
+                  <CurateRiver initial={curate} queuedIds={queuedCurate} nextOffset={RIVER_PAGE} done={curate.length < RIVER_PAGE} />
+                </>
               ) : (
-                <div className="mt-10 text-center font-m text-[12px] text-muted">nothing curated yet — check back.</div>
+                <div className="mt-10 text-center font-m text-[12px] text-muted">nothing here yet — kizu curate is still picking.</div>
               )
             }
           />
