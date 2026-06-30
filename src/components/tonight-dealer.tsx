@@ -84,7 +84,7 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
     return (
       <div className="mt-8 text-center border-2 border-dashed border-hair rounded-2xl p-12">
         <div className="font-h text-xl font-bold">that&apos;s the hand.</div>
-        <p className="text-muted text-sm mt-1">queued what you liked. deal again, or switch the lens.</p>
+        <p className="text-muted text-sm mt-1">saved what you liked. deal again, or switch the lens.</p>
         <button onClick={reshuffle} className="mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#7C5CE6]">deal again</button>
       </div>
     );
@@ -147,7 +147,7 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
       <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
         <button onClick={() => queueIt(current)} disabled={isQueued}
           className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-3.5 shadow-[3px_3px_0_#0D0B09] active:translate-y-[1px] transition-transform">
-          {isQueued ? "✓ queued" : "＋ queue"}
+          {isQueued ? "✓ saved" : "＋ save"}
         </button>
         <button onClick={pass} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-full py-3.5">pass</button>
       </div>

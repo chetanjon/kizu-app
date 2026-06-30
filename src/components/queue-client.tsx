@@ -121,7 +121,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
       {landedYou > 0 && (
         <div className="border-[2.5px] border-frame rounded-2xl p-4 mb-6 shadow-[4px_5px_0_#7C5CE6]" style={{ background: "rgba(124,92,230,0.14)" }}>
           <div className="font-m text-[10px] tracking-widest uppercase text-[#C2D24A]">✦ it landed</div>
-          <div className="font-h font-bold text-base mt-1">{landedYou} {landedYou === 1 ? "thing you queued from your people hit" : "things you queued from your people hit"}.</div>
+          <div className="font-h font-bold text-base mt-1">{landedYou} {landedYou === 1 ? "thing you saved from your people hit" : "things you saved from your people hit"}.</div>
         </div>
       )}
 

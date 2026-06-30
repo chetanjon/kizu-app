@@ -96,13 +96,13 @@ export default async function Queue() {
 
   return (
     <main className="max-w-[700px] mx-auto px-6 py-10">
-      <div className="font-m text-[11px] tracking-widest uppercase text-muted">things you mean to get to</div>
-      <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">your <span className="text-vibe">queue</span></h1>
+      <div className="font-m text-[11px] tracking-widest uppercase text-muted">your save-for-later · watch · listen · go</div>
+      <h1 className="font-h text-4xl font-extrabold tracking-[-0.04em] mt-1.5">your <span className="text-vibe">watchlist</span></h1>
 
       {rows.length === 0 ? (
         <div className="mt-8 border-[2px] border-dashed border-frame rounded-2xl p-12 text-center">
-          <div className="font-h text-xl font-bold">nothing queued yet.</div>
-          <p className="text-muted text-sm mt-1">tap <b>＋ want</b> on anything your people — or kizu — drop.</p>
+          <div className="font-h text-xl font-bold">nothing saved yet.</div>
+          <p className="text-muted text-sm mt-1">tap <b>＋ save</b> on anything your people — or kizu — drop.</p>
           <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#0D0B09]">go to home</Link>
         </div>
       ) : (

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-// Save-to-queue toggle. Target is a group item or a curate pick.
-// - "pill" (default): "＋ want" / "✓ queued" text pill (curate river, etc.)
-// - "icon": a bookmark in the card's top-right corner — outline when unsaved,
-//   filled violet when queued. This IS the watchlist save; the queue is the
-//   product, so on the feed it's the always-visible corner affordance.
+// Save-to-watchlist toggle. Target is a group item or a curate pick.
+// - "pill" (default): "＋ save" / "✓ saved" text pill (curate river, etc.)
+// - "icon": a bookmark on the card's cover — outline when unsaved, filled violet
+//   when saved. This IS the watchlist save; the watchlist is the product, so on
+//   the feed it's the always-visible affordance.
 export default function QueueButton({
   itemId,
   curateDropId,
@@ -47,7 +47,7 @@ export default function QueueButton({
         onClick={toggle}
         disabled={busy}
         aria-pressed={queued}
-        aria-label={queued ? "queued — tap to remove from your queue" : "add to your queue"}
+        aria-label={queued ? "saved — tap to remove from your watchlist" : "save to your watchlist"}
         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 disabled:opacity-60 ${
           queued ? "text-vibe-2" : "text-ink-2 hover:text-vibe-2"
         }`}
@@ -68,7 +68,7 @@ export default function QueueButton({
         queued ? "bg-vibe text-white" : "bg-surface text-ink hover:bg-surface-2"
       }`}
     >
-      {queued ? "✓ queued" : "＋ queue"}
+      {queued ? "✓ saved" : "＋ save"}
     </button>
   );
 }

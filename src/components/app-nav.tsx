@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 // Fixed BOTTOM nav (thumb zone). A violet tile slides to the active destination
 // (the one show of motion); the active slot goes white. Violet is reserved for
 // the tile + the drop button only — RED stays on the kizu. dot.
-// Five slots: home · pick · ＋drop(center) · queue · you. drop is an ACTION, not
+// Five slots: home · log · ＋drop(center) · watchlist · you. drop is an ACTION, not
 // a destination, so the tile never parks under it.
 
 // ---- custom glyphs (filled, chunky; currentColor) ----
