@@ -75,64 +75,40 @@ function Figure({ gender }: { gender: string | null | undefined }) {
   );
 }
 
+// a floating glass pill (thumb zone). active slot = violet icon + a violet dot
+// beneath it. drop is the raised violet action, never marked active.
+function Tab({ href, on, children }: { href: string; on: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={`flex w-11 flex-col items-center gap-[5px] active:scale-95 transition-transform ${on ? "text-vibe-2" : "text-muted"}`}
+    >
+      {children}
+      <span className={`h-[5px] w-[5px] rounded-full ${on ? "bg-vibe-2" : "bg-transparent"}`} />
+    </Link>
+  );
+}
+
 export default function AppNav({ gender }: { gender?: string | null }) {
   const path = usePathname();
   const isOn = (href: string) => path === href || path.startsWith(href + "/");
 
-  // destinations carry their slot index in the 5-wide row (drop is slot 2).
-  const dests = [
-    { href: "/home", slot: 0 },
-    { href: "/tonight", slot: 1 },
-    { href: "/queue", slot: 3 },
-    { href: "/you", slot: 4 },
-  ];
-  const active = dests.find((d) => isOn(d.href));
-
-  const slotClass = (on: boolean) =>
-    `relative z-[1] flex h-full flex-1 flex-col items-center justify-center gap-1 active:scale-95 transition-transform ${
-      on ? "text-white" : "text-muted"
-    }`;
-
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t-[2.5px] border-ink bg-surface">
-      <div className="mx-auto max-w-[600px] px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
-        <div className="relative flex h-[52px]">
-          {/* sliding tile — spans the full row height so it frames each slot cleanly */}
-          {active && (
-            <span
-              className="absolute inset-y-0 z-0 rounded-[14px] border-[2.5px] border-ink bg-vibe transition-[left] duration-200 ease-out motion-reduce:transition-none"
-              style={{ left: `calc(${active.slot * 20}% + 6px)`, width: "calc(20% - 12px)" }}
-            />
-          )}
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none">
+      <div className="glass pointer-events-auto flex items-center gap-1.5 rounded-full border-2 border-frame px-3 py-2 shadow-[5px_5px_0_#7C5CE6]">
+        <Tab href="/home" on={isOn("/home")}><Home /></Tab>
+        <Tab href="/tonight" on={isOn("/tonight")}><Pick /></Tab>
 
-          <Link href="/home" className={slotClass(isOn("/home"))}>
-            <Home />
-            <span className="font-m text-[9.5px] font-bold">home</span>
-          </Link>
+        {/* drop — the raised violet action, framed in cream */}
+        <Link
+          href="/drop"
+          className="mx-0.5 flex h-11 w-11 items-center justify-center rounded-full border-2 border-frame bg-vibe text-white shadow-[2px_3px_0_#0D0B09] transition active:translate-y-[1px] active:shadow-[1px_1px_0_#0D0B09]"
+        >
+          <Plus />
+        </Link>
 
-          <Link href="/tonight" className={slotClass(isOn("/tonight"))}>
-            <Pick />
-            <span className="font-m text-[9.5px] font-bold">pick</span>
-          </Link>
-
-          {/* drop — the action: always-violet raised button, never the tile */}
-          <Link href="/drop" className="relative z-[1] flex h-full flex-1 flex-col items-center justify-center gap-1 text-vibe">
-            <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-[2.5px] border-ink bg-vibe text-white shadow-[2px_3px_0_#14110F] transition active:translate-y-[1px] active:shadow-[1px_1px_0_#14110F]">
-              <Plus />
-            </span>
-            <span className="font-m text-[9.5px] font-bold">drop</span>
-          </Link>
-
-          <Link href="/queue" className={slotClass(isOn("/queue"))}>
-            <Queue />
-            <span className="font-m text-[9.5px] font-bold">queue</span>
-          </Link>
-
-          <Link href="/you" className={slotClass(isOn("/you"))}>
-            <Figure gender={gender} />
-            <span className="font-m text-[9.5px] font-bold">you</span>
-          </Link>
-        </div>
+        <Tab href="/queue" on={isOn("/queue")}><Queue /></Tab>
+        <Tab href="/you" on={isOn("/you")}><Figure gender={gender} /></Tab>
       </div>
     </nav>
   );

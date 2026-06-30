@@ -26,7 +26,7 @@ export default function TasteRead({ initial }: { initial: Read | null }) {
       <div className="mt-6">
         {err ? <p className="text-muted text-sm mb-3 font-b">{err}</p> : null}
         <button onClick={generate} disabled={busy}
-          className="inline-flex items-center gap-2 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-ink rounded-full px-5 py-2.5 shadow-[3px_3px_0_#14110F] hover:-translate-y-[1px] transition-transform disabled:opacity-70">
+          className="inline-flex items-center gap-2 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#7C5CE6] hover:-translate-y-[1px] transition-transform disabled:opacity-70">
           ✦ {busy ? "reading…" : "name my taste"}
         </button>
       </div>
@@ -35,20 +35,22 @@ export default function TasteRead({ initial }: { initial: Read | null }) {
 
   return (
     <div className="mt-6">
-      <div className="bg-surface border-[3px] border-ink rounded-[24px] shadow-[6px_6px_0_#14110F] p-6">
-        <div className="font-m text-[11px] font-bold tracking-[0.16em] text-vibe">✦ TASTE SIGNATURE</div>
-        <p className="font-h text-[24px] font-extrabold tracking-[-0.03em] leading-[1.12] mt-3">{read.signature}</p>
+      <div className="rounded-[22px] overflow-hidden border-[2.5px] border-frame shadow-[5px_5px_0_#7C5CE6]" style={{ background: "linear-gradient(130deg,#7C5CE6,#3A2C6E)" }}>
+        <div className="p-5">
+          <div className="font-m text-[10px] font-extrabold tracking-[0.13em] uppercase text-white/80">✦ your taste signature</div>
+          <p className="font-h text-[19px] font-extrabold leading-[1.3] mt-2 text-white">{read.signature}</p>
 
-        {read.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-5">
-            {read.tags.map((t, i) => (
-              <span key={i} className="font-m text-[11px] font-bold rounded-full px-3 py-1 border-2 border-ink bg-surface-2">{t}</span>
-            ))}
-          </div>
-        )}
+          {read.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {read.tags.map((t, i) => (
+                <span key={i} className="glass font-m text-[10.5px] font-bold text-white rounded-full px-3 py-1 border border-white/40">{t}</span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <button onClick={generate} disabled={busy}
-        className="mt-3 font-h font-bold text-xs bg-surface border-[2px] border-ink rounded-full px-4 py-2 shadow-[2px_2px_0_#14110F] disabled:opacity-70">
+        className="mt-3 font-h font-bold text-xs bg-surface border-2 border-frame rounded-full px-4 py-2 shadow-[2px_2px_0_#7C5CE6] disabled:opacity-70">
         ↻ {busy ? "reading…" : "again"}
       </button>
     </div>

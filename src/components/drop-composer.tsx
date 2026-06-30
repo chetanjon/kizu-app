@@ -211,16 +211,16 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   const accent = TABS.find((t) => t.key === tab)!.color;
 
   return (
-    <div className="w-full max-w-[460px] bg-paper border-[3px] border-ink rounded-[24px] shadow-[8px_8px_0_#14110F] p-6">
+    <div className="w-full max-w-[460px] bg-surface border-[2.5px] border-frame rounded-[24px] shadow-[8px_8px_0_#7C5CE6] p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-h text-2xl font-extrabold tracking-[-0.03em]">drop something</h2>
-        <button onClick={() => router.push("/home")} className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-lg">×</button>
+        <button onClick={() => router.push("/home")} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-lg">×</button>
       </div>
 
-      <div className="flex gap-1 bg-[#ECE4D2] rounded-xl p-1 mb-4">
+      <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-4">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => { setTab(t.key); reset(); }}
-            className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg ${tab === t.key ? "bg-surface text-ink shadow-sm" : "text-muted"}`}>
+            className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg ${tab === t.key ? "bg-vibe text-white" : "text-muted"}`}>
             {t.label}
           </button>
         ))}
@@ -348,7 +348,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         </div>
       ) : (
         <button onClick={drop} disabled={busy}
-          className="w-full mt-5 font-h font-extrabold text-[15px] text-white border-[2.5px] border-ink rounded-xl py-3.5 shadow-[4px_4px_0_#14110F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
+          className="w-full mt-5 font-h font-extrabold text-[15px] text-[#15110D] border-[2.5px] border-frame rounded-xl py-3.5 shadow-[4px_4px_0_#0D0B09] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-60"
           style={{ background: accent }}>
           {dropLabel}
         </button>

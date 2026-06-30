@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserSignals } from "@/lib/taste-signals";
 import { getTasteMatches } from "@/lib/taste-match";
-import { TYPE, title as titleOf, sub as subOf, type DropType } from "@/lib/item-render";
+import { TYPE, title as titleOf, typeWord as typeWordOf, detail as detailOf, type DropType } from "@/lib/item-render";
 import TasteRead from "@/components/taste-read";
 import { SignOutButton } from "@/components/sign-out-button";
 import InstallPrompt from "@/components/install-prompt";
@@ -73,11 +73,12 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
             {signals.picks.map((p, i) => {
               const t = TYPE[p.type as DropType];
               return (
-                <div key={i} className="flex items-center gap-3 border-[2px] border-ink rounded-xl px-3.5 py-2.5 bg-surface shadow-[2px_2px_0_#14110F]">
-                  <span className="font-m text-[10px] font-bold rounded px-1.5 py-0.5 text-white shrink-0" style={{ background: t.color }}>{t.label}</span>
+                <div key={i} className="flex items-center gap-3 border border-hair rounded-xl px-3.5 py-2.5 bg-surface">
                   <div className="min-w-0">
                     <div className="font-h font-bold text-sm truncate">{titleOf(p)}</div>
-                    {subOf(p) ? <div className="font-m text-[10px] text-muted truncate">{subOf(p)}</div> : null}
+                    <div className="font-m text-[10px] text-muted truncate mt-0.5">
+                      <span className="font-bold" style={{ color: t.color }}>{typeWordOf(p)}</span>{detailOf(p) && <> · {detailOf(p)}</>}
+                    </div>
                   </div>
                 </div>
               );

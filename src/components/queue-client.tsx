@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TYPE, img, title, sub, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW_SM, img, title, typeWord, detail, type DropType } from "@/lib/item-render";
 import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 
@@ -80,15 +80,17 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
     const t = TYPE[r.type];
     const cover = img(r);
     return (
-      <div className="flex gap-3 items-center bg-surface border-[2.5px] border-ink rounded-xl p-2.5 shadow-[3px_3px_0_#14110F]">
-        <div className="w-12 h-12 flex-none border-[2px] border-ink rounded-lg overflow-hidden" style={{ background: cover ? undefined : t.color }}>
+      <div className="flex gap-3.5 items-center bg-surface border border-hair rounded-xl p-2.5">
+        <div className={`w-[52px] h-[68px] flex-none rounded-lg border-2 border-frame overflow-hidden ${SHADOW_SM[r.type]}`} style={{ background: cover ? undefined : t.color }}>
           {cover && <img src={cover} alt="" className="w-full h-full object-cover" />}
         </div>
         <div className="min-w-0">
-          <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-ink rounded px-1.5 py-0.5 text-white" style={{ background: t.color }}>{t.label}</span>
-          {r.key === upNextKey && <span className="ml-1.5 inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 align-middle">↑ up next</span>}
+          {/* "up next" stays loud — a reserved kizu signal, not chrome */}
+          {r.key === upNextKey && <span className="inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 mb-1">↑ up next</span>}
           <div className="font-h font-extrabold text-[15px] leading-tight truncate">{title(r)}</div>
-          <div className="font-m text-[9px] text-muted truncate">{[sub(r), r.who ? `· ${r.who.toLowerCase()}` : ""].filter(Boolean).join(" ")}</div>
+          <div className="font-m text-[9px] text-muted truncate">
+            <span className="font-bold" style={{ color: t.color }}>{typeWord(r)}</span>{detail(r) && <> · {detail(r)}</>}{r.who ? ` · ${r.who.toLowerCase()}` : ""}
+          </div>
           <ItemActions actions={r.availability ? [r.availability] : actionsFor(r, musicApp, r.key === firstListenKey)} className="mt-1.5" />
           {r.told && <div className="font-m text-[10px] text-vibe mt-1.5">✦ {r.told.toLowerCase()} will know it landed</div>}
         </div>
@@ -101,7 +103,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
                 <button
                   key={v.key}
                   onClick={() => setVerdict(r, v.key)}
-                  className="font-h text-[10px] font-bold border-[2px] border-ink rounded-full px-2.5 py-1 bg-surface hover:bg-vibe hover:text-white transition-colors"
+                  className="font-h text-[10px] font-bold border-2 border-frame rounded-full px-2.5 py-1 bg-surface hover:bg-vibe hover:text-white transition-colors"
                 >
                   {v.label}
                 </button>
@@ -116,7 +118,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
   return (
     <div className="mt-6">
       {landedYou > 0 && (
-        <div className="bg-ink text-paper border-[2.5px] border-ink rounded-2xl p-4 mb-6 shadow-[4px_5px_0_#6B4BD6]">
+        <div className="border-[2.5px] border-frame rounded-2xl p-4 mb-6 shadow-[4px_5px_0_#7C5CE6]" style={{ background: "rgba(124,92,230,0.14)" }}>
           <div className="font-m text-[10px] tracking-widest uppercase text-[#C2D24A]">✦ it landed</div>
           <div className="font-h font-bold text-base mt-1">{landedYou} {landedYou === 1 ? "thing you queued from your people hit" : "things you queued from your people hit"}.</div>
         </div>
@@ -127,8 +129,8 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
           <button
             key={c.key}
             onClick={() => setFilter(c.key)}
-            className={`font-m text-[11px] font-bold border-[2px] border-ink rounded-full px-3 py-1.5 transition-colors ${
-              filter === c.key ? "bg-ink text-paper" : "bg-surface text-ink"
+            className={`font-m text-[11px] font-bold border-2 border-frame rounded-full px-3 py-1.5 transition-colors ${
+              filter === c.key ? "bg-vibe text-white" : "bg-surface text-ink"
             }`}
           >
             {c.label}

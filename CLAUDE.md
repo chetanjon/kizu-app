@@ -53,17 +53,19 @@ Route-handler writes with the user-scoped Supabase client hit `new row violates 
 
 ## Brand DNA — visual constraints (source of truth: `src/app/globals.css`)
 
-Locked direction: **neo-brutalism × pop color × framed aurora**, edited down (not loud-for-loud's-sake).
+Locked direction (rebranded 2026-06-29, light→dark): **cinematic-brutalist-glass** — a dark warm-black stage, brutalist cream frames with hard blur-less shadows, glass on floating layers. Roughly 50 brutalist / 25 cinematic-dark / 25 glass. *(The earlier light "neo-brutal cream paper" direction is retired; `CLAUDE-old.md`-era. Real poster/album/place art is the design — chrome gets out of its way.)*
 
-- **Surfaces:** paper `#EDE3CE` (warm cream, never stark white), surface `#FFFFFF`, surface-2 `#F7EFDD`. Ink `#14110F`.
-- **Borders:** ~2.5–3px solid ink. **Shadows:** hard offset, **no blur** (e.g. `5px 5px 0 #14110F`).
-- **RED `#FF2E4D` is PRECIOUS — it is reserved ONLY for the period/dot in the `kizu.` wordmark.** Never buttons, links, focus rings, or fills.
-- **Signature accent = violet/grape `#6B4BD6`** (token `--color-vibe`): primary buttons, headline highlights, the vibe surfaces. The **vibe read = an animated aurora gradient framed in a black border** — the one show-stopper; don't dilute it by reusing it everywhere.
-- **Type colors (small functional tags only):** movies/watch = cobalt `#2F6FE0`, music/listen = rose `#E0567E`, outside/go = teal `#1B8A6B`. Extended accent set (indigo/clay/mustard/chartreuse/amber…) for cards/marquee.
-- **Fonts:** Archivo (`font-h`: headlines/numbers/titles/logo), Plus Jakarta Sans (`font-b`: body), Space Mono (`font-m`: labels/ratings/tags). Set in `layout.tsx`.
-- Luxurious whitespace; **anti-doomscroll** — the feed should help you *decide*, not scroll forever. "You're all caught up" is a feature, not a dead end.
+- **Stage:** warm black `paper #16130E` (the page) with a faint violet **nebula** glowing from the top (set on `body`). Deepest black `stage #0D0B09`. Elevated dark cards: `surface #1B1610`, `surface-2 #241D15`.
+- **Text + frames:** primary text/ink `#F6F1EA` (token `--color-ink`, now light); secondary `ink-2 #C7BEB0`; `muted #948D7F`; hairline `--color-hair` (faint light). The brutalist **cream frame** around art is `--color-frame #EDE3CE` (use `border-frame`, ~2.5px).
+- **THE SIGNATURE:** a hard, **blur-less COLORED shadow** behind cover art, tinted to its type — use the `.shadow-watch/.shadow-listen/.shadow-go` (and `-sm`) utility classes, or `SHADOW`/`SHADOW_SM` from `item-render.ts`. Violet `5px 5px 0 #7C5CE6` is the default brutalist shadow for kizu-voice surfaces (hero, nav, CTAs). Dark `#0D0B09` for subtle grounding. **No `#14110F` shadows** (invisible on the dark stage).
+- **RED `#FF3B5C` is PRECIOUS** — only the `kizu.` wordmark dot (and a bare notification ping). Never buttons/links/fills.
+- **Signature accent = violet `#6B4BD6→#7C5CE6`** (`--color-vibe`) + brighter `--color-vibe-2 #A98BFF` for active states/highlights: primary buttons, the floating glass nav tile/dot, headline highlights. The **vibe read = an animated aurora gradient framed in cream** (now `linear-gradient(135deg,#7C5CE6,#FF6F9C,#FF8A5B)`) — the one show-stopper; render it inline-expanded on Home when a read exists.
+- **Type colors (dark-tuned, brighter to read/glow on black):** movies/watch = blue `#5B8DEF`, music/listen = pink `#FF6F9C`, outside/go = green `#5DCAA5` (in `item-render.ts` `TYPE`). They ride a saturated full-width **type bar** above titles (dark text on the color) and tint the colored cover-shadow.
+- **Glass** (`.glass` utility) on floating layers only: the nav pill, chips over color/art, rating badges. `rgba(255,255,255,.10)` + `blur(16px)`.
+- **Fonts:** Archivo (`font-h`), Plus Jakarta Sans (`font-b`), Space Mono (`font-m`). Unchanged.
+- Luxurious whitespace; **anti-doomscroll** — the feed should help you *decide*. "You're all caught up" is a feature.
 
-Use the token names (`bg-paper`, `text-ink`, `bg-vibe`, `border-ink`, `font-h/b/m`, etc.), not raw hexes, in components.
+Use token names (`bg-paper`, `bg-surface`, `text-ink`, `text-vibe-2`, `border-frame`, `border-hair`, `font-h/b/m`, the `.shadow-*`/`.glass` utilities), not raw hexes, in components.
 
 ---
 

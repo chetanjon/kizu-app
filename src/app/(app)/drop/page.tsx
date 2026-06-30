@@ -24,7 +24,7 @@ export default async function Drop() {
     .map((m) => ({ id: m.user_id, name: m.users?.name ?? null }));
 
   return (
-    <div className="min-h-screen bg-paper flex items-start justify-center px-6 py-10">
+    <div className="min-h-screen flex items-start justify-center px-6 py-10">
       <DropComposer groupId={active.group_id} members={members} />
     </div>
   );
