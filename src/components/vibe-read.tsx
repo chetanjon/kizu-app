@@ -39,7 +39,7 @@ export default function VibeRead({ groupId, initial = null }: { groupId: string;
         <button onClick={() => setOpen(true)}
           className="inline-flex items-center gap-2 rounded-full border-[2px] border-frame shadow-[3px_3px_0_#7C5CE6] px-4 py-2"
           style={{ background: AURORA }}>
-          <span className="font-m text-[11px] font-bold tracking-[0.12em] text-white whitespace-nowrap" style={{ textShadow: "0 1px 6px rgba(0,0,0,.35)" }}>✦ this week&apos;s read</span>
+          <span className="font-h text-[13px] font-bold tracking-[-0.01em] text-white whitespace-nowrap" style={{ textShadow: "0 1px 6px rgba(0,0,0,.35)" }}>✦ this week&apos;s read</span>
           <span className="font-h font-black text-[13px] text-white">→</span>
         </button>
       ) : (
