@@ -25,7 +25,7 @@ export type VibeRead = {
 
 const TYPE_LABEL = { watch: "MOVIE", listen: "MUSIC", go_out: "OUTSIDE" } as const;
 
-function buildPrompt(groupName: string, members: string[], items: VibeItem[]): string {
+function buildPrompt(groupName: string, members: string[], items: VibeItem[], variant: "default" | "weekly" = "default"): string {
   const lines = items
     .map((i) => {
       const bits = [
@@ -40,11 +40,16 @@ function buildPrompt(groupName: string, members: string[], items: VibeItem[]): s
     })
     .join("\n");
 
-  return `You are the "vibe read" for kizu — a private space where a friend group drops the movies, music, and places they love. Your job is to read this group's COLLECTIVE TASTE back to them in a way that feels a little too accurate, funny, and flattering-but-true.
+  const weekly = variant === "weekly";
+  const job = weekly
+    ? `Your job is to recap THIS WEEK for them — read the taste behind what they dropped over the last 7 days back to them in a way that feels a little too accurate, funny, and flattering-but-true. This is the weekly ritual: the standing appointment, so it should feel like "here's what your week sounded/looked like."`
+    : `Your job is to read this group's COLLECTIVE TASTE back to them in a way that feels a little too accurate, funny, and flattering-but-true.`;
+
+  return `You are the "vibe read" for kizu — a private space where a friend group drops the movies, music, and places they love. ${job}
 
 GROUP: "${groupName}" — members: ${members.join(", ")}.
 
-THEIR DROPS:
+${weekly ? "THIS WEEK'S DROPS:" : "THEIR DROPS:"}
 ${lines}
 
 WRITE THE READ. Rules:
@@ -122,9 +127,10 @@ async function runModel(prompt: string): Promise<string> {
 export async function generateVibe(
   groupName: string,
   members: string[],
-  items: VibeItem[]
+  items: VibeItem[],
+  variant: "default" | "weekly" = "default"
 ): Promise<VibeRead> {
-  return parseJson(await runModel(buildPrompt(groupName, members, items)));
+  return parseJson(await runModel(buildPrompt(groupName, members, items, variant)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────

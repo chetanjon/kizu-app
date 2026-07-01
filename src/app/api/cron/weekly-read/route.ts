@@ -26,12 +26,12 @@ export async function GET(req: Request) {
     if (!recent) continue;
 
     try {
-      const read = await buildAndStoreVibe(admin, g.id);
-      if (!read) continue;
+      const result = await buildAndStoreVibe(admin, g.id, "weekly");
+      if (!result) continue;
       groupsRead++;
       const { data: members } = await admin.from("group_members").select("user_id").eq("group_id", g.id);
       for (const m of members ?? []) {
-        await notify(admin, m.user_id, "weekly_read", "the week's read is in.", "/home");
+        await notify(admin, m.user_id, "weekly_read", "the week's read is in.", `/read/${result.id}`);
         pushed++;
       }
     } catch {
