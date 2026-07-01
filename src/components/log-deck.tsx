@@ -62,18 +62,15 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
 
   const list = useMemo(() => (lens === "all" ? cards : cards.filter((c) => c.type === lens)), [cards, lens]);
   const n = list.length;
-  const i = n ? ((idx % n) + n) % n : 0;
+  const i = n ? Math.min(Math.max(idx, 0), n - 1) : 0;
   const cur = list[i];
 
   function pick(k: Lens) { setLens(k); setIdx(0); setDx(0); setDragging(false); start.current = null; }
-  function goTo(target: number) { if (n) setIdx(((target % n) + n) % n); }
+  // clamp — the carousel stops at the first / last card, no wrap.
+  function goTo(target: number) { if (n) setIdx(Math.min(Math.max(target, 0), n - 1)); }
 
-  // signed shortest distance from the centred card to card j (handles wrap).
-  function delta(j: number): number {
-    let d = ((j - i) % n + n) % n;
-    if (d > n / 2) d -= n;
-    return d;
-  }
+  // signed distance from the centred card to card j (no wrap).
+  function delta(j: number): number { return j - i; }
 
   function onDown(e: React.PointerEvent) {
     start.current = { x: e.clientX, y: e.clientY, el: e.target as HTMLElement };
@@ -162,8 +159,8 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
                     width: CARD_W, aspectRatio: "230 / 344", borderColor: "#EDE3CE",
                     transform: `translateX(calc(-50% + ${off} + ${dragging ? dx : 0}px)) scale(${scale})`,
                     transformOrigin: "center top",
-                    opacity: center ? 1 : near ? 0.5 : 0,
-                    filter: center ? "none" : "brightness(.62)",
+                    opacity: center ? 1 : near ? 0.86 : 0,
+                    filter: center ? "none" : "brightness(.9)",
                     zIndex: 10 - Math.abs(d),
                     pointerEvents: Math.abs(d) <= 1 ? "auto" : "none",
                     boxShadow: center
