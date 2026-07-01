@@ -21,12 +21,16 @@ export async function POST(req: Request) {
   let row: { user_id: string; item_id?: string; curate_drop_id?: string; source: string };
 
   if (item_id) {
-    const { data: item } = await admin.from("items").select("group_id").eq("id", item_id).maybeSingle();
+    const { data: item } = await admin.from("items").select("group_id, created_by").eq("id", item_id).maybeSingle();
     if (!item) return NextResponse.json({ error: "not found" }, { status: 404 });
-    const { data: mem } = await admin
-      .from("group_members").select("group_id")
-      .eq("group_id", item.group_id).eq("user_id", user.id).maybeSingle();
-    if (!mem) return NextResponse.json({ error: "not a member of that group" }, { status: 403 });
+    // You can always re-queue your OWN item (e.g. "revisit" from the log deck),
+    // even if you've since left its group. Otherwise you must be a member.
+    if (item.created_by !== user.id) {
+      const { data: mem } = await admin
+        .from("group_members").select("group_id")
+        .eq("group_id", item.group_id).eq("user_id", user.id).maybeSingle();
+      if (!mem) return NextResponse.json({ error: "not a member of that group" }, { status: 403 });
+    }
     row = { user_id: user.id, item_id, source: "group" };
   } else {
     const { data: cd } = await admin

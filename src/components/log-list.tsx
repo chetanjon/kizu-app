@@ -28,6 +28,16 @@ function monthKey(iso: string): string {
 }
 
 export default function LogList({ rows, filter }: { rows: LogRow[]; filter: "all" | DropType }) {
+  // no personal logs yet (the deck above still invites action) — keep the shelf
+  // quiet instead of showing "0 things logged" and an empty-filter line.
+  if (rows.length === 0) {
+    return (
+      <div className="mt-8 text-center font-m text-[11px] text-muted">
+        your shelf is empty — the things you log show up here.
+      </div>
+    );
+  }
+
   const shown = rows.filter((r) => filter === "all" || r.type === filter);
 
   // group the filtered rows into month buckets, preserving newest-first order.
