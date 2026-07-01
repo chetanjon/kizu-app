@@ -2,6 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import { img, title, ratingMark, typeWord, detail, type DropType } from "@/lib/item-render";
+import ItemActions from "@/components/item-actions";
+import type { Action } from "@/lib/item-actions";
 
 // One card = one row from YOUR OWN log (your item + rating + note). The log is
 // browsed as a coverflow carousel — a main card in the middle, one neighbour
@@ -14,6 +16,7 @@ export type DeckCard = {
   note: string | null;
   shared: boolean;   // !private — already shared with the crew
   date: string;
+  actions: Action[]; // where-to-watch / play / maps / "you have it" — computed server-side
 };
 
 type Lens = "all" | DropType;
@@ -216,6 +219,12 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
               <div className="font-m text-[10px] text-muted mt-3">
                 logged {fmtDate(cur.date)} · {isShared ? <span className="text-go">shared with the crew</span> : "only you"}
               </div>
+              {cur.actions.length > 0 && (
+                <div className="mt-4">
+                  <div className="font-m text-[10px] tracking-[0.14em] uppercase text-muted mb-2">act on it</div>
+                  <ItemActions actions={cur.actions} />
+                </div>
+              )}
               {isShared ? (
                 <div className="mt-5 w-full text-center font-h font-bold text-sm text-go border-[1.5px] border-hair rounded-full py-2.5">✓ shared with the crew</div>
               ) : (
