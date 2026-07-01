@@ -24,6 +24,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
   // recMode: "everyone" (group-wide, attributed) | "people" (anonymous, one rec per id) | "link"
   const [recMode, setRecMode] = useState<"everyone" | "people" | "link">("everyone");
   const [recipients, setRecipients] = useState<Set<string>>(new Set());
+  const [pickerOpen, setPickerOpen] = useState(false); // the "specific people" dropdown
   // group-wide only — a targeted drop is always attributed, so anon turns off the
   // moment you pick a recipient or the link mode.
   const [anon, setAnon] = useState(false);
@@ -204,6 +205,10 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
 
   const recCount = recipients.size;
   const oneName = recCount === 1 ? (members.find((m) => recipients.has(m.id))?.name || "them").toLowerCase() : "";
+  // the dropdown pill label: the picked names when few, a count when many, else a prompt.
+  const peopleLabel = recCount === 0 ? "specific people"
+    : recCount <= 2 ? members.filter((m) => recipients.has(m.id)).map((m) => (m.name || "someone").toLowerCase()).join(", ")
+    : `${recCount} people`;
   const dropLabel = busy ? (log ? "logging…" : "dropping…")
     : log ? "log it · just for you"
     : recMode === "link" ? "drop + make a link"
@@ -329,15 +334,37 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
       <div className="mt-4">
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => { setRecMode("everyone"); setRecipients(new Set()); }}
+          <button onClick={() => { setRecMode("everyone"); setRecipients(new Set()); setPickerOpen(false); }}
             className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${recMode === "everyone" ? "bg-vibe text-white" : "bg-surface"}`}>everyone</button>
-          {members.map((m) => (
-            <button key={m.id} onClick={() => toggleRecipient(m.id)}
-              className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
-          ))}
-          <button onClick={() => { setRecMode("link"); setRecipients(new Set()); setAnon(false); }}
+          {/* specific people live behind a dropdown so a big group doesn't sprawl
+              into a wall of name pills. the pill shows who's picked; ▾ opens the list. */}
+          <button onClick={() => setPickerOpen((o) => !o)}
+            className={`inline-flex items-center gap-1.5 font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${recMode === "people" ? "bg-vibe text-white" : "bg-surface"}`}>
+            {peopleLabel}
+            <span aria-hidden className="text-[9px] leading-none opacity-80">{pickerOpen ? "▲" : "▼"}</span>
+          </button>
+          <button onClick={() => { setRecMode("link"); setRecipients(new Set()); setAnon(false); setPickerOpen(false); }}
             className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
         </div>
+
+        {pickerOpen && (
+          <div className="mt-2 bg-surface border-[2px] border-frame rounded-xl p-1.5 max-h-[210px] overflow-y-auto">
+            {members.length === 0 ? (
+              <div className="px-3 py-2 font-m text-[11px] text-muted">no one else in the group yet.</div>
+            ) : (
+              members.map((m) => {
+                const on = recipients.has(m.id);
+                return (
+                  <button key={m.id} onClick={() => toggleRecipient(m.id)}
+                    className={`w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left font-h font-bold text-[13px] transition-colors ${on ? "bg-vibe/20 text-ink" : "text-ink-2 hover:bg-surface-2"}`}>
+                    <span>{(m.name || "someone").toLowerCase()}</span>
+                    <span className={`shrink-0 w-[18px] h-[18px] rounded-full border-[2px] flex items-center justify-center text-[10px] leading-none ${on ? "bg-vibe border-vibe text-white" : "border-frame text-transparent"}`}>✓</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
 
         {/* anonymous is a group-wide modifier — turning it ON implies "everyone"
             (and clears any recipients), so you never pick everyone separately.
