@@ -26,5 +26,5 @@ export default async function JoinByCode({
     { onConflict: "group_id,user_id", ignoreDuplicates: true }
   );
 
-  redirect("/feed");
+  redirect("/home");
 }

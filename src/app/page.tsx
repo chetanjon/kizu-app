@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import SignInButton from "@/components/sign-in-button";
 
 // "/" is the ONE public page — invite-only app lives behind it.
 // Authed people skip straight to the app; everyone else (and Google) gets
@@ -15,12 +15,11 @@ export default async function Landing() {
         <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">
           kizu<span className="text-red">.</span>
         </span>
-        <Link
-          href="/login"
+        <SignInButton
           className="glass font-m text-xs font-bold border border-white/25 rounded-full px-4 py-2 hover:-translate-y-[1px] transition-transform"
         >
           enter
-        </Link>
+        </SignInButton>
       </header>
 
       <main className="flex-1 flex flex-col justify-center max-w-[860px] mx-auto w-full px-6 sm:px-10 py-16">
@@ -44,12 +43,11 @@ export default async function Landing() {
         </div>
 
         <div className="mt-10 flex items-center gap-5">
-          <Link
-            href="/login"
+          <SignInButton
             className="font-h font-bold text-base bg-vibe text-white border-[2.5px] border-frame rounded-full px-7 py-3 shadow-[5px_5px_0_#7C5CE6] hover:-translate-x-[1px] hover:-translate-y-[1px] active:translate-x-[3px] active:translate-y-[3px] transition-transform"
           >
             enter your space
-          </Link>
+          </SignInButton>
           <span className="font-m text-[11px] text-muted">no download · in your browser</span>
         </div>
       </main>
