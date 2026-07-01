@@ -17,10 +17,9 @@ export type VibeItem = {
 
 export type VibeRead = {
   title: string;                                   // the screenshot headline
-  body: string;                                    // 2–3 sentence read
-  person_lines: { name: string; line: string }[];  // one too-accurate line per person
+  body: string;                                    // THE read — one 2–3 line paragraph naming the active people
   tags: string[];                                  // 2–4 playful labels
-  top_picks: { type: string; title: string }[];    // what they keep coming back to
+  top_picks: { type: string; title: string }[];    // what they keep coming back to (feeds the act-on-it buttons)
 };
 
 const TYPE_LABEL = { watch: "MOVIE", listen: "MUSIC", go_out: "OUTSIDE" } as const;
@@ -52,22 +51,21 @@ GROUP: "${groupName}" — members: ${members.join(", ")}.
 ${weekly ? "THIS WEEK'S DROPS:" : "THEIR DROPS:"}
 ${lines}
 
-WRITE THE READ. Rules:
-- SHORT. Reads in ~5 seconds. body = ONE or TWO punchy sentences, max. no rambling.
+WRITE THE READ — one short paragraph, nothing else. Rules:
+- SHORT. a SINGLE tight paragraph, UNDER ~45 words total (2-3 short sentences, ~2-3 lines). reads in ~5 seconds. be terse — name a person + their standout drop, don't over-explain. no rambling, no lists, no "it seems"/"meanwhile" filler.
+- NAME THE ACTIVE PEOPLE. weave in the names of the members who actually dropped things — you can see them as "by <name>" on each drop. only name people who dropped; never name someone with no drops, and if a drop is "by someone" it's anonymous, so don't name them.
 - FUNNY. land at least one genuinely funny, specific observation — the kind someone screenshots.
-- HUMAN. sound like a sharp friend texting, not an essay or a horoscope. lowercase, no exclamation marks, no emoji.
-- ACCURATE + SPECIFIC. cite real titles/artists/places by name; read the PEOPLE through their taste. NO generic filler ("eclectic taste", "good vibes") — instant fail.
+- HUMAN. sound like a sharp friend texting, not an essay or a horoscope. lowercase, no exclamation marks, no emoji. PLAIN TEXT only — no markdown, no *asterisks* or \`backticks\` around titles.
+- ACCURATE + SPECIFIC. cite real titles/artists/places by name. NO generic filler ("eclectic taste", "good vibes") — instant fail.
 - flattering-but-true: tease, don't insult.
 
 Return ONLY valid JSON, no markdown:
 {
   "title": "punchy headline, max ~6 words, lowercase",
-  "body": "1-2 SHORT sentences, citing real drops",
-  "person_lines": [ { "name": "<member>", "line": "one short, funny line, max ~12 words" } ],
+  "body": "THE READ — one tight paragraph under ~45 words, naming the people who dropped + citing their real drops",
   "tags": ["2-3 short lowercase labels, e.g. 'letterboxd-core'"],
   "top_picks": [ { "type": "watch|listen|go_out", "title": "<a standout drop>" } ]
-}
-Only add person_lines for members whose taste genuinely stands out — skip the section entirely if there isn't enough signal (e.g. just one person).`;
+}`;
 }
 
 function parseJson(text: string): VibeRead {
@@ -76,9 +74,6 @@ function parseJson(text: string): VibeRead {
   return {
     title: String(obj.title || "").trim(),
     body: String(obj.body || "").trim(),
-    person_lines: Array.isArray(obj.person_lines)
-      ? obj.person_lines.map((p: any) => ({ name: String(p.name || ""), line: String(p.line || "") }))
-      : [],
     tags: Array.isArray(obj.tags) ? obj.tags.map(String).slice(0, 4) : [],
     top_picks: Array.isArray(obj.top_picks)
       ? obj.top_picks.map((t: any) => ({ type: String(t.type || ""), title: String(t.title || "") })).slice(0, 3)
