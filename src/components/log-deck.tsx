@@ -1,191 +1,206 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { TYPE, SHADOW, img, title, typeWord, detail, ratingMark, type DropType } from "@/lib/item-render";
-import { actionsFor, type Action } from "@/lib/item-actions";
-import type { Cand } from "@/components/tonight-dealer";
+import { img, title, ratingMark, typeWord, detail, type DropType } from "@/lib/item-render";
+
+// One card = one row from YOUR OWN log (your item + rating + note). The log is
+// browsed as a deck, one card at a time — never a list. Nothing here is anyone
+// else's entry.
+export type DeckCard = {
+  id: string;
+  type: DropType;
+  data: Record<string, unknown>;
+  rating: string | null;
+  note: string | null;
+  shared: boolean;   // !private — already shared with the crew
+  date: string;
+};
 
 type Lens = "all" | DropType;
 
-// rotate-from-seed deal (no Math.random → SSR/hydration stable)
-function dealOrder<T>(arr: T[], seed: number): T[] {
-  if (arr.length < 2) return arr;
-  const s = seed % arr.length;
-  return [...arr.slice(s), ...arr.slice(0, s)];
+// Softer type colors matched to the approved mockup (movie / music / place).
+const TC: Record<DropType, string> = { watch: "#6E8FE8", listen: "#F58BB0", go_out: "#5FD0A8" };
+const PICKS: { k: Lens; label: string; type?: DropType }[] = [
+  { k: "all", label: "all" },
+  { k: "watch", label: "movies", type: "watch" },
+  { k: "listen", label: "music", type: "listen" },
+  { k: "go_out", label: "places", type: "go_out" },
+];
+
+// a calm placeholder gradient when there's no real cover, tinted to type.
+function grad(type: DropType): string {
+  return `linear-gradient(150deg, ${TC[type]}, rgba(0,0,0,.5) 60%, #12101a)`;
 }
 
-function actFor(c: Cand, musicApp: string | null): Action | null {
-  return c.availability ?? actionsFor(c, musicApp, false).find((a) => a.kind !== "set") ?? null;
+function fmtDate(iso: string): string {
+  try { return new Date(iso).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }).toLowerCase(); }
+  catch { return ""; }
 }
 
-export default function LogDeck({ pool, musicApp, lens }: { pool: Cand[]; musicApp: string | null; lens: Lens }) {
-  const [idx, setIdx] = useState(0);
-  const [deal, setDeal] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const [drag, setDrag] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
-  const [fly, setFly] = useState<"" | "up" | "away">("");
-  const [dragging, setDragging] = useState(false);
-  const start = useRef<{ x: number; y: number } | null>(null);
+function CardArt({ card }: { card: DeckCard }) {
+  const cover = img(card);
+  return cover
+    ? <img src={cover} alt="" draggable={false} className="w-full h-full object-cover object-center" />
+    : <div className="w-full h-full" style={{ background: grad(card.type) }} />;
+}
 
-  const hand = useMemo(() => {
-    const filtered = lens === "all" ? pool : pool.filter((c) => c.type === lens);
-    return dealOrder(filtered, deal).slice(0, 8);
-  }, [pool, lens, deal]);
-
-  const current = hand[idx];
-  const next = hand[idx + 1];
-
-  function reset() { setDrag({ dx: 0, dy: 0 }); setFly(""); setDragging(false); start.current = null; }
-  function advance() { reset(); setBusy(false); setIdx((i) => i + 1); }
-  function reshuffle() { reset(); setBusy(false); setIdx(0); setDeal((d) => d + 1); }
-
-  async function save(c: Cand) {
-    setBusy(true); setFly("up");
-    try {
-      if (c.source === "shelf" && !c.shared) {
-        await fetch("/api/items", {
-          method: "PATCH", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: c.itemId }),
-        });
-      } else {
-        const body = c.itemId ? { item_id: c.itemId } : { curate_drop_id: c.curateDropId };
-        await fetch("/api/queue", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      }
-    } catch { /* optimistic */ }
-    setTimeout(advance, 220);
-  }
-  function skip() { setBusy(true); setFly("away"); setTimeout(advance, 220); }
-
-  function onDown(e: React.PointerEvent) {
-    if (busy) return;
-    start.current = { x: e.clientX, y: e.clientY };
-    setDragging(true);
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-  }
-  function onMove(e: React.PointerEvent) {
-    if (!start.current) return;
-    setDrag({ dx: e.clientX - start.current.x, dy: e.clientY - start.current.y });
-  }
-  function onUp() {
-    if (!start.current || !current || busy) { start.current = null; setDragging(false); return; }
-    const { dx, dy } = drag;
-    const moved = Math.hypot(dx, dy);
-    start.current = null;
-    setDragging(false);
-    if (dy < -90) return void save(current);
-    if (Math.abs(dx) > 110) return void skip();
-    if (moved < 8) {
-      const act = actFor(current, musicApp);
-      if (act) window.open(act.url, act.kind === "set" ? "_self" : "_blank");
-    }
-    setDrag({ dx: 0, dy: 0 });
-  }
-
-  // nothing to deal for this lens → render nothing (the shelf below still shows)
-  if (hand.length === 0) return null;
-
-  // swiped through the whole hand
-  if (!current) {
-    return (
-      <div className="mt-6 text-center border-2 border-dashed border-hair rounded-2xl p-10">
-        <div className="font-h text-lg font-bold">that&apos;s the hand.</div>
-        <p className="text-muted text-sm mt-1">you called it on all of them.</p>
-        <button onClick={reshuffle} className="mt-4 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#0D0B09]">deal again</button>
-      </div>
-    );
-  }
-
-  const t = TYPE[current.type];
-  const act = actFor(current, musicApp);
-  const mine = current.source === "shelf";
-  const saveVerb = mine ? (current.shared ? "revisit" : "share") : "save";
-
-  const topStyle: React.CSSProperties =
-    fly === "up" ? { transform: "translateY(-130%) rotate(-4deg)", opacity: 0, transition: "transform .22s ease, opacity .22s ease" }
-    : fly === "away" ? { transform: `translateX(${drag.dx >= 0 ? 130 : -130}%) rotate(${drag.dx >= 0 ? 12 : -12}deg)`, opacity: 0, transition: "transform .22s ease, opacity .22s ease" }
-    : dragging ? { transform: `translate(${drag.dx}px, ${drag.dy}px) rotate(${drag.dx / 22}deg)` }
-    : { transform: "none", transition: "transform .2s ease" };
-
+// a dimmed neighbor peeking on one side — tap it to browse that way.
+function PeekCard({ card, side, onClick }: { card: DeckCard; side: "left" | "right"; onClick: () => void }) {
+  const tx = side === "left" ? "translateX(-166%)" : "translateX(66%)";
   return (
-    <div className="mt-5">
-      <div className="text-center font-m text-[11px] tracking-widest uppercase text-vibe-2 mb-2">↑ swipe up to {saveVerb}</div>
-
-      <div className="relative" style={{ perspective: 1000 }}>
-        {/* peek: the next card, behind */}
-        {next && (
-          <div className="absolute inset-0 scale-[0.95] translate-y-3 opacity-60 pointer-events-none">
-            <CardFace c={next} />
-          </div>
-        )}
-        {/* top card — draggable */}
-        <div
-          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
-          style={{ ...topStyle, touchAction: "none" }}
-          className="relative cursor-grab active:cursor-grabbing select-none"
-        >
-          <CardFace c={current}>
-            <div className="font-m text-[10px] mb-1" style={{ color: t.color }}>
-              {mine ? "↺ from your shelf" : "✦ from your people"}
-              {current.who ? ` · ${current.who.toLowerCase()}` : ""}
-              {current.moment ? ` · for ${current.moment}` : ""}
-            </div>
-            <h2 className="font-h font-extrabold text-2xl tracking-[-0.02em] leading-[1.05] text-white">{title(current)}</h2>
-            <div className="font-m text-[11px] mt-1 text-white/80">
-              <span className="font-bold" style={{ color: t.color }}>{typeWord(current)}</span>
-              {detail(current) && <> · {detail(current)}</>}
-              {current.rating && <> · {ratingMark(current.rating)}</>}
-              {current.proof && <span className="text-go"> · ♥ {current.proof}</span>}
-            </div>
-            {current.note && <p className="text-[13px] mt-2 leading-snug italic text-white/90 line-clamp-2">&ldquo;{current.note}&rdquo;</p>}
-            {act && (
-              <span className={`inline-flex items-center mt-3 font-h text-[11px] font-bold rounded-full px-3.5 py-1.5 ${
-                act.kind === "have" ? "bg-go text-[#15110D]" : act.primary ? "bg-vibe text-white" : "glass text-white border border-white/30"
-              }`}>
-                {act.kind === "have" ? `✓ ${act.label}` : act.label}
-              </span>
-            )}
-          </CardFace>
-        </div>
-      </div>
-
-      {/* the two explicit buttons back up the gestures (a11y + desktop) */}
-      <div className="grid grid-cols-[1.4fr_1fr] gap-3 mt-4">
-        <button onClick={() => save(current)} disabled={busy}
-          className="font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-3 shadow-[3px_3px_0_#0D0B09] active:translate-y-[1px] transition-transform">
-          {saveVerb === "share" ? "＋ tell the crew" : saveVerb === "revisit" ? "↺ revisit" : "＋ save"}
-        </button>
-        <button onClick={skip} disabled={busy} className="font-h font-bold text-sm bg-surface border-[2.5px] border-frame rounded-full py-3">skip</button>
-      </div>
-
-      <div className="flex items-center justify-center gap-1.5 mt-4">
-        {hand.map((_, i) => (
-          <span key={i} className={`h-1 rounded-full transition-all ${i === idx ? "w-5 bg-vibe-2" : "w-1 bg-hair"}`} />
-        ))}
-      </div>
-      <div className="text-center font-m text-[10px] text-muted mt-2">flick away to skip · tap to open</div>
-    </div>
+    <button onClick={onClick} aria-label={side === "left" ? "previous" : "next"}
+      className="absolute left-1/2 top-0 border-[2.5px] rounded-[18px] overflow-hidden"
+      style={{ width: 206, height: 326, borderColor: "#EDE3CE", transform: `${tx} scale(.84)`, opacity: .32, filter: "brightness(.6)", boxShadow: `5px 5px 0 ${TC[card.type]}` }}>
+      <CardArt card={card} />
+    </button>
   );
 }
 
-// the poster card body — art + bottom scrim; children render the caption block.
-function CardFace({ c, children }: { c: Cand; children?: React.ReactNode }) {
-  const t = TYPE[c.type];
-  const cover = img(c);
+export default function LogDeck({ cards }: { cards: DeckCard[] }) {
+  const [lens, setLens] = useState<Lens>("all");
+  const [idx, setIdx] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [shared, setShared] = useState<Record<string, boolean>>({});
+  const [drag, setDrag] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [fly, setFly] = useState<"" | "up" | "left" | "right">("");
+  const start = useRef<{ x: number; y: number } | null>(null);
+
+  const list = useMemo(() => (lens === "all" ? cards : cards.filter((c) => c.type === lens)), [cards, lens]);
+  const i = Math.min(idx, Math.max(0, list.length - 1));
+  const cur = list[i];
+  const prev = list[i - 1];
+  const next = list[i + 1];
+
+  function reset() { setDrag({ x: 0, y: 0 }); setDragging(false); setFly(""); start.current = null; }
+  function pick(k: Lens) { setLens(k); setIdx(0); reset(); }
+  function go(dir: 1 | -1) {
+    const t = i + dir;
+    if (t < 0 || t >= list.length) { reset(); return; }
+    setFly(dir === 1 ? "left" : "right");
+    setTimeout(() => { setIdx(t); reset(); }, 170);
+  }
+  async function share(c: DeckCard) {
+    if (c.shared || shared[c.id]) { reset(); return; }
+    setShared((s) => ({ ...s, [c.id]: true }));
+    setFly("up");
+    try { await fetch("/api/items", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: c.id }) }); } catch { /* optimistic */ }
+    setTimeout(reset, 240);
+  }
+
+  function onDown(e: React.PointerEvent) { if (fly) return; start.current = { x: e.clientX, y: e.clientY }; setDragging(true); (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); }
+  function onMove(e: React.PointerEvent) { if (!start.current) return; setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y }); }
+  function onUp() {
+    if (!start.current || !cur) { reset(); return; }
+    const { x, y } = drag; const moved = Math.hypot(x, y); start.current = null;
+    if (y < -80 && Math.abs(y) > Math.abs(x)) return void share(cur);
+    if (x < -70) return void go(1);
+    if (x > 70) return void go(-1);
+    if (moved < 8) setOpen(true);
+    reset();
+  }
+  function onKey(e: React.KeyboardEvent) {
+    if (e.key === "ArrowLeft") go(-1);
+    else if (e.key === "ArrowRight") go(1);
+    else if (e.key === "ArrowUp" && cur) share(cur);
+    else if (e.key === "Enter") setOpen(true);
+  }
+
+  function transform(): string {
+    if (fly === "up") return "translate(-50%, -130%) rotate(0deg)";
+    if (fly === "left") return "translate(-185%, 0) rotate(-8deg)";
+    if (fly === "right") return "translate(85%, 0) rotate(8deg)";
+    if (dragging) return `translate(calc(-50% + ${drag.x}px), ${drag.y}px) rotate(${drag.x / 24}deg)`;
+    return "translate(-50%, 0)";
+  }
+
+  const isShared = cur ? (cur.shared || !!shared[cur.id]) : false;
+
   return (
-    <div className={`relative rounded-2xl overflow-hidden border-[2.5px] border-frame ${SHADOW[c.type]}`}>
-      <div className="relative aspect-[2/3]" style={{ background: cover ? undefined : t.color }}>
-        {cover
-          ? <img src={cover} alt="" draggable={false} className="w-full h-full object-cover object-center" />
-          : <div className="absolute inset-0 flex items-center justify-center p-6 text-center"><span className="font-h font-extrabold text-2xl text-[#15110D] leading-tight">{title(c)}</span></div>}
-        {children && (
-          <div className="absolute inset-x-0 bottom-0 p-4 pt-24 bg-gradient-to-t from-black/95 via-black/55 to-transparent">
-            {children}
-          </div>
-        )}
+    <div className="mx-auto w-full max-w-[400px] px-4 pb-24">
+      {/* header */}
+      <div className="pt-1">
+        <div className="font-m text-[9px] tracking-[0.16em] uppercase text-muted">your log</div>
+        <h1 className="font-h text-[23px] font-black tracking-[-0.035em] mt-0.5 leading-none">everything you&apos;ve logged</h1>
       </div>
+
+      {/* type picker — colored dot per type, active fills violet */}
+      <div className="flex items-center gap-[7px] mt-3.5 overflow-x-auto">
+        {PICKS.map((p) => {
+          const on = lens === p.k;
+          return (
+            <button key={p.k} onClick={() => pick(p.k)}
+              className="font-m text-[10px] font-bold rounded-full px-3 py-[5px] whitespace-nowrap flex items-center gap-1.5 border-[1.5px] shrink-0"
+              style={on ? { background: "#9D7CFF", borderColor: "#9D7CFF", color: "#15110D" } : { borderColor: "#EDE3CE", color: "#F4F1EA" }}>
+              {p.type && <span className="w-[7px] h-[7px] rounded-full" style={{ background: TC[p.type] }} />}
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {list.length === 0 ? (
+        <div className="text-center font-m text-[11px] text-muted py-24 leading-relaxed">
+          {lens === "all"
+            ? <>nothing logged yet — hit <b className="text-ink-2">＋</b> and pick <b className="text-ink-2">just me</b>.</>
+            : <>no {PICKS.find((p) => p.k === lens)?.label} logged yet.</>}
+        </div>
+      ) : (
+        <>
+          {/* the deck — clip peeks at the edges so they never widen the page
+              (else browsing sideways scrolls the whole layout). overflow-x:clip
+              keeps the vertical hard-shadows visible while trimming the sides. */}
+          <div className="relative mt-5" style={{ height: 376, overflowX: "clip", overflowY: "visible" }}>
+            {prev && <PeekCard card={prev} side="left" onClick={() => go(-1)} />}
+            {next && <PeekCard card={next} side="right" onClick={() => go(1)} />}
+
+            {cur && (
+              <div
+                role="button" tabIndex={0}
+                onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onKeyDown={onKey}
+                className="absolute left-1/2 top-0 border-[2.5px] rounded-[18px] overflow-hidden select-none cursor-grab active:cursor-grabbing outline-none"
+                style={{ width: 230, height: 344, borderColor: "#EDE3CE", zIndex: 5, touchAction: "none", boxShadow: `6px 7px 0 ${TC[cur.type]}, inset 0 2px 0 rgba(255,255,255,.25)`, transform: transform(), opacity: fly ? 0 : 1, transition: dragging ? undefined : "transform .18s ease, opacity .18s ease" }}>
+                <CardArt card={cur} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,12,.9), transparent 42%)" }} />
+                {cur.rating && <span className="glass absolute top-3 right-3 font-h font-black text-[13px] text-white rounded-[9px] px-[11px] py-1">{ratingMark(cur.rating)}</span>}
+                <div className="absolute left-0 right-0 bottom-0 p-4">
+                  <div className="font-h font-black text-[28px] leading-[1.02] text-white" style={{ textShadow: "0 2px 14px rgba(0,0,0,.5)" }}>{title(cur)}</div>
+                  {cur.note && <div className="text-[12.5px] italic mt-1.5" style={{ color: "rgba(244,241,234,.72)" }}>&ldquo;{cur.note}&rdquo;</div>}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* quiet hint instead of a counter */}
+          <div className="text-center font-m text-[10px] text-muted mt-1">
+            {isShared ? "swipe to browse · tap to open" : "swipe up to share · tap to open"}
+          </div>
+        </>
+      )}
+
+      {open && cur && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4" onClick={() => setOpen(false)}>
+          <div className="w-full max-w-[380px] bg-surface border-[2.5px] border-frame rounded-3xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="relative aspect-[3/4]" style={{ background: img(cur) ? undefined : grad(cur.type) }}>
+              {img(cur) && <img src={img(cur)!} alt="" className="w-full h-full object-cover object-center" />}
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,12,.92), transparent 45%)" }} />
+              <div className="absolute left-0 right-0 bottom-0 p-5">
+                <div className="font-h font-black text-2xl text-white leading-tight">{title(cur)}</div>
+                <div className="font-m text-[11px] mt-1" style={{ color: TC[cur.type] }}>
+                  {typeWord(cur)}{detail(cur) && <span className="text-white/70"> · {detail(cur)}</span>}{cur.rating && <span className="text-white/70"> · {ratingMark(cur.rating)}</span>}
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              {cur.note && <p className="text-[14px] text-ink-2 leading-snug">&ldquo;{cur.note}&rdquo;</p>}
+              <div className="font-m text-[10px] text-muted mt-3">
+                logged {fmtDate(cur.date)} · {isShared ? <span className="text-go">shared with the crew</span> : "only you"}
+              </div>
+              <button onClick={() => setOpen(false)} className="mt-5 w-full font-h font-bold text-sm bg-surface-2 border-[1.5px] border-hair rounded-full py-2.5">close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
