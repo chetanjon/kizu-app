@@ -37,7 +37,7 @@ function Tile({ h }: { h: Highlight }) {
       {h.cover ? (
         <div
           className="kz-hl-art absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${h.cover})`, filter: "blur(24px) brightness(0.4) saturate(1.2)" }}
+          style={{ backgroundImage: `url(${h.cover})`, filter: "blur(16px) brightness(0.4) saturate(1.2)" }}
         />
       ) : (
         <div className="kz-hl-art absolute inset-0" style={{ background: ART[h.type] }} />
@@ -72,10 +72,14 @@ function Tile({ h }: { h: Highlight }) {
 
 export default function HighlightReel({ items }: { items: Highlight[] }) {
   if (!items.length) return null;
-  // repeat until the base row can overflow the viewport, then double it so the
-  // marquee's translateX(-50%) loops seamlessly regardless of how few highlights.
-  const base: Highlight[] = [];
-  while (base.length < 4) base.push(...items);
+  // HARD-CAP the tile count. Each tile is a blurred, composited GPU layer with
+  // an EAGER cover image, so an uncapped stack (was up to 16) blew the iOS
+  // web-content memory budget on /home and crashed the tab ("a problem
+  // repeatedly occurred"), esp. under low battery. 4 unique tiles is plenty for
+  // an ambient "best of" band; duplicated once → a deterministic 8 tiles, which
+  // the marquee's translateX(-50%) loops seamlessly.
+  const src = items.slice(0, 4);
+  const base: Highlight[] = Array.from({ length: 4 }, (_, i) => src[i % src.length]);
   const loop = [...base, ...base];
 
   return (
@@ -84,16 +88,11 @@ export default function HighlightReel({ items }: { items: Highlight[] }) {
         @keyframes kz-hl-marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
         .kz-hl-track { animation: kz-hl-marquee 55s linear infinite; }
         .kz-hl-track:hover { animation-play-state: paused; }
-        .kz-hl-card {
-          box-shadow: 0 16px 54px -16px color-mix(in srgb, var(--glow) 68%, transparent);
-          animation: kz-hl-breathe 5.5s ease-in-out infinite;
-        }
-        @keyframes kz-hl-breathe {
-          0%, 100% { box-shadow: 0 14px 44px -18px color-mix(in srgb, var(--glow) 50%, transparent); }
-          50%      { box-shadow: 0 20px 70px -12px color-mix(in srgb, var(--glow) 85%, transparent); }
-        }
-        .kz-hl-art { animation: kz-hl-zoom 14s ease-in-out infinite alternate; transform-origin: 72% 34%; transform: scale(1.18); }
-        @keyframes kz-hl-zoom { from { transform: scale(1.18) } to { transform: scale(1.32) } }
+        /* static glow (no infinite breathe): keeps large blurred shadow layers
+           from staying hot in GPU memory / draining battery — see the OOM note. */
+        .kz-hl-card { box-shadow: 0 14px 40px -18px color-mix(in srgb, var(--glow) 60%, transparent); }
+        /* static overscan to hide the blur's edge bleed (was an infinite zoom). */
+        .kz-hl-art { transform-origin: 72% 34%; transform: scale(1.12); }
         .kz-hl-sheen {
           background: linear-gradient(115deg, transparent 34%, rgba(255,255,255,0.09) 48%, rgba(255,255,255,0.02) 54%, transparent 66%);
           background-size: 240% 100%;

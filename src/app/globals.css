@@ -63,15 +63,25 @@ html {
 }
 
 body {
-  /* the dark stage + a faint violet nebula glowing from the top */
-  background:
-    radial-gradient(120% 46% at 50% 0%, #1d1636 0%, rgba(22, 19, 14, 0) 60%),
-    #16130E;
-  background-attachment: fixed;
+  /* the dark stage — the warm-black page */
+  background: #16130E;
   color: #F6F1EA;
   font-family: var(--font-plus-jakarta), sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100dvh;
+}
+
+/* the faint violet nebula glowing from the top. A single position:fixed layer
+   instead of `background-attachment: fixed` on the body — the latter forces iOS
+   to keep a full-scroll-height backing store and was a memory/OOM contributor
+   on /home. Same look, far cheaper. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(120% 46% at 50% 0%, #1d1636 0%, rgba(22, 19, 14, 0) 60%);
 }
 
 h1, h2, h3 {
