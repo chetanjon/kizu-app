@@ -33,28 +33,36 @@ function Tile({ h }: { h: Highlight }) {
       className="kz-hl-card relative w-[316px] aspect-[16/9] rounded-[18px] overflow-hidden flex-none"
       style={{ ["--glow" as string]: GLOW[h.type] }}
     >
-      {/* ambient art — the cover bled + blurred to fill the wide frame, slow ken-burns */}
+      {/* ambient backdrop — the cover blurred to fill the wide frame, slow ken-burns */}
       {h.cover ? (
         <div
           className="kz-hl-art absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${h.cover})`, filter: "blur(13px) brightness(0.82) saturate(1.15)" }}
+          style={{ backgroundImage: `url(${h.cover})`, filter: "blur(22px) brightness(0.55) saturate(1.25)" }}
         />
       ) : (
         <div className="kz-hl-art absolute inset-0" style={{ background: ART[h.type] }} />
       )}
-      {/* cinematic scrim pooled lower-left; art breathes upper-right */}
-      <div className="absolute inset-0" style={{ background: "linear-gradient(to top right, rgba(6,5,3,0.95) 6%, rgba(6,5,3,0.35) 46%, transparent 74%)" }} />
+      {/* scrim pooled lower-left so text reads; the art side stays lit */}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to top right, rgba(6,5,3,0.94) 4%, rgba(6,5,3,0.30) 44%, transparent 74%)" }} />
       <div className="kz-hl-sheen absolute inset-0" />
+
+      {/* the ACTUAL cover, sharp — floats on the right like a featured record */}
+      {h.cover && (
+        <img
+          src={h.cover} alt="" loading="lazy" decoding="async"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 h-[82%] w-auto max-w-[46%] object-contain rounded-[10px] ring-1 ring-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+        />
+      )}
 
       <div className="glass absolute top-3 left-3 rounded-full px-2.5 py-1 font-m text-[9px] font-bold tracking-wide text-white/90">
         {TYPEWORD[h.type]}
       </div>
 
-      <div className="absolute left-4 right-4 bottom-3.5 max-w-[80%]">
+      <div className={`absolute left-4 bottom-3.5 ${h.cover ? "right-[48%]" : "right-4 max-w-[80%]"}`}>
         <div className="font-m text-[9.5px] font-bold tracking-[0.1em] uppercase mb-1.5" style={{ color: h.hookCol }}>{h.hook}</div>
-        <div className="font-h font-extrabold text-[24px] leading-[0.98] text-white drop-shadow-md line-clamp-1">{h.title}</div>
-        <p className="font-b text-[11.5px] text-white/80 mt-1.5 leading-snug line-clamp-2">{h.take}</p>
-        <div className="font-m text-[8.5px] text-white/45 mt-1.5">{h.who}</div>
+        <div className="font-h font-extrabold text-[20px] leading-[1.0] text-white drop-shadow-md line-clamp-2">{h.title}</div>
+        <p className="font-b text-[11px] text-white/80 mt-1.5 leading-snug line-clamp-2">{h.take}</p>
+        <div className="font-m text-[8.5px] text-white/45 mt-1.5 truncate">{h.who}</div>
       </div>
     </div>
   );
