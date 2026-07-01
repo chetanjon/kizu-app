@@ -1,11 +1,11 @@
-// The presentational vibe-read card — aurora-framed title/body/person_lines/tags.
-// Shared by the on-demand modal (vibe-read.tsx) and the weekly read page
-// (/read/[id]) so the card markup lives in exactly one place.
+// The presentational vibe-read card — aurora-framed title/body/tags. The read
+// itself is one short 2–3 line paragraph that names the active people; there's
+// no separate per-person section. Shared by the on-demand modal (vibe-read.tsx)
+// and the weekly read page (/read/[id]) so the markup lives in one place.
 
 export type Read = {
   title: string;
   body: string;
-  person_lines: { name: string; line: string }[];
   tags: string[];
   top_picks: { type: string; title: string }[];
 };
@@ -17,17 +17,7 @@ export default function VibeCard({ read }: { read: Read }) {
       <div className="p-6" style={{ background: "linear-gradient(180deg,rgba(13,11,9,.10),rgba(13,11,9,.32))" }}>
         <div className="font-m text-[11px] font-bold tracking-[0.16em] opacity-90">✦ VIBE READ</div>
         <h2 className="font-h text-[30px] font-extrabold tracking-[-0.03em] leading-[1.05] mt-3" style={{ textShadow: "0 2px 16px rgba(0,0,0,.25)" }}>{read.title}</h2>
-        <p className="text-[15px] leading-relaxed mt-4 opacity-95">{read.body}</p>
-
-        {read.person_lines?.length > 0 && (
-          <div className="mt-5 flex flex-col gap-2.5">
-            {read.person_lines.map((p, i) => (
-              <div key={i} className="text-[13.5px] leading-snug">
-                <b>{p.name}</b> <span className="opacity-90">— {p.line}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <p className="text-[16px] leading-relaxed mt-4 opacity-95">{read.body}</p>
 
         {read.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-5">
