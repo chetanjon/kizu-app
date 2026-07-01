@@ -493,6 +493,8 @@ export type Database = {
           generated_at: string
           group_id: string
           id: string
+          period_start: string | null
+          source: string
           summary: string
         }
         Insert: {
@@ -500,6 +502,8 @@ export type Database = {
           generated_at?: string
           group_id: string
           id?: string
+          period_start?: string | null
+          source?: string
           summary: string
         }
         Update: {
@@ -507,6 +511,8 @@ export type Database = {
           generated_at?: string
           group_id?: string
           id?: string
+          period_start?: string | null
+          source?: string
           summary?: string
         }
         Relationships: [

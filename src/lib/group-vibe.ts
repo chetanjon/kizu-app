@@ -20,7 +20,7 @@ function metaFor(type: string, d: Record<string, unknown>): string {
  *  tone: "default" (on-demand button) or "weekly" (the Friday ritual). Caller
  *  authorizes (cron is trusted). */
 export async function buildAndStoreVibe(
-  admin: Admin, groupId: string, variant: "default" | "weekly" = "default"
+  admin: Admin, groupId: string, variant: "default" | "weekly" = "default", periodStart?: string
 ): Promise<{ id: string; read: VibeRead } | null> {
   const { data: group } = await admin.from("groups").select("name").eq("id", groupId).single();
   const { data: memRows } = await admin
@@ -54,7 +54,12 @@ export async function buildAndStoreVibe(
     group_id: groupId,
     summary: read.title || read.body.slice(0, 120),
     card_data: read,
+    // weekly rows are tagged + dated so the partial unique index enforces one
+    // read per group per week; manual reads keep the defaults (manual / null).
+    ...(variant === "weekly" ? { source: "weekly", period_start: periodStart ?? null } : {}),
   }).select("id").single();
+  // a concurrent weekly run already wrote this group-week — treat as done, not an error.
+  if (error?.code === "23505") return null;
   if (error || !inserted) throw error ?? new Error("failed to store vibe read");
   return { id: inserted.id, read };
 }
