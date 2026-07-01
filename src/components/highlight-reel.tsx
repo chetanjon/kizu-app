@@ -33,24 +33,26 @@ function Tile({ h }: { h: Highlight }) {
       className="kz-hl-card relative w-[316px] aspect-[16/9] rounded-[18px] overflow-hidden flex-none"
       style={{ ["--glow" as string]: GLOW[h.type] }}
     >
-      {/* ambient backdrop — the cover blurred to fill the wide frame, slow ken-burns */}
+      {/* ambient backdrop — the cover blurred + darkened so the sharp art pops off it */}
       {h.cover ? (
         <div
           className="kz-hl-art absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${h.cover})`, filter: "blur(22px) brightness(0.55) saturate(1.25)" }}
+          style={{ backgroundImage: `url(${h.cover})`, filter: "blur(24px) brightness(0.4) saturate(1.2)" }}
         />
       ) : (
         <div className="kz-hl-art absolute inset-0" style={{ background: ART[h.type] }} />
       )}
       {/* scrim pooled lower-left so text reads; the art side stays lit */}
-      <div className="absolute inset-0" style={{ background: "linear-gradient(to top right, rgba(6,5,3,0.94) 4%, rgba(6,5,3,0.30) 44%, transparent 74%)" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to top right, rgba(6,5,3,0.92) 6%, rgba(6,5,3,0.28) 46%, transparent 78%)" }} />
       <div className="kz-hl-sheen absolute inset-0" />
 
-      {/* the ACTUAL cover, sharp — floats on the right like a featured record */}
+      {/* the ACTUAL cover, sharp — the hero, floating on the right like a featured record.
+          NOT lazy: inside the transformed marquee, lazy images never enter the viewport
+          and would never load, leaving only the blurred backdrop. */}
       {h.cover && (
         <img
-          src={h.cover} alt="" loading="lazy" decoding="async"
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 h-[82%] w-auto max-w-[46%] object-contain rounded-[10px] ring-1 ring-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+          src={h.cover} alt="" decoding="async"
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-[86%] w-auto max-w-[50%] object-contain rounded-[11px] ring-1 ring-white/15 shadow-[0_12px_34px_rgba(0,0,0,0.65)]"
         />
       )}
 
@@ -58,7 +60,7 @@ function Tile({ h }: { h: Highlight }) {
         {TYPEWORD[h.type]}
       </div>
 
-      <div className={`absolute left-4 bottom-3.5 ${h.cover ? "right-[48%]" : "right-4 max-w-[80%]"}`}>
+      <div className={`absolute left-4 bottom-3.5 ${h.cover ? "right-[51%]" : "right-4 max-w-[80%]"}`}>
         <div className="font-m text-[9.5px] font-bold tracking-[0.1em] uppercase mb-1.5" style={{ color: h.hookCol }}>{h.hook}</div>
         <div className="font-h font-extrabold text-[20px] leading-[1.0] text-white drop-shadow-md line-clamp-2">{h.title}</div>
         <p className="font-b text-[11px] text-white/80 mt-1.5 leading-snug line-clamp-2">{h.take}</p>
