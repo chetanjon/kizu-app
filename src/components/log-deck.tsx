@@ -108,9 +108,9 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
   const isShared = cur ? (cur.shared || !!shared[cur.id]) : false;
 
   return (
-    <div className="mx-auto w-full max-w-[680px] px-4 pb-24 text-center">
+    <div className="mx-auto w-full max-w-[680px] px-4 pt-5 pb-28 text-center flex flex-col min-h-[100dvh]">
       {/* header — centred so it shares the carousel's axis */}
-      <div className="pt-1">
+      <div>
         <div className="font-m text-[9px] tracking-[0.16em] uppercase text-muted">your log</div>
         <h1 className="font-h text-[23px] font-black tracking-[-0.035em] mt-0.5 leading-none">everything you&apos;ve logged</h1>
       </div>
@@ -130,6 +130,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
         })}
       </div>
 
+      <div className="flex-1 flex flex-col justify-center min-h-0">
       {n === 0 ? (
         <div className="font-m text-[11px] text-muted py-24 leading-relaxed">
           {lens === "all"
@@ -143,7 +144,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
           <div
             role="group" tabIndex={0} aria-label="your log, slide to browse"
             onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onKeyDown={onKey}
-            className="relative mt-6 select-none outline-none cursor-grab active:cursor-grabbing"
+            className="relative select-none outline-none cursor-grab active:cursor-grabbing"
             style={{ height: "min(92vw, 446px)", overflowX: "clip", overflowY: "visible", touchAction: "pan-y" }}>
             {list.map((c, j) => {
               const d = delta(j);
@@ -158,7 +159,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
                   style={{
                     width: CARD_W, aspectRatio: "230 / 344", borderColor: "#EDE3CE",
                     transform: `translateX(calc(-50% + ${off} + ${dragging ? dx : 0}px)) scale(${scale})`,
-                    transformOrigin: "center top",
+                    transformOrigin: "center center",
                     opacity: center ? 1 : near ? 0.86 : 0,
                     filter: center ? "none" : "brightness(.9)",
                     zIndex: 10 - Math.abs(d),
@@ -171,11 +172,14 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
                   <CardArt card={c} />
                   {center && (
                     <>
-                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,12,.9), transparent 42%)" }} />
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,12,.97) 3%, rgba(8,6,12,.72) 27%, transparent 62%)" }} />
                       {c.rating && <span className="glass absolute top-3 right-3 font-h font-black text-[13px] text-white rounded-[9px] px-[11px] py-1">{ratingMark(c.rating)}</span>}
                       <div className="absolute left-0 right-0 bottom-0 p-4 text-left">
-                        <div className="font-h font-black text-[27px] leading-[1.02] text-white" style={{ textShadow: "0 2px 14px rgba(0,0,0,.5)" }}>{title(c)}</div>
-                        {c.note && <div className="text-[12.5px] italic mt-1.5" style={{ color: "rgba(244,241,234,.72)" }}>&ldquo;{c.note}&rdquo;</div>}
+                        <div className="font-m text-[10.5px] tracking-wide mb-1.5 uppercase" style={{ color: TC[c.type] }}>
+                          {typeWord(c)}{detail(c) && <span className="normal-case text-white/60"> · {detail(c)}</span>}
+                        </div>
+                        <div className="font-h font-black text-[23px] leading-[1.06] text-white line-clamp-2" style={{ textShadow: "0 2px 14px rgba(0,0,0,.55)" }}>{title(c)}</div>
+                        {c.note && <div className="text-[12px] italic mt-1.5 line-clamp-1" style={{ color: "rgba(244,241,234,.7)" }}>&ldquo;{c.note}&rdquo;</div>}
                       </div>
                     </>
                   )}
@@ -185,9 +189,14 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
           </div>
 
           {/* quiet hint instead of a counter */}
-          <div className="font-m text-[10px] text-muted mt-2">slide to browse · tap to open</div>
+          <div className="font-m text-[10px] mt-6 flex items-center justify-center gap-2.5" style={{ color: "rgba(199,190,176,.55)" }}>
+            <span className="text-[13px] leading-none" style={{ color: "rgba(199,190,176,.85)" }}>‹</span>
+            slide to browse · tap to open
+            <span className="text-[13px] leading-none" style={{ color: "rgba(199,190,176,.85)" }}>›</span>
+          </div>
         </>
       )}
+      </div>
 
       {open && cur && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4 text-left" onClick={() => setOpen(false)}>

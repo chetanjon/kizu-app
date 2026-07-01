@@ -34,7 +34,7 @@ export default async function Log() {
   }));
 
   return (
-    <main className="pt-6">
+    <main>
       <LogDeck cards={cards} />
     </main>
   );
