@@ -58,53 +58,57 @@ function nameList(ns: string[]): string {
   return `${ns[0]}, ${ns[1]} +${ns.length - 2}`;
 }
 
-// Build the highlight reel from what home already loaded — no extra queries.
-// North-star moments first: your recs landing, then group consensus, then a real
-// take, then fresh drops to fill if the space is quiet. Each drop appears once.
-function buildHighlights(items: Item[], proof: Map<string, Voter[]>, meId: string): Highlight[] {
-  const used = new Set<string>();
-  const out: Highlight[] = [];
-  const add = (it: Item, x: { hook: string; hookCol: string; take: string; who: string }) => {
-    if (used.has(it.id) || out.length >= 8) return;
-    used.add(it.id);
-    out.push({ id: it.id, type: it.type, cover: img(it), title: title(it), ...x });
-  };
-  const dropper = (it: Item) => (it.anon ? "someone" : (it.users?.name || "someone").toLowerCase());
+// varied phrasings for a landed rec, so consecutive "it landed" tiles never read
+// the same. `idx` rotates the template; type picks the verb.
+function landedTake(ns: string[], type: DropType, idx: number): string {
+  if (ns.length > 1) {
+    const alt = [`${nameList(ns)} are loving what you dropped.`, `your drop landed with ${ns.length} of them.`];
+    return alt[idx % alt.length];
+  }
+  const n = ns[0];
+  const verb = type === "listen" ? "had it on repeat" : type === "watch" ? "couldn't stop thinking about it" : "went, and loved it";
+  const opts = [`${n} loved the one you dropped.`, `${n} ${verb} — your pick.`, `landed with ${n}. your drop.`];
+  return opts[idx % opts.length];
+}
 
-  // 1 — it landed: YOUR drops that others gave a positive verdict (the payoff)
+// Build the highlight reel from what home already loaded — no extra queries. Each
+// drop is sorted into ONE bucket (its strongest angle), then we round-robin the
+// rich buckets so the reel always reads as a MIX — never three of a kind in a row.
+function buildHighlights(items: Item[], proof: Map<string, Voter[]>, meId: string): Highlight[] {
+  const dropper = (it: Item) => (it.anon ? "someone" : (it.users?.name || "someone").toLowerCase());
+  const mk = (it: Item, x: { hook: string; hookCol: string; take: string; who: string }): Highlight =>
+    ({ id: it.id, type: it.type, cover: img(it), title: title(it), ...x });
+
+  const landed: Highlight[] = [], consensus: Highlight[] = [], takes: Highlight[] = [], fresh: Highlight[] = [];
+  let li = 0;
   for (const it of items) {
-    if (it.created_by !== meId) continue;
-    const ns = voterNames(proof.get(it.id), [meId]);
-    if (!ns.length) continue;
-    add(it, {
-      hook: "✦ it landed", hookCol: "#C9B6FF",
-      take: ns.length === 1 ? `${ns[0]} loved the one you dropped.` : `${nameList(ns)} are loving what you dropped.`,
-      who: "your drop",
-    });
-  }
-  // 2 — the group agrees: two or more people into the same drop
-  for (const it of items) {
-    const ns = voterNames(proof.get(it.id), [it.created_by]);
-    if (ns.length < 2) continue;
-    add(it, { hook: "the group agrees", hookCol: HOOK_TINT[it.type], take: `${nameList(ns)} are all into it.`, who: `${ns.length} of your people` });
-  }
-  // 3 — a real take: a drop carrying someone's words
-  for (const it of items) {
-    if (!it.note) continue;
-    const hook = it.type === "listen" ? "on their repeat" : it.type === "watch" ? "they couldn't shake it" : "a spot they swear by";
-    add(it, { hook, hookCol: HOOK_TINT[it.type], take: `“${it.note}”`, who: dropper(it) });
-  }
-  // 4 — fresh: newest, only to fill a quiet reel
-  if (out.length < 4) {
-    for (const it of items) {
-      add(it, {
-        hook: "just dropped", hookCol: HOOK_TINT[it.type],
-        take: it.note ? `“${it.note}”` : `${dropper(it)} just added this to the space.`,
-        who: dropper(it),
-      });
-      if (out.length >= 5) break;
+    // it landed — YOUR drop others gave a positive verdict (the north-star payoff)
+    if (it.created_by === meId) {
+      const ns = voterNames(proof.get(it.id), [meId]);
+      if (ns.length) { landed.push(mk(it, { hook: "✦ it landed", hookCol: "#C9B6FF", take: landedTake(ns, it.type, li++), who: "your drop" })); continue; }
     }
+    // the group agrees — two or more people into the same drop
+    const cs = voterNames(proof.get(it.id), [it.created_by]);
+    if (cs.length >= 2) { consensus.push(mk(it, { hook: "the group agrees", hookCol: HOOK_TINT[it.type], take: `${nameList(cs)} are all into it.`, who: `${cs.length} of your people` })); continue; }
+    // a real take — a drop carrying someone's words
+    if (it.note) {
+      const hook = it.type === "listen" ? "on their repeat" : it.type === "watch" ? "they couldn't shake it" : "a spot they swear by";
+      takes.push(mk(it, { hook, hookCol: HOOK_TINT[it.type], take: `“${it.note}”`, who: dropper(it) }));
+      continue;
+    }
+    // fresh — everything else, held back to fill only if the reel is quiet
+    fresh.push(mk(it, { hook: "just dropped", hookCol: HOOK_TINT[it.type], take: `${dropper(it)} just added this to the space.`, who: dropper(it) }));
   }
+
+  // round-robin the three rich buckets → a visible mix; cap at 8
+  const out: Highlight[] = [];
+  const buckets = [landed, consensus, takes];
+  for (let i = 0; out.length < 8 && buckets.some((b) => b.length); i++) {
+    const b = buckets[i % buckets.length];
+    if (b.length) out.push(b.shift()!);
+  }
+  // only reach for fresh drops if the reel would otherwise be thin
+  while (out.length < 4 && fresh.length) out.push(fresh.shift()!);
   return out;
 }
 
