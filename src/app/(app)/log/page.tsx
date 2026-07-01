@@ -5,6 +5,9 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 import type { DropType } from "@/lib/item-render";
 import LogDeck, { type DeckCard } from "@/components/log-deck";
+import { actionsFor } from "@/lib/item-actions";
+import { availabilityMap } from "@/lib/providers";
+import { cleanServices } from "@/lib/services";
 
 type Raw = {
   id: string; type: DropType; data: Record<string, unknown>;
@@ -28,9 +31,20 @@ export default async function Log() {
   const items = (raw ?? []) as unknown as Raw[];
   await signPhotos(createAdminClient(), items, (it) => it.data);
 
+  // act-on-it buttons for the detail sheet: play-in-your-app / where-to-watch /
+  // open-in-maps, plus the green "you have it" pill when a movie streams on a
+  // service you've saved. Same merge rule as the feed + read page.
+  const { data: me } = await supabase.from("users").select("music_app, services").eq("id", user.id).maybeSingle();
+  const musicApp = me?.music_app ?? null;
+  const availMap = await availabilityMap(
+    items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
+    cleanServices(me?.services),
+  );
+
   const cards: DeckCard[] = items.map((it) => ({
     id: it.id, type: it.type, data: it.data ?? {},
     rating: it.rating_value, note: it.note, shared: !it.private, date: it.created_at,
+    actions: availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor({ type: it.type, data: it.data ?? {} }, musicApp, false),
   }));
 
   return (
