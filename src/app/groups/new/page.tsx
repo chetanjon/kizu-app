@@ -63,7 +63,7 @@ function NewGroupInner() {
           <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-5">
             {(["create", "join"] as const).map((t) => (
               <button key={t} onClick={() => setTab(t)}
-                className={`flex-1 font-b font-semibold text-sm py-2.5 rounded-lg transition-colors ${tab === t ? "bg-vibe text-white" : "text-muted"}`}>
+                className={`flex-1 font-h font-bold text-sm py-2.5 rounded-lg transition-colors ${tab === t ? "bg-vibe text-white" : "text-muted"}`}>
                 {t}
               </button>
             ))}

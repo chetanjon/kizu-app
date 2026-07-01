@@ -224,15 +224,15 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
       {/* share with the crew, or keep it as a private log */}
       <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-4">
         <button onClick={() => setLog(false)}
-          className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg transition-colors ${!log ? "bg-vibe text-white" : "text-muted"}`}>share with the crew</button>
+          className={`flex-1 font-h font-bold text-[13px] py-2.5 rounded-lg transition-colors ${!log ? "bg-vibe text-white" : "text-muted"}`}>share with the crew</button>
         <button onClick={() => setLog(true)}
-          className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg transition-colors ${log ? "bg-vibe text-white" : "text-muted"}`}>just me</button>
+          className={`flex-1 font-h font-bold text-[13px] py-2.5 rounded-lg transition-colors ${log ? "bg-vibe text-white" : "text-muted"}`}>just me</button>
       </div>
 
       <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-4">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => { setTab(t.key); reset(); }}
-            className={`flex-1 font-b font-semibold text-[13px] py-2.5 rounded-lg ${tab === t.key ? "bg-vibe text-white" : "text-muted"}`}>
+            className={`flex-1 font-h font-bold text-[13px] py-2.5 rounded-lg ${tab === t.key ? "bg-vibe text-white" : "text-muted"}`}>
             {t.label}
           </button>
         ))}
@@ -245,7 +245,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
           <div className="flex gap-2 flex-wrap">
             {SUBTYPES.map((s) => (
               <button key={s} onClick={() => setSubtype(s)}
-                className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${subtype === s ? "bg-vibe text-white" : "bg-surface"}`}>{s}</button>
+                className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${subtype === s ? "bg-vibe text-white" : "bg-surface"}`}>{s}</button>
             ))}
           </div>
           {["bar", "brewery", "pub"].includes(subtype) && (
@@ -307,7 +307,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-2.5">
           {(Object.keys(RATINGS) as (keyof typeof RATINGS)[]).map((s) => (
             <button key={s} onClick={() => { setRatingStyle(s); setRatingValue(""); }}
-              className={`flex-1 font-b font-semibold text-[12px] py-2 rounded-lg transition-colors ${ratingStyle === s ? "bg-vibe text-white" : "text-muted"}`}>
+              className={`flex-1 font-h font-bold text-[12px] py-2 rounded-lg transition-colors ${ratingStyle === s ? "bg-vibe text-white" : "text-muted"}`}>
               {s === "number" ? "number" : s === "stars" ? "stars" : "a word"}
             </button>
           ))}
@@ -330,13 +330,13 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => { setRecMode("everyone"); setRecipients(new Set()); }}
-            className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${recMode === "everyone" ? "bg-vibe text-white" : "bg-surface"}`}>everyone</button>
+            className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${recMode === "everyone" ? "bg-vibe text-white" : "bg-surface"}`}>everyone</button>
           {members.map((m) => (
             <button key={m.id} onClick={() => toggleRecipient(m.id)}
-              className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
+              className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recipients.has(m.id) ? "bg-vibe text-white" : "bg-surface"}`}>{(m.name || "someone").toLowerCase()}</button>
           ))}
           <button onClick={() => { setRecMode("link"); setRecipients(new Set()); setAnon(false); }}
-            className={`font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
+            className={`font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 ${recMode === "link" ? "bg-vibe text-white" : "bg-surface"}`}>✦ anyone (link)</button>
         </div>
 
         {/* anonymous is a group-wide modifier — turning it ON implies "everyone"
@@ -344,7 +344,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             picking a person or the link turns it back off (targeted = attributed). */}
         <div className="mt-3">
           <button onClick={() => { const next = !anon; setAnon(next); if (next) { setRecMode("everyone"); setRecipients(new Set()); } }}
-            className={`inline-flex items-center gap-1.5 font-b font-semibold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${anon ? "bg-vibe text-white" : "bg-surface"}`}>
+            className={`inline-flex items-center gap-1.5 font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${anon ? "bg-vibe text-white" : "bg-surface"}`}>
             🕶 {anon ? "anonymous · on" : "drop without my name"}
           </button>
           {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
