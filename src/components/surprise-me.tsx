@@ -4,11 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { TYPE, SHADOW, img, title, typeWord, detail } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
-import type { QRow } from "@/components/queue-client";
+import type { Cand } from "@/components/tonight-dealer";
 
-// "can't decide?" — deal one thing from your saved pile. A slot-machine of your
-// own covers that riffles, then slams onto a single random pick with its
-// type-colored hard-shadow. Pure client theatre; no new data, no network.
+// "can't decide?" — deal one thing from EVERYTHING you could do tonight (group
+// drops + kizu curate + your watchlist; pool assembled server-side, filtered to
+// the active chip). A slot-machine of covers that riffles, then slams onto a
+// single random pick with its type-colored hard-shadow. Pure client theatre.
 const LINES = [
   "tonight, it's this.",
   "the pile has spoken.",
@@ -18,11 +19,11 @@ const LINES = [
   "the dice say yes.",
 ];
 
-export default function SurpriseMe({ pool, musicApp, label }: { pool: QRow[]; musicApp: string | null; label: string }) {
+export default function SurpriseMe({ pool, musicApp, label }: { pool: Cand[]; musicApp: string | null; label: string }) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<"shuffle" | "reveal">("shuffle");
   const [faceIdx, setFaceIdx] = useState(0);
-  const [pick, setPick] = useState<QRow | null>(null);
+  const [pick, setPick] = useState<Cand | null>(null);
   const [rolls, setRolls] = useState(0);
   const spin = useRef<ReturnType<typeof setInterval> | null>(null);
   const stop = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,7 +120,7 @@ export default function SurpriseMe({ pool, musicApp, label }: { pool: QRow[]; mu
                   <button onClick={roll} className="font-h font-bold text-sm bg-surface border-[2px] border-frame rounded-full px-4 py-2.5">🎲 again</button>
                   <button onClick={close} className="font-h font-bold text-sm bg-vibe text-white border-[2px] border-frame rounded-full px-5 py-2.5">that one</button>
                 </div>
-                <div className="font-m text-[10px] text-muted mt-3">from your {label} pile · {pool.length} saved</div>
+                <div className="font-m text-[10px] text-muted mt-3">{label === "everything" ? "from your group · curate · watchlist" : `${label} · from everywhere`} · {pool.length}</div>
               </div>
             ) : (
               <div className="mt-5 font-m text-[11px] text-muted">tap anywhere to skip</div>
