@@ -139,6 +139,43 @@ export async function POST(req: Request) {
   return NextResponse.json({ id: item.id, recUrl });
 }
 
+// Share one of your OWN private logs with the crew: flip private → false and
+// fan out the same cryptic, push-only ping a fresh drop sends (skip the sharer,
+// honor per-user drop mutes). No recs, no in-app row — the feed shows it.
+export async function PATCH(req: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const b = await req.json().catch(() => ({}));
+  const id = String(b.id ?? "");
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const admin = createAdminClient();
+  const { data: item } = await admin
+    .from("items").select("created_by, group_id, private").eq("id", id).maybeSingle();
+  if (!item) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (item.created_by !== user.id) return NextResponse.json({ error: "not yours" }, { status: 403 });
+  if (!item.private) return NextResponse.json({ ok: true, already: true });
+
+  await admin.from("items").update({ private: false }).eq("id", id);
+
+  const { data: members } = await admin
+    .from("group_members").select("user_id").eq("group_id", item.group_id);
+  const recipients = (members ?? []).map((m) => m.user_id).filter((uid) => uid !== user.id);
+  const { data: muted } = recipients.length
+    ? await admin.from("users").select("id").eq("mute_drop_pings", true).in("id", recipients)
+    : { data: [] };
+  const mutedSet = new Set((muted ?? []).map((u) => u.id));
+  await Promise.all(
+    recipients.filter((uid) => !mutedSet.has(uid)).map((uid) =>
+      sendPushToUser(admin, uid, { title: "someone dropped something.", url: "/home", kind: "drop" }),
+    ),
+  );
+
+  return NextResponse.json({ ok: true });
+}
+
 // Delete your own drop.
 export async function DELETE(req: Request) {
   const supabase = await createClient();
