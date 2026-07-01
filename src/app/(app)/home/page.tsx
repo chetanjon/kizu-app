@@ -28,6 +28,7 @@ type Item = {
   id: string;
   type: DropType;
   anon: boolean;
+  targeted: boolean;
   rating_value: string | null;
   note: string | null;
   data: Record<string, unknown>;
@@ -140,9 +141,11 @@ export default async function Home() {
   const queuedCurate = (cqRes.data ?? []).map((r) => r.curate_drop_id as string);
 
   // group items, then which of them I've already queued.
+  // NOTE: this is the USER-scoped client, so items RLS applies — a targeted drop
+  // (dropped for specific people) only comes back for its sender + recipients.
   const { data: iRaw } = await supabase
     .from("items")
-    .select("id, type, anon, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
+    .select("id, type, anon, targeted, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
     .eq("group_id", g.id)
     .eq("private", false)
     .order("created_at", { ascending: false });
@@ -159,15 +162,34 @@ export default async function Home() {
   const proofMap = await fetchPositiveVerdicts(createAdminClient(), ids);
   const { data: qRaw } = await supabase
     .from("queue_items")
-    .select("item_id, source_rec_id")
+    .select("item_id")
     .eq("user_id", user.id)
     .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
   const queued = new Set((qRaw ?? []).map((q) => q.item_id));
 
-  // a drop is "for you" only if it reached your queue via a TARGETED rec
-  // (source_rec_id is set). Group-drop "it landed" credits also write a recs row
-  // with to_user = you, so reading recs.to_user here would wrongly tag those.
-  const forMe = new Set((qRaw ?? []).filter((q) => q.source_rec_id).map((q) => q.item_id as string));
+  // A targeted drop is private to its sender + recipients (RLS enforces it), so
+  // just SEEING one you didn't send means it's for you. For your OWN targeted
+  // drops, look up who you sent them to, to show a quiet "sent to …" note.
+  const mySentTargeted = items.filter((it) => it.created_by === user.id && it.targeted).map((it) => it.id);
+  const sentTo = new Map<string, string[]>();
+  if (mySentTargeted.length) {
+    const admin = createAdminClient();
+    const { data: recRows } = await admin
+      .from("recs").select("item_id, to_user")
+      .eq("from_user", user.id).in("item_id", mySentTargeted).not("to_user", "is", null);
+    const toIds = [...new Set((recRows ?? []).map((r) => r.to_user as string))];
+    const nameById = new Map<string, string>();
+    if (toIds.length) {
+      const { data: us } = await admin.from("users").select("id, name").in("id", toIds);
+      for (const u of us ?? []) nameById.set(u.id as string, ((u.name as string | null) || "someone").toLowerCase());
+    }
+    for (const r of recRows ?? []) {
+      const arr = sentTo.get(r.item_id as string) ?? [];
+      const nm = nameById.get(r.to_user as string);
+      if (nm && !arr.includes(nm)) arr.push(nm);
+      sentTo.set(r.item_id as string, arr);
+    }
+  }
 
   // the group's latest vibe read (the weekly cron writes these) → surfaced on the
   // button so people can open the week's read without regenerating it.
@@ -224,7 +246,9 @@ export default async function Home() {
                 const t = TYPE[it.type];
                 const cover = img(it);
                 const mine = it.created_by === user.id;
-                const forYou = forMe.has(it.id);
+                // targeted + not mine ⇒ I'm a recipient (RLS wouldn't show it otherwise).
+                const forYou = it.targeted && !mine;
+                const sentNames = mine && it.targeted ? (sentTo.get(it.id) ?? []) : [];
                 const proof = proofLine(proofMap.get(it.id), [it.created_by, user.id]);
                 // Reactor names only reach the client for the dropper's own drops.
                 const rx = mine
@@ -259,7 +283,17 @@ export default async function Home() {
                         <span className="font-h font-extrabold text-[10px] tracking-[0.12em] text-[#15110D]">{t.label}</span>
                       </div>
                       <h3 className="font-h font-bold text-[21px] tracking-[-0.02em] leading-[1.1] line-clamp-2 mt-2">{title(it)}</h3>
-                      {forYou && <div className="font-m text-[11px] text-vibe-2 mt-1" title="someone sent this to you directly">✦ for you</div>}
+                      {/* received privately — make it feel like a personal handoff, not a group post */}
+                      {forYou && (
+                        <div className="mt-1.5 inline-flex w-fit items-center rounded-full bg-vibe/20 border border-vibe/40 px-2.5 py-1 font-h font-bold text-[11px] text-vibe-2"
+                          title={`${dropperName} dropped this only for you`}>
+                          just for you · from {dropperName}
+                        </div>
+                      )}
+                      {/* your own targeted drop — a quiet reminder it went privately */}
+                      {mine && it.targeted && (
+                        <div className="font-m text-[11px] text-vibe-2/70 mt-1.5">{sentNames.length ? `sent privately to ${nameList(sentNames)}` : "sent privately"}</div>
+                      )}
                       {it.note && <p className="text-[13.5px] text-ink-2 mt-1 leading-snug line-clamp-2">&ldquo;{it.note}&rdquo;</p>}
                       {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
 

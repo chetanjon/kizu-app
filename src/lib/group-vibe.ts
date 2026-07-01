@@ -32,6 +32,10 @@ export async function buildAndStoreVibe(
     .from("items")
     .select("type, rating_value, note, data, anon, users!items_created_by_fkey(name)")
     .eq("group_id", groupId)
+    // the read is shared with the whole group, so it must never quote a private
+    // log or a drop targeted at specific people — only true group-wide drops.
+    .eq("private", false)
+    .eq("targeted", false)
     .order("created_at", { ascending: false })
     .limit(60);
   const items = (rows ?? []) as unknown as {
