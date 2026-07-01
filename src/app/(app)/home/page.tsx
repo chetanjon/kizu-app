@@ -13,9 +13,10 @@ import CurateRiver, { type CDrop } from "@/components/curate-river";
 import FeedTabs from "@/components/feed-tabs";
 import FeedReveal from "@/components/feed-reveal";
 import GroupSwitcher from "@/components/group-switcher";
+import HighlightReel, { type Highlight } from "@/components/highlight-reel";
 import { TYPE, SHADOW, img, title, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
-import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
+import { fetchPositiveVerdicts, proofLine, type Voter } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 import { availabilityMap } from "@/lib/providers";
@@ -34,6 +35,78 @@ type Item = {
   users: { name: string | null } | null;
   reactions: { emoji: string; user_id: string; users: { name: string | null } | null }[];
 };
+
+// hook color = a light tint of the drop's type color (landed uses violet).
+const HOOK_TINT: Record<DropType, string> = { watch: "#C9DBFF", listen: "#FFC7DA", go_out: "#C4F5E1" };
+
+// positive-verdict voter names for a drop, excluding some ids, lowercased & deduped.
+function voterNames(voters: Voter[] | undefined, excludeIds: string[]): string[] {
+  if (!voters?.length) return [];
+  const ex = new Set(excludeIds);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of voters) {
+    if (ex.has(v.userId) || seen.has(v.userId)) continue;
+    seen.add(v.userId);
+    out.push((v.name || "someone").toLowerCase());
+  }
+  return out;
+}
+function nameList(ns: string[]): string {
+  if (ns.length === 1) return ns[0];
+  if (ns.length === 2) return `${ns[0]} & ${ns[1]}`;
+  return `${ns[0]}, ${ns[1]} +${ns.length - 2}`;
+}
+
+// Build the highlight reel from what home already loaded — no extra queries.
+// North-star moments first: your recs landing, then group consensus, then a real
+// take, then fresh drops to fill if the space is quiet. Each drop appears once.
+function buildHighlights(items: Item[], proof: Map<string, Voter[]>, meId: string): Highlight[] {
+  const used = new Set<string>();
+  const out: Highlight[] = [];
+  const add = (it: Item, x: { hook: string; hookCol: string; take: string; who: string }) => {
+    if (used.has(it.id) || out.length >= 8) return;
+    used.add(it.id);
+    out.push({ id: it.id, type: it.type, cover: img(it), title: title(it), ...x });
+  };
+  const dropper = (it: Item) => (it.anon ? "someone" : (it.users?.name || "someone").toLowerCase());
+
+  // 1 — it landed: YOUR drops that others gave a positive verdict (the payoff)
+  for (const it of items) {
+    if (it.created_by !== meId) continue;
+    const ns = voterNames(proof.get(it.id), [meId]);
+    if (!ns.length) continue;
+    add(it, {
+      hook: "✦ it landed", hookCol: "#C9B6FF",
+      take: ns.length === 1 ? `${ns[0]} loved the one you dropped.` : `${nameList(ns)} are loving what you dropped.`,
+      who: "your drop",
+    });
+  }
+  // 2 — the group agrees: two or more people into the same drop
+  for (const it of items) {
+    const ns = voterNames(proof.get(it.id), [it.created_by]);
+    if (ns.length < 2) continue;
+    add(it, { hook: "the group agrees", hookCol: HOOK_TINT[it.type], take: `${nameList(ns)} are all into it.`, who: `${ns.length} of your people` });
+  }
+  // 3 — a real take: a drop carrying someone's words
+  for (const it of items) {
+    if (!it.note) continue;
+    const hook = it.type === "listen" ? "on their repeat" : it.type === "watch" ? "they couldn't shake it" : "a spot they swear by";
+    add(it, { hook, hookCol: HOOK_TINT[it.type], take: `“${it.note}”`, who: dropper(it) });
+  }
+  // 4 — fresh: newest, only to fill a quiet reel
+  if (out.length < 4) {
+    for (const it of items) {
+      add(it, {
+        hook: "just dropped", hookCol: HOOK_TINT[it.type],
+        take: it.note ? `“${it.note}”` : `${dropper(it)} just added this to the space.`,
+        who: dropper(it),
+      });
+      if (out.length >= 5) break;
+    }
+  }
+  return out;
+}
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -98,6 +171,9 @@ export default async function Home() {
     .from("vibe_reads").select("card_data")
     .eq("group_id", g.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
 
+  // the cinematic highlight reel — the best of what your people did lately.
+  const highlights = buildHighlights(items, proofMap, user.id);
+
   return (
     <div className="min-h-screen pb-28">
       <header className="sticky top-0 z-20 flex items-center justify-between px-5 h-16 border-b border-hair bg-paper/70 backdrop-blur-md">
@@ -114,6 +190,10 @@ export default async function Home() {
       <main className="max-w-[600px] mx-auto px-5 py-6">
         {/* the aurora read — the one showstopper, framed in cream on the dark stage */}
         <VibeRead groupId={g.id} initial={(latestRead?.card_data as VibeReadData) ?? null} />
+
+        {/* the highlight reel — a wide cinematic band of the group's best moments */}
+        {highlights.length > 0 && <div className="mt-6"><HighlightReel items={highlights} /></div>}
+
         <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
 
