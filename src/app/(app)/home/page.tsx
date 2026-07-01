@@ -201,16 +201,6 @@ export default async function Home() {
         <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
 
-        {/* quick decide — jump straight into tonight's shuffle, pre-lensed */}
-        <div className="mt-6">
-          <div className="font-m text-[11px] tracking-widest uppercase text-muted mb-2.5">in the mood for&hellip;</div>
-          <div className="flex gap-2">
-            <Link href="/tonight?lens=watch" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🎬 watch</Link>
-            <Link href="/tonight?lens=listen" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🎧 listen</Link>
-            <Link href="/tonight?lens=go_out" className="flex-1 text-center font-h font-bold text-[13px] border-[1.5px] border-frame rounded-full py-2.5 bg-surface active:scale-95 transition-transform">🌅 outside</Link>
-          </div>
-        </div>
-
         {items.length === 0 && curate.length === 0 ? (
           <div className="mt-8 border border-dashed border-hair rounded-2xl p-14 text-center">
             <div className="font-h text-xl font-bold">nothing here yet.</div>
