@@ -54,6 +54,14 @@
   color: #fff;
 }
 
+html {
+  /* stop iOS from auto-inflating text, and disable double-tap-to-zoom (the
+     viewport lock handles pinch; this covers the double-tap gesture too) */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
 body {
   /* the dark stage + a faint violet nebula glowing from the top */
   background:

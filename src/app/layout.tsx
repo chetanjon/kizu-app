@@ -49,7 +49,17 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "kizu", statusBarStyle: "default" },
 };
 
-export const viewport: Viewport = { themeColor: "#16130E" };
+// Lock the viewport so the installed PWA can't pinch / double-tap zoom — an
+// accidental sideways gesture on the horizontal card rows was zooming the whole
+// app with nothing to snap back to. viewportFit=cover keeps it under the notch.
+export const viewport: Viewport = {
+  themeColor: "#16130E",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export default function RootLayout({
   children,
