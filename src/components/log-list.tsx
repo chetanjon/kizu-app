@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import { TYPE, SHADOW_SM, img, title, typeWord, detail, ratingMark, type DropType } from "@/lib/item-render";
 
 export type LogRow = {
@@ -12,13 +9,6 @@ export type LogRow = {
   shared: boolean;
   date: string;
 };
-
-const CHIPS: { k: "all" | DropType; l: string }[] = [
-  { k: "all", l: "all" },
-  { k: "watch", l: "movies" },
-  { k: "listen", l: "music" },
-  { k: "go_out", l: "outside" },
-];
 
 function fmtDay(iso: string): string {
   try {
@@ -37,8 +27,7 @@ function monthKey(iso: string): string {
   }
 }
 
-export default function LogList({ rows }: { rows: LogRow[] }) {
-  const [filter, setFilter] = useState<"all" | DropType>("all");
+export default function LogList({ rows, filter }: { rows: LogRow[]; filter: "all" | DropType }) {
   const shown = rows.filter((r) => filter === "all" || r.type === filter);
 
   // group the filtered rows into month buckets, preserving newest-first order.
@@ -55,15 +44,6 @@ export default function LogList({ rows }: { rows: LogRow[] }) {
       {/* the shelf grows — a quiet count of what you've kept */}
       <div className="font-m text-[11px] text-muted mb-5">
         <span className="text-ink-2 font-bold">{rows.length}</span> {rows.length === 1 ? "thing" : "things"} logged · only you see these
-      </div>
-
-      <div className="flex gap-2 mb-6">
-        {CHIPS.map((c) => (
-          <button key={c.k} onClick={() => setFilter(c.k)}
-            className={`font-m text-[11px] font-bold border-2 border-frame rounded-full px-3 py-1.5 transition-colors ${filter === c.k ? "bg-vibe text-white" : "bg-surface text-ink"}`}>
-            {c.l}
-          </button>
-        ))}
       </div>
 
       {months.map((m) => (

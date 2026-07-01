@@ -16,6 +16,8 @@ export type Cand = {
   rating?: string | null;        // the dropper's own take
   proof?: string | null;         // who else in the group is into it
   availability?: Action | null;  // movie/tv: "you have it" / "on netflix" (server-resolved)
+  source?: "people" | "shelf";   // where the card came from (the log deck tags + branches on this)
+  shared?: boolean;              // shelf cards only: is this own item already shared with the crew?
 };
 
 type Lens = "all" | DropType;
