@@ -366,16 +366,20 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
           </div>
         )}
 
-        {/* anonymous is a group-wide modifier — turning it ON implies "everyone"
-            (and clears any recipients), so you never pick everyone separately.
-            picking a person or the link turns it back off (targeted = attributed). */}
-        <div className="mt-3">
-          <button onClick={() => { const next = !anon; setAnon(next); if (next) { setRecMode("everyone"); setRecipients(new Set()); } }}
-            className={`inline-flex items-center gap-1.5 font-h font-bold text-[12px] border-[2px] border-frame rounded-full px-3 py-1.5 transition-colors ${anon ? "bg-vibe text-white" : "bg-surface"}`}>
-            🕶 {anon ? "anonymous · on" : "drop without my name"}
-          </button>
-          {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
-        </div>
+        {/* anonymous only makes sense for a group-wide drop — a targeted drop or a
+            link is always attributed — so we only offer it in "everyone" mode.
+            That kills the old confusion where toggling it silently jumped you back
+            to everyone. (toggleRecipient already flips anon off when you target.) */}
+        {recMode === "everyone" && (
+          <div className="mt-3">
+            <button onClick={() => setAnon((a) => !a)}
+              className={`inline-flex items-center gap-1.5 font-h font-bold text-[12px] border-[2px] rounded-full px-3 py-1.5 transition-colors ${anon ? "bg-vibe text-white border-vibe" : "bg-surface border-frame"}`}>
+              {anon && <span aria-hidden className="text-[11px] leading-none">✓</span>}
+              {anon ? "anonymous" : "drop without my name"}
+            </button>
+            {anon && <p className="font-m text-[10px] text-muted mt-1.5">the group sees the drop, not who dropped it.</p>}
+          </div>
+        )}
       </div>
       )}
 
