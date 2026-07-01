@@ -131,7 +131,7 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
             {current.note && <p className="text-[13px] mt-2 leading-snug italic text-white/90 line-clamp-2">&ldquo;{current.note}&rdquo;</p>}
             {act && (
               <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
-                className={`inline-flex items-center mt-3 font-m text-[11px] font-bold rounded-full px-3.5 py-1.5 transition-transform active:scale-95 ${
+                className={`inline-flex items-center mt-3 font-h text-[11px] font-bold rounded-full px-3.5 py-1.5 transition-transform active:scale-95 ${
                   act.kind === "have" ? "bg-go text-[#15110D]"
                   : act.primary ? "bg-vibe text-white"
                   : "glass text-white border border-white/30"

@@ -15,7 +15,7 @@ export default function ItemActions({ actions, className = "" }: { actions: Acti
           <a
             key={i}
             href={a.url}
-            className="inline-flex items-center gap-1 font-m text-[10px] font-bold border-[2px] border-dashed border-hair text-muted rounded-full px-2.5 py-1 hover:border-frame hover:text-ink transition-colors"
+            className="inline-flex items-center gap-1 font-h text-[10px] font-bold border-[2px] border-dashed border-hair text-muted rounded-full px-2.5 py-1 hover:border-frame hover:text-ink transition-colors"
           >
             <span aria-hidden className="text-[9px] leading-none">♪</span>
             {a.label}
@@ -26,7 +26,7 @@ export default function ItemActions({ actions, className = "" }: { actions: Acti
             href={a.url}
             target="_blank"
             rel="noreferrer"
-            className={`inline-flex items-center gap-1 font-m text-[10px] font-bold rounded-full px-2.5 py-1 transition-all hover:-translate-y-[1px] ${
+            className={`inline-flex items-center gap-1 font-h text-[10px] font-bold rounded-full px-2.5 py-1 transition-all hover:-translate-y-[1px] ${
               // airy outlined pills, tinted to meaning: their music app → violet,
               // "have" (you own it) → green, everything else → neutral cream.
               a.primary
