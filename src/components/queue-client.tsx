@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TYPE, SHADOW_SM, img, title, typeWord, detail, type DropType } from "@/lib/item-render";
 import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
+import SurpriseMe from "@/components/surprise-me";
 
 export type QRow = {
   key: string;                 // stable row key
@@ -141,6 +142,12 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
           </button>
         ))}
       </div>
+
+      {/* can't decide? — let the pile pick one from what you still want to get to */}
+      {want.length > 1 && (
+        <SurpriseMe pool={want} musicApp={musicApp}
+          label={filter === "all" ? "watchlist" : (CHIPS.find((c) => c.key === filter)?.label ?? "watchlist")} />
+      )}
 
       {want.length > 0 && (
         <>
