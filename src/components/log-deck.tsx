@@ -50,7 +50,7 @@ function PeekCard({ card, side, onClick }: { card: DeckCard; side: "left" | "rig
   return (
     <button onClick={onClick} aria-label={side === "left" ? "previous" : "next"}
       className="absolute left-1/2 top-0 border-[2.5px] rounded-[18px] overflow-hidden"
-      style={{ width: 206, height: 326, borderColor: "#EDE3CE", transform: `${tx} scale(.84)`, opacity: .32, filter: "brightness(.6)", boxShadow: `5px 5px 0 ${TC[card.type]}` }}>
+      style={{ width: "min(58vw, 300px)", aspectRatio: "206 / 326", borderColor: "#EDE3CE", transform: `${tx} scale(.84)`, opacity: .32, filter: "brightness(.6)", boxShadow: `5px 5px 0 ${TC[card.type]}` }}>
       <CardArt card={card} />
     </button>
   );
@@ -117,7 +117,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
   const isShared = cur ? (cur.shared || !!shared[cur.id]) : false;
 
   return (
-    <div className="mx-auto w-full max-w-[400px] px-4 pb-24">
+    <div className="mx-auto w-full max-w-[560px] px-4 pb-24">
       {/* header */}
       <div className="pt-1">
         <div className="font-m text-[9px] tracking-[0.16em] uppercase text-muted">your log</div>
@@ -150,7 +150,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
           {/* the deck — clip peeks at the edges so they never widen the page
               (else browsing sideways scrolls the whole layout). overflow-x:clip
               keeps the vertical hard-shadows visible while trimming the sides. */}
-          <div className="relative mt-5" style={{ height: 376, overflowX: "clip", overflowY: "visible" }}>
+          <div className="relative mt-5" style={{ height: "min(96vw, 496px)", overflowX: "clip", overflowY: "visible" }}>
             {prev && <PeekCard card={prev} side="left" onClick={() => go(-1)} />}
             {next && <PeekCard card={next} side="right" onClick={() => go(1)} />}
 
@@ -159,7 +159,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
                 role="button" tabIndex={0}
                 onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onKeyDown={onKey}
                 className="absolute left-1/2 top-0 border-[2.5px] rounded-[18px] overflow-hidden select-none cursor-grab active:cursor-grabbing outline-none"
-                style={{ width: 230, height: 344, borderColor: "#EDE3CE", zIndex: 5, touchAction: "none", boxShadow: `6px 7px 0 ${TC[cur.type]}, inset 0 2px 0 rgba(255,255,255,.25)`, transform: transform(), opacity: fly ? 0 : 1, transition: dragging ? undefined : "transform .18s ease, opacity .18s ease" }}>
+                style={{ width: "min(64vw, 332px)", aspectRatio: "230 / 344", borderColor: "#EDE3CE", zIndex: 5, touchAction: "none", boxShadow: `6px 7px 0 ${TC[cur.type]}, inset 0 2px 0 rgba(255,255,255,.25)`, transform: transform(), opacity: fly ? 0 : 1, transition: dragging ? undefined : "transform .18s ease, opacity .18s ease" }}>
                 <CardArt card={cur} />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,12,.9), transparent 42%)" }} />
                 {cur.rating && <span className="glass absolute top-3 right-3 font-h font-black text-[13px] text-white rounded-[9px] px-[11px] py-1">{ratingMark(cur.rating)}</span>}
