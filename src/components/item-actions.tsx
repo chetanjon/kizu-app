@@ -6,11 +6,12 @@ import type { Action } from "@/lib/item-actions";
 const GLYPH: Record<Action["kind"], string> = { play: "", watch: "▷", map: "↗", have: "✓", set: "+" };
 
 // Music services get their own brand-colored border so you recognise them at a
-// glance: spotify green, youtube/yt-music red. Others fall through to neutral.
+// glance: spotify green, youtube/yt-music red. Kept dim (~45% alpha) so they sit
+// on the dark stage like the other pills instead of glaring. Others → neutral.
 function serviceBorder(label: string): string | null {
   const l = label.toLowerCase();
-  if (l.includes("spotify")) return "#1DB954";
-  if (l.includes("yt") || l.includes("youtube")) return "#FF0000";
+  if (l.includes("spotify")) return "rgba(29,185,84,0.45)";
+  if (l.includes("yt") || l.includes("youtube")) return "rgba(255,45,45,0.45)";
   return null;
 }
 
