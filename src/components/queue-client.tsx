@@ -5,6 +5,7 @@ import { TYPE, SHADOW_SM, img, title, typeWord, detail, type DropType } from "@/
 import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 import SurpriseMe from "@/components/surprise-me";
+import type { Cand } from "@/components/tonight-dealer";
 
 export type QRow = {
   key: string;                 // stable row key
@@ -44,7 +45,7 @@ const VERDICTS: { key: "loved" | "liked" | "meh"; label: string }[] = [
   { key: "meh", label: "meh" },
 ];
 
-export default function QueueClient({ rows, landedYou, musicApp = null }: { rows: QRow[]; landedYou: number; musicApp?: string | null }) {
+export default function QueueClient({ rows, landedYou, musicApp = null, surprisePool = [] }: { rows: QRow[]; landedYou: number; musicApp?: string | null; surprisePool?: Cand[] }) {
   const [state, setState] = useState<QRow[]>(rows);
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -70,6 +71,9 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
   const shown = state.filter((r) => filter === "all" || r.type === filter);
   const want = shown.filter((r) => !r.done);
   const done = shown.filter((r) => r.done);
+  // surprise-me draws from the broad pool (group + curate + watchlist), filtered
+  // to the active chip so "movies" surprises with a movie, "all" with anything.
+  const surpriseShown = surprisePool.filter((c) => filter === "all" || c.type === filter);
   // the single easiest win among things you still want to get to.
   const upNextKey = want.length
     ? want.reduce((best, r) => (easeScore(r) > easeScore(best) ? r : best)).key
@@ -143,10 +147,11 @@ export default function QueueClient({ rows, landedYou, musicApp = null }: { rows
         ))}
       </div>
 
-      {/* can't decide? — let the pile pick one from what you still want to get to */}
-      {want.length > 1 && (
-        <SurpriseMe pool={want} musicApp={musicApp}
-          label={filter === "all" ? "watchlist" : (CHIPS.find((c) => c.key === filter)?.label ?? "watchlist")} />
+      {/* can't decide? — deal one from EVERYTHING: group drops + curate + your
+          watchlist, honouring the active filter. */}
+      {surpriseShown.length > 1 && (
+        <SurpriseMe pool={surpriseShown} musicApp={musicApp}
+          label={filter === "all" ? "everything" : (CHIPS.find((c) => c.key === filter)?.label ?? "everything")} />
       )}
 
       {want.length > 0 && (

@@ -8,6 +8,8 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 import { availabilityMap } from "@/lib/providers";
 import { cleanServices } from "@/lib/services";
+import { buildPeoplePool } from "@/lib/tonight-pool";
+import type { Cand } from "@/components/tonight-dealer";
 
 type Raw = {
   item_id: string | null;
@@ -94,6 +96,22 @@ export default async function Queue() {
   // things you queued from OTHER people that you loved/liked (north-star seed).
   const landedCount = rows.filter((r) => !r.mine && r.done && (r.verdict === "loved" || r.verdict === "liked")).length;
 
+  // SURPRISE-ME pool = "everything you could do tonight": every group drop you can
+  // see + kizu curate (buildPeoplePool, minus what's already saved) + your own
+  // watchlist wants. So "can't decide?" draws from the whole space, not just saves.
+  const { data: mRaw } = await supabase.from("group_members").select("group_id, is_home").eq("user_id", user.id);
+  const memberships = (mRaw ?? []) as { group_id: string; is_home: boolean }[];
+  const activeGroup = memberships.find((m) => m.is_home) ?? memberships[0];
+  const peoplePool: Cand[] = activeGroup ? await buildPeoplePool(user.id, activeGroup.group_id) : [];
+  const watchlistWants: Cand[] = rows
+    .filter((r) => !r.done)
+    .map((r) => ({
+      key: r.key, itemId: r.itemId, curateDropId: r.curateDropId,
+      type: r.type, data: r.data, note: r.note, who: r.who,
+      rating: r.ratingValue, availability: r.availability ?? null, source: "shelf",
+    }));
+  const surprisePool: Cand[] = [...peoplePool, ...watchlistWants];
+
   return (
     <main className="max-w-[700px] mx-auto px-6 py-10">
       <div className="font-m text-[11px] tracking-widest uppercase text-muted">your save-for-later · watch · listen · go</div>
@@ -106,7 +124,7 @@ export default async function Queue() {
           <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#0D0B09]">go to home</Link>
         </div>
       ) : (
-        <QueueClient rows={rows} landedYou={landedCount} musicApp={me?.music_app ?? null} />
+        <QueueClient rows={rows} landedYou={landedCount} musicApp={me?.music_app ?? null} surprisePool={surprisePool} />
       )}
     </main>
   );
