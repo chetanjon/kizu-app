@@ -10,12 +10,10 @@ import { usePathname } from "next/navigation";
 // a destination, so the tile never parks under it.
 
 // ---- custom glyphs (filled, chunky; currentColor) ----
-// "home" — two overlapping rings: the group's blended taste. This tab IS the
-// shared feed, so the mark reads as taste flowing together, not a house.
 const Home = () => (
-  <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" aria-hidden>
-    <circle cx="9" cy="12" r="6" />
-    <circle cx="15" cy="12" r="6" />
+  <svg width="27" height="27" viewBox="0 0 24 24" aria-hidden>
+    <rect x="8" y="4" width="12" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="2.3" />
+    <rect x="4" y="8" width="12" height="12" rx="3" fill="currentColor" />
   </svg>
 );
 // "log" — a notebook/diary (your private taste shelf).
