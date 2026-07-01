@@ -113,7 +113,10 @@ export default function HighlightReel({ items }: { items: Highlight[] }) {
         worth losing sleep over
       </h2>
 
-      <div className="overflow-visible -mx-5 px-5">
+      {/* clip the x-axis: the w-max marquee track must not expand the document's
+          scroll width (that let the whole page pan sideways). y stays visible so
+          the cards' glow/breathe shadows aren't cut. */}
+      <div className="overflow-x-clip -mx-5 px-5">
         <div className="flex gap-5 w-max kz-hl-track py-5">
           {loop.map((h, k) => <Tile key={`${h.id}-${k}`} h={h} />)}
         </div>

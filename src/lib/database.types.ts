@@ -161,6 +161,7 @@ export type Database = {
           private: boolean
           rating_style: string | null
           rating_value: string | null
+          targeted: boolean
           type: string
         }
         Insert: {
@@ -174,6 +175,7 @@ export type Database = {
           private?: boolean
           rating_style?: string | null
           rating_value?: string | null
+          targeted?: boolean
           type: string
         }
         Update: {
@@ -187,6 +189,7 @@ export type Database = {
           private?: boolean
           rating_style?: string | null
           rating_value?: string | null
+          targeted?: boolean
           type?: string
         }
         Relationships: [

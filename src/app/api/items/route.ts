@@ -73,6 +73,10 @@ export async function POST(req: Request) {
   // a private log is creator-only: never targeted, never anon, no group ping.
   const isPrivate = b.private === true;
   const anon = !isPrivate && targets.length === 0 && b.anon === true;
+  // targeted = dropped FOR specific people → private to them + the sender. Only
+  // the "people" mode sends recipients; everyone/link/log leave targets empty and
+  // stay group-visible. RLS + every read surface honour this flag.
+  const targeted = targets.length > 0;
 
   const { data: item, error } = await admin
     .from("items")
@@ -86,6 +90,7 @@ export async function POST(req: Request) {
       data,
       anon,
       private: isPrivate,
+      targeted,
     })
     .select("id")
     .single();
