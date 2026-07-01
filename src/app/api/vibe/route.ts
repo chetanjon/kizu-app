@@ -29,9 +29,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const read = await buildAndStoreVibe(admin, group_id);
-    if (!read) return NextResponse.json({ error: "not enough to read yet." }, { status: 400 });
-    return NextResponse.json({ read });
+    const result = await buildAndStoreVibe(admin, group_id);
+    if (!result) return NextResponse.json({ error: "not enough to read yet." }, { status: 400 });
+    return NextResponse.json({ read: result.read });
   } catch (e) {
     return NextResponse.json({ error: (e as Error)?.message ?? "vibe read failed" }, { status: 500 });
   }

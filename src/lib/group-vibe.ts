@@ -15,9 +15,13 @@ function metaFor(type: string, d: Record<string, unknown>): string {
   return [s(d.subtype), s(d.music_note)].filter(Boolean).join(" · ");
 }
 
-/** Generate + store a fresh vibe read for a group. Returns the read, or null if
- *  the group has too few drops to read. Caller authorizes (cron is trusted). */
-export async function buildAndStoreVibe(admin: Admin, groupId: string): Promise<VibeRead | null> {
+/** Generate + store a fresh vibe read for a group. Returns the stored row id +
+ *  the read, or null if the group has too few drops to read. `variant` picks the
+ *  tone: "default" (on-demand button) or "weekly" (the Friday ritual). Caller
+ *  authorizes (cron is trusted). */
+export async function buildAndStoreVibe(
+  admin: Admin, groupId: string, variant: "default" | "weekly" = "default"
+): Promise<{ id: string; read: VibeRead } | null> {
   const { data: group } = await admin.from("groups").select("name").eq("id", groupId).single();
   const { data: memRows } = await admin
     .from("group_members").select("users(name)").eq("group_id", groupId);
@@ -45,11 +49,12 @@ export async function buildAndStoreVibe(admin: Admin, groupId: string): Promise<
     who: it.anon ? "someone" : (it.users?.name || "someone"),
   }));
 
-  const read = await generateVibe(group?.name || "the group", members, vibeItems);
-  await admin.from("vibe_reads").insert({
+  const read = await generateVibe(group?.name || "the group", members, vibeItems, variant);
+  const { data: inserted, error } = await admin.from("vibe_reads").insert({
     group_id: groupId,
     summary: read.title || read.body.slice(0, 120),
     card_data: read,
-  });
-  return read;
+  }).select("id").single();
+  if (error || !inserted) throw error ?? new Error("failed to store vibe read");
+  return { id: inserted.id, read };
 }
