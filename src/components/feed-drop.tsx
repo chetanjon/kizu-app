@@ -32,6 +32,7 @@ export type FeedDropProps = {
   facts: string | null;
   tagline: string | null;
   synopsis: string | null;
+  trailer: string | null;   // YouTube key for the official trailer (watch drops)
   preview: string | null;   // 30s audio url (plain public file, no app needed)
   act: { label: string; url: string; kind: string } | null;
   saved: boolean;
@@ -53,19 +54,27 @@ function typesetSize(title: string): number {
   return 40 * (longest > 9 ? Math.min(1, 9 / longest) : 1);
 }
 
-// only one preview plays at a time, app-wide: starting a card's preview hands
-// off from whichever card was playing (its own pause listener flips its UI).
-let activePreview: HTMLAudioElement | null = null;
+// one sound at a time, app-wide: previews and trailers claim playback and stop
+// whatever held it (the loser's own listener/state flips its UI back).
+let stopActiveMedia: (() => void) | null = null;
+function claimPlayback(stop: () => void) {
+  if (stopActiveMedia && stopActiveMedia !== stop) stopActiveMedia();
+  stopActiveMedia = stop;
+}
+function releasePlayback(stop: () => void) {
+  if (stopActiveMedia === stop) stopActiveMedia = null;
+}
 
 function Preview({ url }: { url: string }) {
   const audio = useRef<HTMLAudioElement | null>(null);
+  const stopRef = useRef<() => void>(() => audio.current?.pause());
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
   const [dur, setDur] = useState(30);
 
   useEffect(() => () => {
     audio.current?.pause();
-    if (activePreview === audio.current) activePreview = null;
+    releasePlayback(stopRef.current);
   }, []);
 
   function toggle(e: React.MouseEvent) {
@@ -80,8 +89,7 @@ function Preview({ url }: { url: string }) {
       audio.current = a;
     }
     if (audio.current.paused) {
-      if (activePreview && activePreview !== audio.current) activePreview.pause();
-      activePreview = audio.current;
+      claimPlayback(stopRef.current);
       void audio.current.play().catch(() => {});
     } else {
       audio.current.pause();
@@ -112,6 +120,56 @@ function Preview({ url }: { url: string }) {
       </div>
       <div className="font-m text-[9px] tracking-[0.08em] text-muted/60 mt-1.5 ml-[54px]">preview · via apple</div>
     </div>
+  );
+}
+
+// The trailer: a zero-weight facade (YouTube's own thumbnail + a play circle)
+// until tapped — only then does the actual YouTube player load, inline, ad
+// policy and all. youtube-nocookie keeps it in privacy-enhanced mode. Closing
+// the card unmounts the player, and starting it claims playback from any song.
+function Trailer({ ytKey, title, cardOpen }: { ytKey: string; title: string; cardOpen: boolean }) {
+  const [playing, setPlaying] = useState(false);
+  const stopRef = useRef<() => void>(() => setPlaying(false));
+
+  useEffect(() => {
+    if (!cardOpen && playing) { setPlaying(false); releasePlayback(stopRef.current); }
+  }, [cardOpen, playing]);
+  useEffect(() => () => releasePlayback(stopRef.current), []);
+
+  function start(e: React.MouseEvent) {
+    e.stopPropagation();
+    claimPlayback(stopRef.current);
+    setPlaying(true);
+  }
+
+  if (playing) {
+    return (
+      <div className="mt-3 aspect-video rounded-xl overflow-hidden border border-hair bg-stage" onClick={(e) => e.stopPropagation()}>
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${ytKey}?autoplay=1&playsinline=1&rel=0`}
+          title={`${title} trailer`}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          className="w-full h-full border-0"
+        />
+      </div>
+    );
+  }
+  return (
+    <button onClick={start} aria-label={`play the ${title} trailer`}
+      className="relative mt-3 w-full aspect-video rounded-xl overflow-hidden border border-hair bg-surface-2 block group">
+      <img src={`https://i.ytimg.com/vi/${ytKey}/hqdefault.jpg`} alt="" loading="lazy" decoding="async"
+        className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+      <span className="absolute inset-0 flex items-center justify-center">
+        <span className="w-[48px] h-[48px] rounded-full bg-vibe text-white flex items-center justify-center shadow-[3px_3px_0_#0D0B09] transition-transform group-active:scale-90">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="ml-[2px]">
+            <path d="M6.4 5.1a1.2 1.2 0 0 1 1.82-1.03l11 6.9a1.2 1.2 0 0 1 0 2.06l-11 6.9A1.2 1.2 0 0 1 6.4 18.9V5.1z" />
+          </svg>
+        </span>
+      </span>
+      <span className="absolute left-3 bottom-2.5 font-m text-[10px] tracking-[0.14em] uppercase text-white/85">trailer</span>
+    </button>
   );
 }
 
@@ -261,6 +319,7 @@ export default function FeedDrop(p: FeedDropProps) {
           {!p.facts && p.sub && p.type !== "watch" && (
             <div className="font-m text-[11px] text-muted tracking-[0.06em]">{p.sub.toLowerCase()}</div>
           )}
+          {p.trailer && <Trailer ytKey={p.trailer} title={p.title} cardOpen={open} />}
           {p.preview && <Preview url={p.preview} />}
           {p.sentTo && <div className="font-m text-[11px] text-vibe-2/80 mt-3">{p.sentTo}</div>}
 

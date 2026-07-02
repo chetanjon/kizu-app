@@ -11,7 +11,21 @@ export type FilmFacts = {
   facts: string;           // "★ 7.0 · 3h 35m · drama" (parts drop out when unknown)
   tagline: string | null;  // the film's own line, lowercased to the house voice
   synopsis: string | null; // trimmed to ~280 chars on a word boundary
+  trailer: string | null;  // YouTube video key for the best official trailer
 };
+
+// the best trailer from TMDB's videos block: official trailers beat fan
+// uploads, trailers beat teasers, newer beats older within a tier.
+type Video = { key?: string; site?: string; type?: string; official?: boolean; published_at?: string };
+function pickTrailer(videos: unknown): string | null {
+  const list = Array.isArray((videos as { results?: Video[] })?.results)
+    ? (videos as { results: Video[] }).results : [];
+  const yt = list.filter((v) => v.site === "YouTube" && typeof v.key === "string" && (v.type === "Trailer" || v.type === "Teaser"));
+  if (!yt.length) return null;
+  const tier = (v: Video) => (v.type === "Trailer" ? 2 : 0) + (v.official ? 1 : 0);
+  yt.sort((a, b) => tier(b) - tier(a) || (b.published_at ?? "").localeCompare(a.published_at ?? ""));
+  return yt[0].key!;
+}
 
 type Row = { id: string; type: string; data: Record<string, unknown> | null | undefined };
 
@@ -33,7 +47,9 @@ async function fetchFilmFacts(media: "movie" | "tv", tmdbId: number | string): P
   const k = process.env.TMDB_API_KEY;
   if (!k) return null;
   try {
-    const res = await fetch(`${TMDB}/${media}/${tmdbId}?api_key=${k}`, {
+    // videos ride the same request (append_to_response) — the trailer lookup
+    // costs zero extra round trips.
+    const res = await fetch(`${TMDB}/${media}/${tmdbId}?api_key=${k}&append_to_response=videos`, {
       next: { revalidate: 86400 },
       signal: AbortSignal.timeout(800),
     });
@@ -43,11 +59,13 @@ async function fetchFilmFacts(media: "movie" | "tv", tmdbId: number | string): P
     const runtime = fmtRuntime(media === "movie" ? j.runtime : j.episode_run_time?.[0]);
     const genre = typeof j.genres?.[0]?.name === "string" ? j.genres[0].name.toLowerCase() : null;
     const facts = [vote, runtime, genre].filter(Boolean).join(" · ");
-    if (!facts && !j.tagline && !j.overview) return null;
+    const trailer = pickTrailer(j.videos);
+    if (!facts && !j.tagline && !j.overview && !trailer) return null;
     return {
       facts,
       tagline: typeof j.tagline === "string" && j.tagline.trim() ? j.tagline.trim().toLowerCase() : null,
       synopsis: trimTo(j.overview, 280),
+      trailer,
     };
   } catch {
     return null;

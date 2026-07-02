@@ -300,6 +300,7 @@ export default async function Home() {
                     facts={enrich?.facts ?? null}
                     tagline={enrich?.tagline ?? null}
                     synopsis={enrich?.synopsis ?? null}
+                    trailer={enrich?.trailer ?? null}
                     preview={previews.get(it.id) ?? null}
                     act={act ? { label: act.label, url: act.url, kind: act.kind } : null}
                     saved={queued.has(it.id)}
