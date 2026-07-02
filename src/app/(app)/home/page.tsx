@@ -3,10 +3,7 @@ import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import VibeRead, { type Read as VibeReadData } from "@/components/vibe-read";
-import Reactions from "@/components/reactions";
-import DeleteDrop from "@/components/delete-drop";
 import NameSetter from "@/components/name-setter";
-import QueueButton from "@/components/queue-button";
 import NotificationsBell from "@/components/notifications-bell";
 import PushNudge from "@/components/push-nudge";
 import CurateRiver, { type CDrop } from "@/components/curate-river";
@@ -14,13 +11,15 @@ import FeedTabs from "@/components/feed-tabs";
 import FeedReveal from "@/components/feed-reveal";
 import GroupSwitcher from "@/components/group-switcher";
 import HighlightReel, { type Highlight } from "@/components/highlight-reel";
-import { TYPE, SHADOW, imgSm, title, type DropType } from "@/lib/item-render";
+import { imgSm, img, title, sub, ratingMark, ago, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import { fetchPositiveVerdicts, proofLine, type Voter } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 import { availabilityMap } from "@/lib/providers";
+import { filmFactsMap, previewMap } from "@/lib/enrich";
 import { cleanServices } from "@/lib/services";
+import FeedDrop from "@/components/feed-drop";
 
 const RIVER_PAGE = 12;
 
@@ -33,17 +32,13 @@ type Item = {
   note: string | null;
   data: Record<string, unknown>;
   created_by: string;
+  created_at: string;
   users: { name: string | null } | null;
   reactions: { emoji: string; user_id: string; users: { name: string | null } | null }[];
 };
 
 // hook color = a light tint of the drop's type color (landed uses violet).
 const HOOK_TINT: Record<DropType, string> = { watch: "#C9DBFF", listen: "#FFC7DA", go_out: "#C4F5E1" };
-
-// cover placeholder glyph for drops with no art anywhere (manual drops of
-// tracks/places no catalog knows) — a quiet mark on the type color, so the
-// card reads designed instead of broken.
-const COVER_GLYPH: Record<DropType, string> = { watch: "▷", listen: "♪", go_out: "↗" };
 
 // positive-verdict voter names for a drop, excluding some ids, lowercased & deduped.
 function voterNames(voters: Voter[] | undefined, excludeIds: string[]): string[] {
@@ -146,7 +141,7 @@ export default async function Home() {
     // Bounded: the feed reveals 8 then "show earlier", so 120 covers it with room.
     supabase
       .from("items")
-      .select("id, type, anon, targeted, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
+      .select("id, type, anon, targeted, rating_value, note, data, created_by, created_at, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
       .eq("group_id", g.id)
       .eq("private", false)
       .order("created_at", { ascending: false })
@@ -200,16 +195,17 @@ export default async function Home() {
   }
 
   // second batch — every enrichment derived from the items list, together:
-  // signed photo urls, "you have it" availability, who's into what (admin:
-  // verdicts are owner-scoped), what I've already saved, targeted-drop names.
-  const [, availMap, proofMap, qRes, sentTo] = await Promise.all([
+  // signed photo urls, "you have it" availability, catalog facts + song
+  // previews for the expanded card, who's into what (admin: verdicts are
+  // owner-scoped), what I've already saved, targeted-drop names.
+  const feedRows = feedItems.map((it) => ({ id: it.id, type: it.type, data: it.data }));
+  const [, availMap, factsMap, previews, proofMap, qRes, sentTo] = await Promise.all([
     signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>),
-    // only the rendered cards need the "you have it" lookup — it's the one
-    // enrichment that fans out to external fetches per title.
-    availabilityMap(
-      feedItems.map((it) => ({ id: it.id, type: it.type, data: it.data })),
-      cleanServices(meRes.data?.services),
-    ),
+    // only the rendered cards need the external enrichments — they're the
+    // fetches that fan out per title (all 24h-cached, cron-primed, 800ms-capped).
+    availabilityMap(feedRows, cleanServices(meRes.data?.services)),
+    filmFactsMap(feedRows),
+    previewMap(feedRows),
     fetchPositiveVerdicts(createAdminClient(), ids),
     supabase
       .from("queue_items")
@@ -266,8 +262,6 @@ export default async function Home() {
                 <>
                   <FeedReveal>
               {feedItems.map((it) => {
-                const t = TYPE[it.type];
-                const cover = imgSm(it);
                 const mine = it.created_by === user.id;
                 // targeted + not mine ⇒ I'm a recipient (RLS wouldn't show it otherwise).
                 const forYou = it.targeted && !mine;
@@ -278,75 +272,41 @@ export default async function Home() {
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
                   : it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id }));
                 const dropperName = (it.users?.name || "someone").toLowerCase();
-                // footer shows the FIRST name only — full names get chopped mid-word
-                // ("myla…") once reactions + the act pill claim the row; full name
-                // stays available on hover/long-press via title.
                 const dropperFirst = dropperName.split(" ")[0];
-                const avatarCh = it.anon ? (mine ? "Y" : "?") : dropperName.slice(0, 1).toUpperCase();
                 // the single "act on it" — for music this resolves to THEIR picked
                 // subscription app (actionsFor returns it as the primary); for film
                 // "where to watch" / "you have it", for places "open in maps".
                 const acts = availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, false);
                 const act = acts.find((a) => a.kind !== "set") ?? null;
-                // the footer is one tight line — compact the two widest labels so the
-                // dropper's name survives next to them ("where to watch" ate the row).
-                const actLabel = act ? (act.kind === "watch" ? "watch" : act.kind === "map" ? "maps" : act.label) : null;
+                const enrich = factsMap.get(it.id);
                 return (
-                  // bigger card: the colored type kicker bar fills the row (the type
-                  // signal), big cover with the one corner affordance on a dark scrim,
-                  // title hero, the take, an avatar+name footer, one filled act-on-it.
-                  <article key={it.id} className="relative flex gap-4 py-6 border-t border-hair first:border-t-0">
-                    <div className={`relative w-[116px] h-[174px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
-                      {cover ? <img src={cover} alt="" loading="lazy" decoding="async"
-                          className="w-full h-full object-cover object-center" />
-                        : <span aria-hidden className="absolute inset-0 flex items-center justify-center text-[44px] text-[#15110D]/30 select-none">{COVER_GLYPH[it.type]}</span>}
-                      {/* the card's one affordance, on a dark scrim so it reads over any art:
-                          ⋯ delete on your own drops · bookmark (save→watchlist) on others' */}
-                      <div className="absolute top-1.5 right-1.5 z-10 rounded-full bg-black/45 backdrop-blur-sm">
-                        {mine
-                          ? <DeleteDrop itemId={it.id} />
-                          : <QueueButton itemId={it.id} initialQueued={queued.has(it.id)} variant="icon" />}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0 flex flex-col">
-                      {/* the type line — fills the row, but thin (a colored line, not a slab) */}
-                      <div className="rounded-md px-2.5 py-1" style={{ background: t.color }}>
-                        <span className="font-h font-extrabold text-[10px] tracking-[0.12em] text-[#15110D]">{t.label}</span>
-                      </div>
-                      <h3 className="font-h font-bold text-[21px] tracking-[-0.02em] leading-[1.1] line-clamp-2 mt-2">{title(it)}</h3>
-                      {/* received privately — make it feel like a personal handoff, not a group post */}
-                      {forYou && (
-                        <div className="mt-1.5 inline-flex w-fit items-center rounded-full bg-vibe/20 border border-vibe/40 px-2.5 py-1 font-h font-bold text-[11px] text-vibe-2"
-                          title={`${dropperName} dropped this only for you`}>
-                          just for you · from {dropperFirst}
-                        </div>
-                      )}
-                      {/* your own targeted drop — a quiet reminder it went privately */}
-                      {mine && it.targeted && (
-                        <div className="font-m text-[11px] text-vibe-2/70 mt-1.5">{sentNames.length ? `sent privately to ${nameList(sentNames)}` : "sent privately"}</div>
-                      )}
-                      {it.note && <p className="text-[13.5px] text-ink-2 mt-1 leading-snug line-clamp-2">&ldquo;{it.note}&rdquo;</p>}
-                      {proof && <div className="font-m text-[11px] text-go mt-1.5">♥ {proof}</div>}
-
-                      {/* one engagement line, bottom-aligned to the cover:
-                          avatar · who · their reactions ........ act on it */}
-                      <div className="mt-auto pt-3 flex items-center gap-1 min-w-0">
-                        <span className="w-[24px] h-[24px] flex-none rounded-full bg-surface-2 border border-hair flex items-center justify-center font-h font-extrabold text-[11px] text-ink-2">{avatarCh}</span>
-                        <span className="font-m text-[11px] text-ink-2 truncate min-w-0" title={it.anon ? undefined : dropperName}>{it.anon ? (mine ? "you · anon" : "someone") : dropperFirst}</span>
-                        <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} compact />
-                        {act && (
-                          <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
-                            className={`ml-auto flex-none font-h text-[12px] font-bold rounded-full px-2.5 py-2 transition-all active:scale-95 ${
-                              act.kind === "have" ? "bg-go text-[#15110D]"
-                              : act.primary ? "bg-vibe text-white"
-                              : "bg-surface-2 text-ink border-[1.5px] border-frame"
-                            }`}>
-                            {actLabel}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </article>
+                  <FeedDrop
+                    key={it.id}
+                    id={it.id}
+                    type={it.type}
+                    title={title(it)}
+                    sub={sub(it) || null}
+                    cover={img(it)}
+                    fresh={Date.now() - new Date(it.created_at).getTime() < 86_400_000}
+                    note={it.note}
+                    rating={it.rating_value ? ratingMark(it.rating_value) : null}
+                    who={it.anon ? (mine ? "you · anon" : "someone") : dropperFirst}
+                    whoFull={it.anon ? null : dropperName}
+                    when={ago(it.created_at)}
+                    mine={mine}
+                    forYou={forYou}
+                    sentTo={mine && it.targeted ? (sentNames.length ? `sent privately to ${nameList(sentNames)}` : "sent privately") : null}
+                    proof={proof}
+                    facts={enrich?.facts ?? null}
+                    tagline={enrich?.tagline ?? null}
+                    synopsis={enrich?.synopsis ?? null}
+                    preview={previews.get(it.id) ?? null}
+                    act={act ? { label: act.label, url: act.url, kind: act.kind } : null}
+                    saved={queued.has(it.id)}
+                    userId={user.id}
+                    rx={rx}
+                    canSeeWho={mine}
+                  />
                 );
               })}
                   </FeedReveal>

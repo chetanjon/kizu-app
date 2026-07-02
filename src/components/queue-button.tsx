@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 // Save-to-watchlist toggle. Target is a group item or a curate pick.
 // - "pill" (default): "＋ save" / "✓ saved" text pill (curate river, etc.)
 // - "icon": a bookmark on the card's cover — outline when unsaved, filled violet
-//   when saved. This IS the watchlist save; the watchlist is the product, so on
-//   the feed it's the always-visible affordance.
+//   when saved. This IS the watchlist save; the watchlist is the product.
+// - "action": the feed drawer's 42px action-row pill, sized to sit beside
+//   "where to watch" / share.
 export default function QueueButton({
   itemId,
   curateDropId,
@@ -17,7 +18,7 @@ export default function QueueButton({
   itemId?: string;
   curateDropId?: string;
   initialQueued: boolean;
-  variant?: "pill" | "icon";
+  variant?: "pill" | "icon" | "action";
 }) {
   const [queued, setQueued] = useState(initialQueued);
   const [busy, setBusy] = useState(false);
@@ -61,6 +62,20 @@ export default function QueueButton({
           stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M6 4.5h12a1 1 0 0 1 1 1V20l-7-4-7 4V5.5a1 1 0 0 1 1-1z" />
         </svg>
+      </button>
+    );
+  }
+
+  if (variant === "action") {
+    return (
+      <button
+        onClick={toggle}
+        disabled={busy}
+        className={`inline-flex items-center justify-center font-h font-bold text-[13px] rounded-full px-4 h-[42px] border-[1.5px] border-frame transition-colors active:scale-95 disabled:opacity-60 ${
+          queued ? "bg-vibe text-white border-vibe" : "bg-surface-2 text-ink"
+        }`}
+      >
+        {queued ? "✓ saved" : "☆ save"}
       </button>
     );
   }

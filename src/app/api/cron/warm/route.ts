@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase-admin";
 import { availabilityMap } from "@/lib/providers";
+import { filmFactsMap, previewMap } from "@/lib/enrich";
 import { NextResponse } from "next/server";
 
 // Cache-warm ONLY. The Supabase pg_cron job hits this every 5 minutes to
@@ -30,12 +31,13 @@ export async function GET() {
   }).catch(() => null);
 
   const admin = createAdminClient();
-  // the titles feeds actually render: the most recent watch drops across all
-  // groups (each group's feed caps at its recent slice, so 100 covers them).
+  // the titles feeds actually render: the most recent drops across all groups
+  // (each group's feed caps at its recent slice, so 100 covers them). watch
+  // rows prime availability + film facts; listen rows prime song previews.
   const { data } = await admin
     .from("items")
     .select("id, type, data")
-    .eq("type", "watch")
+    .in("type", ["watch", "listen"])
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -43,7 +45,7 @@ export async function GET() {
   // mine=[] → no "you have it" match is computed, but every title's provider
   // fetch still runs, which is all the cache warming needs. The body stays
   // information-free on purpose (the route is public).
-  await availabilityMap(rows, []);
+  await Promise.all([availabilityMap(rows, []), filmFactsMap(rows), previewMap(rows)]);
   await pagePing;
   return NextResponse.json({ ok: true });
 }

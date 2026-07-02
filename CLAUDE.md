@@ -61,7 +61,7 @@ The app went from 1–2.5s page loads to ~200ms by removing serialized round tri
 2. **Auth is verified locally.** Middleware + `getCurrentUser()` use `supabase.auth.getClaims()` (ES256, no network). Never reintroduce `auth.getUser()` on the page/middleware path. `getCurrentUser()` returns a slim `{ id, email }` — need more user fields? Query `users` inside your page's Promise.all.
 3. **Tab pages reuse the layout's request-memoized `getMemberships`** (`@/lib/auth`) — never re-query `group_members` for the active group.
 4. **External fetches in the render path need a hard timeout** (`AbortSignal.timeout`) + `next: { revalidate }`. See `providers.ts`.
-5. **Covers:** list surfaces (feed, reel, watchlist rows, grids) use `imgSm()` (w342); only single-card/detail surfaces use `img()` (w500).
+5. **Covers:** list surfaces with SMALL thumbs (reel tiles, watchlist rows, grids) use `imgSm()` (w342). The home feed's full-bleed cards (`feed-drop.tsx`, up to 600px wide) deliberately use `img()` (w500) — the art IS the card there. Don't "optimize" it back down.
 6. **Client router cache is ON** (`staleTimes.dynamic: 30`). Any mutation whose result must appear on another tab (save, drop, delete, verdict) MUST call `router.refresh()` after success — otherwise it looks lost for up to 30s.
 7. **`sw.js` caches immutable assets only** (`/_next/static`, cover art). Never cache pages or APIs in the service worker.
 8. **New tabs get a content-shaped `loading.tsx` skeleton** (see `home/loading.tsx`), not a spinner. Ghost blocks MUST be `bg-white/[0.08]`–`bg-white/[0.12]` — `bg-surface` on the paper background is invisible (~2% brightness delta) and users read the skeleton as a broken blank screen.

@@ -96,3 +96,27 @@ export function detail(it: RenderItem): string {
   if (it.type === "listen") return s(d["artist"]) ?? "";
   return [s(d["subtype"]), s(d["music_note"])].filter(Boolean).join(" · ");
 }
+
+// rich duotone stand-in when a drop has no cover art: the typeset-poster
+// background on full-bleed feed cards. Brighter than the highlight reel's ART
+// gradients on purpose — this one carries dark ink, the reel carries white text.
+export const ART_FALLBACK: Record<DropType, string> = {
+  listen: "radial-gradient(90% 130% at 78% 30%, #FFB3CC 0%, transparent 55%), linear-gradient(115deg, #7A2E5B 0%, #FF6F9C 100%)",
+  watch: "radial-gradient(90% 130% at 78% 30%, #B7CCFF 0%, transparent 55%), linear-gradient(115deg, #2E3C7A 0%, #5B8DEF 100%)",
+  go_out: "radial-gradient(90% 130% at 78% 30%, #ABF2D6 0%, transparent 55%), linear-gradient(115deg, #1E6B52 0%, #5DCAA5 100%)",
+};
+
+// compact relative age for feed meta lines: "now" / "5h" / "2d" / "3w".
+// Computed server-side and passed down as a string, so no client Date drift.
+export function ago(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return "now";
+  const m = Math.floor(ms / 60_000);
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  return `${Math.floor(d / 7)}w`;
+}

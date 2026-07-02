@@ -5,7 +5,7 @@ import { REACTIONS } from "@/lib/reactions";
 
 const PALETTE: readonly string[] = REACTIONS;
 
-type Rx = { emoji: string; user_id: string; name?: string | null };
+export type Rx = { emoji: string; user_id: string; name?: string | null };
 
 export default function Reactions({
   itemId,
