@@ -1,9 +1,13 @@
 "use client";
 
-// The home "from your people" strip — a calm, SWIPEABLE rail of the group's best
-// moments (it-landed, consensus, a real take). It's the supporting act beneath the
-// hero vibe read now, so: smaller 16:9 tiles, no auto-scroll marquee, and no heavy
-// blur backdrops (which also keeps iOS memory down — see the /home OOM fix).
+// The home "from your people" strip — a smooth, always-drifting marquee of the
+// group's best moments (it-landed, consensus, a real take). Done right:
+//  · seamless loop — the track is duplicated and slid exactly -50%, and each tile
+//    carries its OWN trailing margin so there's no hitch at the seam.
+//  · overflow-x-clip wrapper so the wide track never makes the whole PAGE pan.
+//  · soft mask fade at both edges so tiles dissolve in/out (premium touch).
+//  · pauses on hover; respects prefers-reduced-motion.
+//  · light tiles (cover + scrim, NO blur layers) to keep iOS memory down.
 import { type DropType } from "@/lib/item-render";
 
 export type Highlight = {
@@ -28,20 +32,20 @@ const ART: Record<DropType, string> = {
 
 function Tile({ h }: { h: Highlight }) {
   return (
+    // mr-3 (not a flex gap) so EVERY tile — including the last of each half —
+    // carries a trailing gap; that's what makes the -50% seam perfectly smooth.
     <div
-      className="relative flex-none w-[210px] aspect-[16/9] rounded-[14px] overflow-hidden border-2 border-frame bg-surface-2"
+      className="relative mr-3 flex-none w-[240px] aspect-[16/9] rounded-[14px] overflow-hidden border-2 border-frame bg-surface-2"
       style={{ background: h.cover ? undefined : ART[h.type] }}
     >
-      {h.cover && (
-        <img src={h.cover} alt="" loading="lazy" decoding="async"
-          className="absolute inset-0 w-full h-full object-cover object-center" />
-      )}
-      {/* scrim pooled lower-left so the text reads over any art */}
+      {/* eager (NOT lazy): inside the transformed track a lazy img never enters
+          the viewport and would never load. */}
+      {h.cover && <img src={h.cover} alt="" decoding="async" className="absolute inset-0 w-full h-full object-cover object-center" />}
       <div className="absolute inset-0" style={{ background: "linear-gradient(to top right, rgba(6,5,3,0.9) 8%, rgba(6,5,3,0.25) 50%, transparent 80%)" }} />
       <div className="glass absolute top-2 left-2 rounded-full px-2 py-0.5 font-m text-[8.5px] font-bold tracking-wide text-white/90">{TYPEWORD[h.type]}</div>
       <div className="absolute left-2.5 bottom-2 right-3">
         <div className="font-m text-[8.5px] font-bold tracking-[0.1em] uppercase" style={{ color: h.hookCol }}>{h.hook}</div>
-        <div className="font-h font-extrabold text-[14px] leading-[1.05] text-white line-clamp-2 mt-0.5">{h.title}</div>
+        <div className="font-h font-extrabold text-[15px] leading-[1.05] text-white line-clamp-2 mt-0.5">{h.title}</div>
         <div className="font-m text-[8px] text-white/50 mt-1 truncate">{h.who}</div>
       </div>
     </div>
@@ -50,12 +54,26 @@ function Tile({ h }: { h: Highlight }) {
 
 export default function HighlightReel({ items }: { items: Highlight[] }) {
   if (!items.length) return null;
+  // widen the base so the row fills the viewport, then double it for the loop.
+  const base: Highlight[] = [];
+  while (base.length < 4) base.push(...items);
+  const loop = [...base, ...base];
+
+  const FADE = "linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%)";
+
   return (
     <section className="mt-8">
-      <style>{`.kz-rail::-webkit-scrollbar{display:none}`}</style>
+      <style>{`
+        @keyframes kz-marq { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+        .kz-marq { animation: kz-marq 42s linear infinite; will-change: transform; }
+        .kz-marq:hover { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) { .kz-marq { animation: none !important; } }
+      `}</style>
       <div className="mb-3 font-m text-[10px] font-bold tracking-[0.2em] uppercase text-vibe-2">from your people</div>
-      <div className="kz-rail flex gap-3 overflow-x-auto -mx-5 px-5 pb-1 [scrollbar-width:none]">
-        {items.map((h) => <Tile key={h.id} h={h} />)}
+      <div className="overflow-x-clip -mx-5 px-5" style={{ WebkitMaskImage: FADE, maskImage: FADE }}>
+        <div className="kz-marq flex w-max py-1">
+          {loop.map((h, i) => <Tile key={`${h.id}-${i}`} h={h} />)}
+        </div>
       </div>
     </section>
   );
