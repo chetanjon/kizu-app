@@ -40,9 +40,10 @@ export type FeedDropProps = {
   canSeeWho: boolean;
 };
 
-// collapsed cards keep the act pill to one short word
+// collapsed cards keep the act pill short: film/place get a compact verb, but
+// music says the viewer's OWN app by name ("spotify", not a generic "play")
 const shortAct = (act: NonNullable<FeedDropProps["act"]>): string =>
-  act.kind === "watch" ? "watch" : act.kind === "map" ? "maps" : act.kind === "have" ? act.label : "play";
+  act.kind === "watch" ? "watch" : act.kind === "map" ? "maps" : act.label;
 const longAct = (act: NonNullable<FeedDropProps["act"]>): string =>
   act.kind === "watch" ? "where to watch" : act.kind === "map" ? "open in maps" : act.label;
 
@@ -107,7 +108,9 @@ function Preview({ url }: { url: string }) {
         <div className="h-[5px] rounded-full bg-white/10 overflow-hidden">
           <div className="h-full rounded-full bg-vibe-2 transition-[width] duration-300" style={{ width: `${Math.min(100, (t / dur) * 100)}%` }} />
         </div>
-        <div className="font-m text-[10px] text-muted mt-1.5">{mmss(t)} / {mmss(dur)} · preview</div>
+        <div className="font-m text-[10px] text-muted mt-1.5">
+          {mmss(t)} / {mmss(dur)} · preview <span className="opacity-50">· via apple</span>
+        </div>
       </div>
     </div>
   );
