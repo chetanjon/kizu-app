@@ -18,7 +18,7 @@ export async function POST() {
 
   if (signals.signalCount < MIN_SIGNALS) {
     return NextResponse.json(
-      { error: `kizu needs a little more to go on. drop or queue a few more things first (${signals.signalCount}/${MIN_SIGNALS}).` },
+      { error: `kizu needs a little more to go on. drop or save a few more things first (${signals.signalCount}/${MIN_SIGNALS}).` },
       { status: 400 }
     );
   }

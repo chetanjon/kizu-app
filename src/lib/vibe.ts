@@ -94,6 +94,7 @@ async function runGemini(prompt: string): Promise<string> {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.95, responseMimeType: "application/json" },
       }),
+      signal: AbortSignal.timeout(30_000),
     }
   );
   if (!res.ok) throw new Error(`Gemini error ${res.status}: ${await res.text()}`);
@@ -158,7 +159,7 @@ function buildTastePrompt(name: string, signals: TasteSignal[]): string {
         s.title,
         s.meta ? `(${s.meta})` : "",
         s.rating ? `· rated ${s.rating}` : "",
-        s.source === "drop" ? "· they dropped this" : `· they queued this${s.verdict ? `, verdict: ${s.verdict}` : ""}`,
+        s.source === "drop" ? "· they dropped this" : `· they saved this${s.verdict ? `, verdict: ${s.verdict}` : ""}`,
         s.note ? `· "${s.note}"` : "",
       ];
       return "- " + bits.filter(Boolean).join(" ");
@@ -167,7 +168,7 @@ function buildTastePrompt(name: string, signals: TasteSignal[]): string {
 
   return `You are the "taste signature" for kizu, a private space where friends drop the movies, music, and places they love. Give ${name} a SINGLE-LINE signature that names the AESTHETIC of their taste: the territory their drops live in. This describes their TASTE, never their personality.
 
-${name}'S DROPS & QUEUE:
+${name}'S DROPS & WATCHLIST:
 ${lines}
 
 WRITE THE SIGNATURE. Rules:

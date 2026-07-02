@@ -18,9 +18,16 @@ const font = (b64: string): ArrayBuffer => {
 
 export default async function InviteImage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const admin = createAdminClient();
-  const { data: group } = await admin
-    .from("groups").select("name, color").eq("invite_code", code.toUpperCase()).maybeSingle();
+  // a transient DB failure must not 500 the preview — fall back to generic wording
+  let group: { name: string; color: string } | null = null;
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("groups").select("name, color").eq("invite_code", code.toUpperCase()).maybeSingle();
+    group = data;
+  } catch {
+    group = null;
+  }
 
   const archivo = font(ARCHIVO_800);
   const jakarta = font(JAKARTA_500);

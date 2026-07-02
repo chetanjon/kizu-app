@@ -39,7 +39,7 @@ export async function searchWatch(query: string): Promise<WatchData[]> {
   const q = query.trim();
   if (!q) return [];
   const url = `${BASE}/search/multi?include_adult=false&language=en-US&query=${encodeURIComponent(q)}&api_key=${key()}`;
-  const res = await fetch(url, { next: { revalidate: 0 } });
+  const res = await fetch(url, { next: { revalidate: 0 }, signal: AbortSignal.timeout(8_000) });
   if (!res.ok) return [];
   const json = await res.json();
   return (json.results || [])
@@ -51,7 +51,7 @@ export async function searchWatch(query: string): Promise<WatchData[]> {
 /** Resolve a pasted themoviedb.org link (/movie/123 or /tv/123). */
 export async function getWatchByTmdb(mediaType: "movie" | "tv", id: number): Promise<WatchData | null> {
   const url = `${BASE}/${mediaType}/${id}?language=en-US&api_key=${key()}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
   if (!res.ok) return null;
   return toWatch({ ...(await res.json()), media_type: mediaType });
 }
@@ -59,7 +59,7 @@ export async function getWatchByTmdb(mediaType: "movie" | "tv", id: number): Pro
 /** Resolve a pasted IMDb link via TMDB's /find by external id. */
 export async function getWatchByImdb(imdbId: string): Promise<WatchData | null> {
   const url = `${BASE}/find/${imdbId}?external_source=imdb_id&api_key=${key()}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
   if (!res.ok) return null;
   const j = await res.json();
   const hit = (j.movie_results || [])[0] || (j.tv_results || [])[0];

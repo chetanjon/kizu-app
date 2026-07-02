@@ -32,7 +32,7 @@ export default async function Landing() {
         </h1>
         <p className="font-b text-lg text-ink-2 mt-6 max-w-[520px] leading-snug">
           drop the movies, music, and places you love into one space with your
-          people. queue what to do tonight. let an AI read your group&apos;s vibe
+          people. save what to do tonight. let an AI read your group&apos;s vibe
           back to you.
         </p>
 

@@ -73,7 +73,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
       ) : (
         <p className="text-muted mt-6 font-b text-sm">
           soon: your taste signature. the shape of what you love, in one line.
-          drop or queue a few more things and it shows up here.
+          drop or save a few more things and it shows up here.
         </p>
       )}
 

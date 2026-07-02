@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase-server";
+import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -34,14 +34,13 @@ export default async function JoinByCode({
   const { code } = await params;
   const group = await groupByCode(code);
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (user) {
     if (!group) redirect("/groups/new?error=badcode");
-    const { count } = await supabase
-      .from("group_members").select("*", { count: "exact", head: true }).eq("user_id", user.id);
     const admin = createAdminClient();
+    const { count } = await admin
+      .from("group_members").select("*", { count: "exact", head: true }).eq("user_id", user.id);
     await admin.from("group_members").upsert(
       { group_id: group.id, user_id: user.id, is_home: (count ?? 0) === 0 },
       { onConflict: "group_id,user_id", ignoreDuplicates: true }

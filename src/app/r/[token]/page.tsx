@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase-server";
+import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { notFound } from "next/navigation";
 import RecCard from "@/components/rec-card";
@@ -25,8 +25,7 @@ export default async function RecPage({ params }: { params: Promise<{ token: str
   const fromName = (rec.from as unknown as { name: string | null } | null)?.name ?? "someone";
 
   // is the viewer signed in? (and not the sender)
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const signedIn = !!user;
   const isSender = user?.id === rec.from_user;
 

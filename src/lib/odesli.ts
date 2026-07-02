@@ -30,6 +30,7 @@ export async function resolveListen(url: string): Promise<ListenData | null> {
   try {
     const res = await fetch(`${API}?url=${encodeURIComponent(url)}&userCountry=US`, {
       next: { revalidate: 0 },
+      signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) return null;
     const j = await res.json();

@@ -16,7 +16,7 @@ export async function searchListen(q: string): Promise<ListenHit[]> {
   try {
     const res = await fetch(
       `https://itunes.apple.com/search?media=music&entity=song&limit=6&term=${encodeURIComponent(term)}`,
-      { next: { revalidate: 0 } }
+      { next: { revalidate: 0 }, signal: AbortSignal.timeout(8_000) }
     );
     if (!res.ok) return [];
     const j = await res.json();

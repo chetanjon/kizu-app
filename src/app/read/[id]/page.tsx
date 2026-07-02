@@ -30,26 +30,28 @@ export default async function ReadPage({ params }: { params: Promise<{ id: strin
     .maybeSingle();
   if (!row) notFound();
 
-  const { data: mem } = await admin
-    .from("group_members")
-    .select("group_id")
-    .eq("group_id", row.group_id)
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // Everything below only needs row.group_id / user.id — one batch, no waterfall.
+  // (Matching watch picks back to real drops answers the personal question
+  // "do YOU have it?" — the read's picks are just title+type, but the drop
+  // carries the tmdb id that availabilityMap needs.)
+  const [{ data: mem }, { data: me }, { data: wRaw }] = await Promise.all([
+    admin
+      .from("group_members")
+      .select("group_id")
+      .eq("group_id", row.group_id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    admin.from("users").select("music_app, services").eq("id", user.id).maybeSingle(),
+    admin
+      .from("items").select("id, type, data")
+      .eq("group_id", row.group_id).eq("type", "watch")
+      .order("created_at", { ascending: false }).limit(200),
+  ]);
   if (!mem) notFound();
 
   const read = row.card_data as unknown as Read;
-  const { data: me } = await admin.from("users").select("music_app, services").eq("id", user.id).maybeSingle();
   const musicApp = me?.music_app ?? null;
   const picks = (read.top_picks ?? []).filter((p) => p.title);
-
-  // Match each watch pick back to its real drop (by title) so we can answer the
-  // personal question "do YOU have it?" — the read's picks are just title+type,
-  // but the drop carries the tmdb id that availabilityMap needs.
-  const { data: wRaw } = await admin
-    .from("items").select("id, type, data")
-    .eq("group_id", row.group_id).eq("type", "watch")
-    .order("created_at", { ascending: false }).limit(200);
   const byTitle = new Map<string, Drop>();
   for (const it of (wRaw ?? []) as Drop[]) {
     const t = norm(String(it.data?.title ?? ""));
