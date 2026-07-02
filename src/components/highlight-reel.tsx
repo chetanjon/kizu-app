@@ -104,13 +104,7 @@ export default function HighlightReel({ items }: { items: Highlight[] }) {
         }
       `}</style>
 
-      <div className="mb-1 font-m text-[10px] font-bold tracking-[0.2em] uppercase text-vibe-2">✦ from your people</div>
-      <h2
-        className="font-h font-extrabold text-[26px] tracking-[-0.03em] leading-none mb-4"
-        style={{ background: "linear-gradient(110deg,#A98BFF,#FF6F9C,#FF8A5B)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}
-      >
-        worth losing sleep over
-      </h2>
+      <div className="mb-3 font-m text-[10px] font-bold tracking-[0.2em] uppercase text-vibe-2">from your people</div>
 
       {/* clip the x-axis: the w-max marquee track must not expand the document's
           scroll width (that let the whole page pan sideways). y stays visible so
