@@ -3,15 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { shareInvite } from "@/components/invite-share";
 
-type G = { id: string; name: string; color: string };
+type G = { id: string; name: string; color: string; inviteCode: string };
 
-// The group pill IS the button: tap to switch, create, join, or manage.
+// The group pill IS the button: tap to switch, invite, create, join, or manage.
 export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activeId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
+
+  async function invite() {
+    if (!active) return;
+    const r = await shareInvite(active.inviteCode, active.name);
+    if (r === "copied") {
+      // no share sheet here (desktop): show the link landed, then tuck away.
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setOpen(false); }, 1400);
+    } else {
+      setOpen(false);
+    }
+  }
 
   async function switchTo(id: string) {
     if (id === activeId || busy) return;
@@ -41,7 +55,9 @@ export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activ
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 mt-2 w-[230px] z-40 bg-surface border-[2.5px] border-frame rounded-2xl shadow-[5px_5px_0_#0D0B09] overflow-hidden">
+          {/* right-anchored: the pill sits at the header's right edge, so a
+              left-anchored menu runs off the viewport and clips the ✓ */}
+          <div className="absolute right-0 mt-2 w-[230px] z-40 bg-surface border-[2.5px] border-frame rounded-2xl shadow-[5px_5px_0_#0D0B09] overflow-hidden">
             <div className="px-4 py-2.5 border-b-[2px] border-hair font-m text-[10px] tracking-widest uppercase text-muted">your groups</div>
             {groups.map((g) => (
               <button key={g.id} onClick={() => switchTo(g.id)}
@@ -52,8 +68,12 @@ export default function GroupSwitcher({ groups, activeId }: { groups: G[]; activ
               </button>
             ))}
             <div className="border-t-[2px] border-hair">
+              <button onClick={invite}
+                className="w-full text-left px-4 py-2.5 font-m text-[12px] font-bold text-vibe hover:bg-surface-2">
+                {copied ? "link copied" : "⤴ invite someone"}
+              </button>
               <Link href="/groups/new" onClick={() => setOpen(false)}
-                className="block px-4 py-2.5 font-m text-[12px] font-bold text-vibe hover:bg-surface-2">＋ create new group</Link>
+                className="block px-4 py-2.5 font-m text-[12px] font-bold hover:bg-surface-2">＋ create new group</Link>
               <Link href="/groups/new?tab=join" onClick={() => setOpen(false)}
                 className="flex items-center gap-1.5 px-4 py-2.5 font-m text-[12px] font-bold hover:bg-surface-2">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h13M12 6l6 6-6 6" /></svg>

@@ -221,7 +221,7 @@ export default async function Home() {
         <span className="font-h text-2xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></span>
         <div className="flex items-center gap-3">
           <GroupSwitcher
-              groups={memberships.map((m) => ({ id: m.groups!.id, name: m.groups!.name, color: m.groups!.color }))}
+              groups={memberships.map((m) => ({ id: m.groups!.id, name: m.groups!.name, color: m.groups!.color, inviteCode: m.groups!.invite_code }))}
               activeId={g.id}
             />
           <NotificationsBell />

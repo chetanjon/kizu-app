@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import InviteShare from "@/components/invite-share";
 
 const COLORS = ["#F0A23C", "#2F6FE0", "#E0567E", "#1B8A6B", "#6B4BD6"];
 
@@ -14,6 +15,14 @@ function NewGroupInner() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // set once the group exists: flips the card into the share-the-invite view,
+  // so the promised invite link actually shows up at the moment of intent.
+  const [created, setCreated] = useState<{ code: string; name: string } | null>(null);
+
+  function goHome() {
+    router.push("/home");
+    router.refresh();
+  }
 
   async function create() {
     if (!name.trim() || busy) return;
@@ -26,7 +35,8 @@ function NewGroupInner() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setErr(j.error || `error ${res.status}. check server env vars`); return; }
-      router.push("/home");
+      if (j.invite_code) setCreated({ code: j.invite_code, name: name.trim() });
+      else goHome();
     } catch {
       setErr("network error. try again");
     } finally {
@@ -59,6 +69,17 @@ function NewGroupInner() {
         <div className="text-center mb-7">
           <h1 className="font-h text-4xl font-extrabold tracking-[-0.05em]">kizu<span className="text-red">.</span></h1>
         </div>
+        {created ? (
+          <div className="bg-surface rounded-[22px] border-[2.5px] border-frame shadow-[8px_8px_0_#7C5CE6] p-7">
+            <div className="font-h font-extrabold text-xl tracking-[-0.02em]">{created.name.toLowerCase()} is ready.</div>
+            <p className="font-b text-[13px] text-muted mt-1 mb-5">it&apos;s empty until your people show up. send them the way in.</p>
+            <InviteShare code={created.code} groupName={created.name} />
+            <button onClick={goHome}
+              className="mt-4 w-full font-h font-bold text-sm bg-surface-2 border-[1.5px] border-hair rounded-full py-2.5">
+              into the space →
+            </button>
+          </div>
+        ) : (
         <div className="bg-surface rounded-[22px] border-[2.5px] border-frame shadow-[8px_8px_0_#7C5CE6] p-7">
           <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-5">
             {(["create", "join"] as const).map((t) => (
@@ -107,6 +128,7 @@ function NewGroupInner() {
 
           {err && <p className="font-m text-[12px] text-red text-center mt-4">{err}</p>}
         </div>
+        )}
       </div>
     </div>
   );

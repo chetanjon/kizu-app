@@ -4,6 +4,7 @@ import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
 import GroupSettingsForm from "@/components/group-settings-form";
 import LeaveGroupButton from "@/components/leave-group-button";
+import InviteShare from "@/components/invite-share";
 
 // Settings for the active group: rename (creator), invite code, members, leave.
 export default async function ManageGroup() {
@@ -35,9 +36,8 @@ export default async function ManageGroup() {
         </section>
 
         <section>
-          <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">invite code</div>
-          <div className="font-h font-extrabold text-2xl tracking-wide">{g.invite_code}</div>
-          <div className="font-m text-[11px] text-muted mt-1">share <b>/join/{g.invite_code}</b></div>
+          <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-3">invite someone</div>
+          <InviteShare code={g.invite_code} groupName={g.name} />
         </section>
 
         <section>
