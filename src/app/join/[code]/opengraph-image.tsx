@@ -1,11 +1,6 @@
 import { ImageResponse } from "next/og";
 import { createAdminClient } from "@/lib/supabase-admin";
-
-// Dynamic og images run at request time — on the node runtime the image
-// machinery 500s inside the lambda (the static root card never hits this
-// because it's prerendered at build). Edge is the canonical runtime for
-// @vercel/og: fonts load via fetch(import.meta.url) and get bundled.
-export const runtime = "edge";
+import { ARCHIVO_800, JAKARTA_500 } from "./og-fonts";
 
 // The invite's link-preview card: "you're invited to <group>" in the brand,
 // with the group's accent color as the hard shadow. Falls back to the generic
@@ -15,7 +10,11 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "you're invited · kizu";
 
-const font = (rel: string) => fetch(new URL(rel, import.meta.url)).then((r) => r.arrayBuffer());
+// slice to the exact bytes — .buffer alone can be a larger pooled ArrayBuffer
+const font = (b64: string): ArrayBuffer => {
+  const b = Buffer.from(b64, "base64");
+  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
+};
 
 export default async function InviteImage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
@@ -23,12 +22,8 @@ export default async function InviteImage({ params }: { params: Promise<{ code: 
   const { data: group } = await admin
     .from("groups").select("name, color").eq("invite_code", code.toUpperCase()).maybeSingle();
 
-  // fonts live NEXT TO this file (copies of src/app/og/*) so the edge
-  // bundler picks them up as assets.
-  const [archivo, jakarta] = await Promise.all([
-    font("./archivo-800.ttf"),
-    font("./jakarta-500.ttf"),
-  ]);
+  const archivo = font(ARCHIVO_800);
+  const jakarta = font(JAKARTA_500);
 
   const name = (group?.name ?? "the group").toLowerCase();
   const shadow = group?.color ?? "#7C5CE6";
