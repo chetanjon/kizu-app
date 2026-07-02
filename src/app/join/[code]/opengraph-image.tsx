@@ -1,7 +1,11 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { createAdminClient } from "@/lib/supabase-admin";
+
+// Dynamic og images run at request time — on the node runtime the image
+// machinery 500s inside the lambda (the static root card never hits this
+// because it's prerendered at build). Edge is the canonical runtime for
+// @vercel/og: fonts load via fetch(import.meta.url) and get bundled.
+export const runtime = "edge";
 
 // The invite's link-preview card: "you're invited to <group>" in the brand,
 // with the group's accent color as the hard shadow. Falls back to the generic
@@ -11,7 +15,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "you're invited · kizu";
 
-const font = (rel: string) => readFile(fileURLToPath(new URL(rel, import.meta.url)));
+const font = (rel: string) => fetch(new URL(rel, import.meta.url)).then((r) => r.arrayBuffer());
 
 export default async function InviteImage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
@@ -19,9 +23,8 @@ export default async function InviteImage({ params }: { params: Promise<{ code: 
   const { data: group } = await admin
     .from("groups").select("name, color").eq("invite_code", code.toUpperCase()).maybeSingle();
 
-  // fonts live NEXT TO this file (copies of src/app/og/*) — a "../../og/"
-  // reference worked locally but wasn't traced into the Vercel bundle (500s
-  // in prod); same-directory "./" references are what tracing reliably keeps.
+  // fonts live NEXT TO this file (copies of src/app/og/*) so the edge
+  // bundler picks them up as assets.
   const [archivo, jakarta] = await Promise.all([
     font("./archivo-800.ttf"),
     font("./jakarta-500.ttf"),
