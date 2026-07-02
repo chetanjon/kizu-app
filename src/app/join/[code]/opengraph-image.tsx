@@ -19,9 +19,12 @@ export default async function InviteImage({ params }: { params: Promise<{ code: 
   const { data: group } = await admin
     .from("groups").select("name, color").eq("invite_code", code.toUpperCase()).maybeSingle();
 
+  // fonts live NEXT TO this file (copies of src/app/og/*) — a "../../og/"
+  // reference worked locally but wasn't traced into the Vercel bundle (500s
+  // in prod); same-directory "./" references are what tracing reliably keeps.
   const [archivo, jakarta] = await Promise.all([
-    font("../../og/archivo-800.ttf"),
-    font("../../og/jakarta-500.ttf"),
+    font("./archivo-800.ttf"),
+    font("./jakarta-500.ttf"),
   ]);
 
   const name = (group?.name ?? "the group").toLowerCase();
