@@ -48,6 +48,9 @@ const VERDICTS: { key: "loved" | "liked" | "meh"; label: string }[] = [
 export default function QueueClient({ rows, landedYou, musicApp = null, surprisePool = [] }: { rows: QRow[]; landedYou: number; musicApp?: string | null; surprisePool?: Cand[] }) {
   const [state, setState] = useState<QRow[]>(rows);
   const [filter, setFilter] = useState<Filter>("all");
+  // rating is gated behind "seen it?" so unwatched rows stay clean — you rate a
+  // thing after you've actually done it, not before.
+  const [rateOpen, setRateOpen] = useState<string | null>(null);
 
   async function setVerdict(row: QRow, verdict: "loved" | "liked" | "meh") {
     const prev = state;
@@ -104,7 +107,7 @@ export default function QueueClient({ rows, landedYou, musicApp = null, surprise
             {act && <ItemActions actions={[act]} />}
             {r.done ? (
               <span className="font-m text-[11px] font-bold text-go ml-auto">{r.verdict === "loved" ? "♥ loved" : r.verdict}</span>
-            ) : (
+            ) : rateOpen === r.key ? (
               <div className="flex gap-1.5 ml-auto">
                 {VERDICTS.map((v) => (
                   <button
@@ -116,6 +119,13 @@ export default function QueueClient({ rows, landedYou, musicApp = null, surprise
                   </button>
                 ))}
               </div>
+            ) : (
+              <button
+                onClick={() => setRateOpen(r.key)}
+                className="ml-auto font-m text-[11px] font-bold text-muted hover:text-ink border-2 border-hair rounded-full px-3 py-1 transition-colors"
+              >
+                seen it?
+              </button>
             )}
           </div>
           {r.told && <div className="font-m text-[10px] text-vibe mt-2">✦ {r.told.toLowerCase()} will know it landed</div>}

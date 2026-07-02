@@ -4,7 +4,7 @@ import { signPhotos } from "@/lib/drop-photos";
 import { fetchPositiveVerdicts, proofLine } from "@/lib/social-proof";
 import { availabilityMap } from "@/lib/providers";
 import { cleanServices } from "@/lib/services";
-import type { DropType } from "@/lib/item-render";
+import { title, type DropType } from "@/lib/item-render";
 import type { Cand } from "@/components/tonight-dealer";
 
 type ItemRow = {
@@ -69,4 +69,47 @@ export async function buildPeoplePool(userId: string, groupId: string): Promise<
     }));
 
   return [...fromItems, ...fromCurate];
+}
+
+// The "surprise me" pool for the watchlist: EVERYTHING you could pick tonight —
+// your watchlist (passed in) + others' group drops + kizu curate (buildPeoplePool)
+// + your own drops AND private logs. De-duplicated by display title so the same
+// thing never appears twice (e.g. saved + also a group drop, or dropped by two
+// people). First occurrence wins, in priority order: watchlist → people/curate →
+// your own. Untitled items are never collapsed together.
+export async function buildSurprisePool(userId: string, groupId: string, watchlist: Cand[]): Promise<Cand[]> {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+
+  const people = await buildPeoplePool(userId, groupId);
+
+  // your own items — public drops you made AND private log entries only you see.
+  const { data: myRaw } = await supabase
+    .from("items")
+    .select("id, type, data, note, rating_value")
+    .eq("created_by", userId)
+    .order("created_at", { ascending: false })
+    .limit(80);
+  const myRows = (myRaw ?? []) as unknown as { id: string; type: DropType; data: Record<string, unknown> | null; note: string | null; rating_value: string | null }[];
+  await signPhotos(admin, myRows, (r) => (r as { data?: Record<string, unknown> }).data);
+  const { data: me } = await supabase.from("users").select("services").eq("id", userId).maybeSingle();
+  const myAvail = await availabilityMap(
+    myRows.map((r) => ({ id: r.id, type: r.type, data: r.data ?? {} })),
+    cleanServices(me?.services),
+  );
+  const mine: Cand[] = myRows.map((r) => ({
+    key: `i:${r.id}`, itemId: r.id, type: r.type, data: r.data ?? {}, note: r.note,
+    who: null, rating: r.rating_value, availability: myAvail.get(r.id) ?? null, source: "shelf",
+  }));
+
+  const seen = new Set<string>();
+  const out: Cand[] = [];
+  for (const c of [...watchlist, ...people, ...mine]) {
+    const k = title(c).toLowerCase().trim();
+    if (!k || k === "untitled") { out.push(c); continue; } // don't merge distinct untitled things
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(c);
+  }
+  return out;
 }

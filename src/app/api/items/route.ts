@@ -134,7 +134,7 @@ export async function POST(req: Request) {
       .filter((id) => !mutedSet.has(id))
       .map((id) =>
         sendPushToUser(admin, id, {
-          title: "someone dropped something.",
+          title: "someone dropped.",
           url: "/home",
           kind: "drop",
         }),
@@ -174,7 +174,7 @@ export async function PATCH(req: Request) {
   const mutedSet = new Set((muted ?? []).map((u) => u.id));
   await Promise.all(
     recipients.filter((uid) => !mutedSet.has(uid)).map((uid) =>
-      sendPushToUser(admin, uid, { title: "someone dropped something.", url: "/home", kind: "drop" }),
+      sendPushToUser(admin, uid, { title: "someone dropped.", url: "/home", kind: "drop" }),
     ),
   );
 
