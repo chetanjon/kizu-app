@@ -64,7 +64,7 @@ The app went from 1–2.5s page loads to ~200ms by removing serialized round tri
 5. **Covers:** list surfaces (feed, reel, watchlist rows, grids) use `imgSm()` (w342); only single-card/detail surfaces use `img()` (w500).
 6. **Client router cache is ON** (`staleTimes.dynamic: 30`). Any mutation whose result must appear on another tab (save, drop, delete, verdict) MUST call `router.refresh()` after success — otherwise it looks lost for up to 30s.
 7. **`sw.js` caches immutable assets only** (`/_next/static`, cover art). Never cache pages or APIs in the service worker.
-8. **New tabs get a content-shaped `loading.tsx` skeleton** (see `home/loading.tsx`), not a spinner.
+8. **New tabs get a content-shaped `loading.tsx` skeleton** (see `home/loading.tsx`), not a spinner. Ghost blocks MUST be `bg-white/[0.08]`–`bg-white/[0.12]` — `bg-surface` on the paper background is invisible (~2% brightness delta) and users read the skeleton as a broken blank screen.
 9. **Feed-type queries stay bounded** (`.limit(...)`) — nothing unbounded on the hot path.
 10. **Keep-warm:** a Supabase pg_cron job (`kizu-keep-warm`, every 5 min) hits `https://kizu.app/api/cron/warm`, which keeps the Hobby lambda warm AND re-primes the 24h TMDB availability cache (deliberately unauthed — fixed bounded work, so no secret lives in the cron SQL). GitHub Actions cron proved too throttled for this (`keep-warm.yml` stays as a free backup layer). Don't remove the pg_cron job without a replacement; check it with `select * from cron.job`.
 11. **The home document stays small:** render at most ~40 feed cards into the page (the full item window still feeds the reel/counts). The document was 276KB when all 120 rendered — phones re-download and re-parse it on every open.
