@@ -166,11 +166,17 @@ export default async function Home() {
   const latestRead = readRes.data;
   const ids = items.map((i) => i.id);
 
+  // Render at most 40 cards. Every card used to be server-rendered (the full
+  // 120-item window → a ~276KB document a phone re-downloads and re-parses on
+  // every open) even though the feed reveals 8. The full list still feeds the
+  // highlight reel + the fresh count; the deep tail lives on in logs/watchlists.
+  const feedItems = items.slice(0, 40);
+
   // A targeted drop is private to its sender + recipients (RLS enforces it), so
   // just SEEING one you didn't send means it's for you. For your OWN targeted
   // drops, look up who you sent them to, to show a quiet "sent to …" note.
   const uid = user.id;
-  const mySentTargeted = items.filter((it) => it.created_by === uid && it.targeted).map((it) => it.id);
+  const mySentTargeted = feedItems.filter((it) => it.created_by === uid && it.targeted).map((it) => it.id);
   async function loadSentTo(): Promise<Map<string, string[]>> {
     const map = new Map<string, string[]>();
     if (!mySentTargeted.length) return map;
@@ -198,8 +204,10 @@ export default async function Home() {
   // verdicts are owner-scoped), what I've already saved, targeted-drop names.
   const [, availMap, proofMap, qRes, sentTo] = await Promise.all([
     signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>),
+    // only the rendered cards need the "you have it" lookup — it's the one
+    // enrichment that fans out to external fetches per title.
     availabilityMap(
-      items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
+      feedItems.map((it) => ({ id: it.id, type: it.type, data: it.data })),
       cleanServices(meRes.data?.services),
     ),
     fetchPositiveVerdicts(createAdminClient(), ids),
@@ -257,7 +265,7 @@ export default async function Home() {
               ) : (
                 <>
                   <FeedReveal>
-              {items.map((it) => {
+              {feedItems.map((it) => {
                 const t = TYPE[it.type];
                 const cover = imgSm(it);
                 const mine = it.created_by === user.id;

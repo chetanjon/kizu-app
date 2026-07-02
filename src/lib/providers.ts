@@ -15,11 +15,13 @@ async function fetchFlatrate(mediaType: "movie" | "tv", tmdbId: number | string)
   const k = process.env.TMDB_API_KEY;
   if (!k) return null;
   try {
-    // hard 2s cap — this runs in the page render path, and an unbounded fetch
-    // would hold the whole page hostage; a miss just means no "you have it" pill.
+    // hard 800ms cap — this runs in the page render path, and slow TMDB days
+    // were the biggest single cold-open cost; a miss just means the card keeps
+    // its plain "where to watch" pill. The keep-warm cron re-primes the 24h
+    // cache every 5 min (api/cron/warm), so page renders almost always hit it.
     const res = await fetch(`${BASE}/${mediaType}/${tmdbId}/watch/providers?api_key=${k}`, {
       next: { revalidate: 86400 },
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(800),
     });
     if (!res.ok) return null;
     const us = (await res.json())?.results?.[REGION];
