@@ -30,11 +30,11 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims ?? null;
 
-  // /r/<token> is intentionally public (rec-as-invite preview before signup).
-  const protectedPaths = ["/home", "/tonight", "/queue", "/you", "/drop", "/groups", "/join", "/admin"];
-  const isProtected = protectedPaths.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
+  // /r/<token> and /read/<id> gate themselves; / and /login are public.
+  // Segment-aware match: bare startsWith would make "/log" swallow "/login".
+  const protectedPaths = ["/home", "/tonight", "/queue", "/you", "/drop", "/log", "/groups", "/join", "/admin"];
+  const path = request.nextUrl.pathname;
+  const isProtected = protectedPaths.some((p) => path === p || path.startsWith(p + "/"));
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
@@ -44,16 +44,39 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // already signed in and on /login → straight into the app. Nobody should be
+  // shown a sign-in card while they hold a working session.
+  if (user && request.nextUrl.pathname === "/login") {
+    const url = request.nextUrl.clone();
+    const next = request.nextUrl.searchParams.get("next");
+    url.pathname = next && next.startsWith("/") ? next.split("?")[0] : "/home";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }
 
+// LOAD-BEARING: every page route that can be someone's FIRST request of a
+// visit must be matched here. Supabase refresh tokens are single-use: when a
+// page renders without this middleware and the access token is expired, the
+// server component refreshes the session but CANNOT persist the rotated
+// cookies — the browser keeps the consumed refresh token, the next request
+// trips Supabase's reuse detection, and the whole session is revoked (user
+// gets bounced to sign-in). /log + /read were missing exactly this way.
+// Add every new top-level route to this matcher.
 export const config = {
   matcher: [
+    "/",
+    "/login",
     "/home/:path*",
     "/tonight/:path*",
     "/queue/:path*",
     "/you/:path*",
     "/drop/:path*",
+    "/log/:path*",
+    "/read/:path*",
+    "/r/:path*",
     "/groups/:path*",
     "/join/:path*",
     "/admin/:path*",

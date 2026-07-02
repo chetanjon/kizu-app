@@ -36,6 +36,8 @@ Route-handler writes with the user-scoped Supabase client hit `new row violates 
 
 **Embed gotcha:** `items` ↔ `users` is an ambiguous embed (`created_by` AND via `reactions`) → `PGRST201` and silent 0 rows. Always disambiguate with the FK hint, e.g. `users!items_created_by_fkey(name)`.
 
+**Middleware matcher gotcha (learned via user-facing sign-outs):** every new top-level page route MUST be added to the matcher in `src/proxy.ts`. Supabase refresh tokens are single-use; a page that renders without the middleware while the access token is expired refreshes the session inside a server component, where the rotated cookies cannot be persisted — the next request reuses the consumed refresh token and Supabase revokes the whole session (the user is bounced to sign-in). `/log` and `/read` shipped without matcher entries and caused exactly this.
+
 ---
 
 ## Code style preferences
