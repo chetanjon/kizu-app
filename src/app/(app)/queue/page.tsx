@@ -93,9 +93,6 @@ export default async function Queue() {
     })
     .filter((r): r is QRow => r !== null);
 
-  // things you queued from OTHER people that you loved/liked (north-star seed).
-  const landedCount = rows.filter((r) => !r.mine && r.done && (r.verdict === "loved" || r.verdict === "liked")).length;
-
   // SURPRISE-ME pool = "everything you could do tonight": your watchlist + group
   // drops + kizu curate + your own logs, de-duped by title (see buildSurprisePool).
   const { data: mRaw } = await supabase.from("group_members").select("group_id, is_home").eq("user_id", user.id);
@@ -124,7 +121,7 @@ export default async function Queue() {
           <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#0D0B09]">go to home</Link>
         </div>
       ) : (
-        <QueueClient rows={rows} landedYou={landedCount} musicApp={me?.music_app ?? null} surprisePool={surprisePool} />
+        <QueueClient rows={rows} musicApp={me?.music_app ?? null} surprisePool={surprisePool} />
       )}
     </main>
   );

@@ -41,20 +41,25 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
         {(me?.name ?? "you").toLowerCase()}
       </h1>
 
-      {/* the one number: how often the group runs with your word */}
-      {signals.recsLanded > 0 ? (
-        <div className="mt-6 flex items-center justify-between gap-4 rounded-[22px] border border-hair bg-stage px-5 py-5 shadow-[5px_5px_0_#7C5CE6]">
-          <div className="min-w-0">
-            <div className="font-m text-[10px] font-extrabold tracking-[0.13em] uppercase text-ink-2">taste taken</div>
-            <p className="font-b text-[12px] text-muted mt-1.5 leading-snug max-w-[200px]">
-              {signals.recsLanded === 1 ? "someone ran with a rec of yours." : "times the group ran with a rec of yours."}
-            </p>
+      {/* taste that landed — two mirror numbers: your word in the group, and
+          theirs in you. The quiet analytics keepsake (no charts, no streaks). */}
+      {signals.recsLanded > 0 || signals.landedForYou > 0 ? (
+        <div className="mt-6 rounded-[22px] border border-hair bg-stage px-5 py-5 shadow-[5px_5px_0_#7C5CE6]">
+          <div className="font-m text-[10px] font-extrabold tracking-[0.13em] uppercase text-ink-2">taste that landed</div>
+          <div className="mt-3.5 flex flex-col gap-3">
+            <div className="flex items-baseline justify-between gap-4 border-b border-hair pb-3">
+              <p className="font-b text-[12px] text-muted leading-snug max-w-[220px]">the group ran with yours</p>
+              <div className="font-h text-[44px] font-black leading-none text-ink tracking-[-0.04em] shrink-0">{signals.recsLanded}</div>
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="font-b text-[12px] text-muted leading-snug max-w-[220px]">you ran with theirs</p>
+              <div className="font-h text-[44px] font-black leading-none text-ink tracking-[-0.04em] shrink-0">{signals.landedForYou}</div>
+            </div>
           </div>
-          <div className="font-h text-[56px] font-black leading-none text-ink tracking-[-0.04em] shrink-0">{signals.recsLanded}</div>
         </div>
       ) : (
         <p className="mt-5 text-muted font-b text-sm">
-          no one&apos;s taken your word for it yet — drop something <span className="text-vibe-2">for</span> someone.
+          nothing&apos;s landed yet — drop something <span className="text-vibe-2">for</span> someone, or run with a rec.
         </p>
       )}
 

@@ -45,7 +45,7 @@ const VERDICTS: { key: "loved" | "liked" | "meh"; label: string }[] = [
   { key: "meh", label: "meh" },
 ];
 
-export default function QueueClient({ rows, landedYou, musicApp = null, surprisePool = [] }: { rows: QRow[]; landedYou: number; musicApp?: string | null; surprisePool?: Cand[] }) {
+export default function QueueClient({ rows, musicApp = null, surprisePool = [] }: { rows: QRow[]; musicApp?: string | null; surprisePool?: Cand[] }) {
   const [state, setState] = useState<QRow[]>(rows);
   const [filter, setFilter] = useState<Filter>("all");
   // rating is gated behind "seen it?" so unwatched rows stay clean — you rate a
@@ -136,13 +136,6 @@ export default function QueueClient({ rows, landedYou, musicApp = null, surprise
 
   return (
     <div className="mt-6">
-      {landedYou > 0 && (
-        <div className="border-[2.5px] border-frame rounded-2xl p-4 mb-6 shadow-[4px_5px_0_#7C5CE6]" style={{ background: "rgba(124,92,230,0.14)" }}>
-          <div className="font-m text-[10px] tracking-widest uppercase text-[#C2D24A]">✦ it landed</div>
-          <div className="font-h font-bold text-base mt-1">{landedYou} {landedYou === 1 ? "thing you saved from your people hit" : "things you saved from your people hit"}.</div>
-        </div>
-      )}
-
       <div className="flex gap-2 mb-6">
         {CHIPS.map((c) => (
           <button

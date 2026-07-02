@@ -14,7 +14,8 @@ export type UserSignals = {
   signals: TasteSignal[];        // for the AI read
   signalCount: number;           // drops + verdicts — the threshold gate
   recsSent: number;              // recs you sent (any)
-  recsLanded: number;            // recs you sent that landed — "they took your word for it"
+  recsLanded: number;            // recs you sent that landed — "the group ran with yours"
+  landedForYou: number;          // others' drops you queued and loved/liked — "you ran with theirs"
   picks: SignaturePick[];        // your 3 standout drops
 };
 
@@ -50,7 +51,7 @@ export async function getUserSignals(admin: Admin, userId: string): Promise<User
     .from("queue_items")
     .select(
       "verdict, " +
-      "items!queue_items_item_id_fkey(type, data, rating_value, note), " +
+      "items!queue_items_item_id_fkey(type, data, rating_value, note, created_by), " +
       "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words)"
     )
     .eq("user_id", userId)
@@ -59,10 +60,18 @@ export async function getUserSignals(admin: Admin, userId: string): Promise<User
 
   type QRow = {
     verdict: "loved" | "liked" | "meh" | null;
-    items: { type: DropType; data: Record<string, unknown> | null; rating_value: string | null; note: string | null } | null;
+    items: { type: DropType; data: Record<string, unknown> | null; rating_value: string | null; note: string | null; created_by: string } | null;
     curate_drops: { type: DropType; data: Record<string, unknown> | null; their_words: string | null } | null;
   };
   const verdicts = (qRows ?? []) as unknown as QRow[];
+
+  // "you ran with theirs": things you queued from OTHERS (a friend's drop or a
+  // curate pick — never your own) and loved/liked. Mirror of recsLanded.
+  const landedForYou = verdicts.filter((q) => {
+    if (q.verdict !== "loved" && q.verdict !== "liked") return false;
+    if (q.curate_drops) return true;                 // curate is always "theirs"
+    return !!q.items && q.items.created_by !== userId; // a friend's drop, not yours
+  }).length;
 
   // 3. Recs I sent — and how many landed (north-star, sender side).
   const { count: recsSent } = await admin
@@ -115,6 +124,7 @@ export async function getUserSignals(admin: Admin, userId: string): Promise<User
     signalCount: drops.length + verdicts.length,
     recsSent: recsSent ?? 0,
     recsLanded: recsLanded ?? 0,
+    landedForYou,
     picks,
   };
 }
