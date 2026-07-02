@@ -1,0 +1,18 @@
+# Keep the Vercel function warm. Hobby-tier lambdas cold-start after idling
+# (~1s+ added to the first open after a quiet stretch — exactly the "open the
+# app after work" moment). A tiny ping every 10 minutes keeps that from ever
+# being user-visible. Free on a public repo; delete this file to turn it off.
+# Note: GitHub pauses schedules after 60 days without repo activity.
+name: keep-warm
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      # "/" is a dynamic route → boots the same Next.js function the app uses.
+      - run: |
+          curl -s -o /dev/null -w "kizu.app status=%{http_code} ttfb=%{time_starttransfer}s\n" https://kizu.app/

@@ -71,6 +71,12 @@ export default function RootLayout({
       lang="en"
       className={`${archivo.variable} ${plusJakarta.variable} ${spaceMono.variable} antialiased`}
     >
+      <head>
+        {/* cover-art CDNs: pay DNS+TLS before the first poster is requested —
+            worth ~100-300ms on cellular for the first image paint */}
+        <link rel="preconnect" href="https://image.tmdb.org" />
+        <link rel="preconnect" href="https://is1-ssl.mzstatic.com" />
+      </head>
       <body>{children}<PwaRegister /></body>
     </html>
   );
