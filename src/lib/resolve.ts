@@ -92,7 +92,7 @@ export async function resolveUrl(raw: string): Promise<ResolveResult> {
   if (type === "listen") {
     const data = await resolveListen(url);
     if (data) return { type: "listen", resolved: true, data };
-    return { type: "listen", resolved: false, reason: "couldn't resolve that music link — add it manually" };
+    return { type: "listen", resolved: false, reason: "couldn't resolve that music link. add it manually" };
   }
 
   if (type === "watch") {
@@ -104,7 +104,7 @@ export async function resolveUrl(raw: string): Promise<ResolveResult> {
     return {
       type: "watch",
       resolved: false,
-      reason: query ? "pick the film:" : "that link can't be read — type the movie's name",
+      reason: query ? "pick the film:" : "that link can't be read. type the movie's name",
       query,
     };
   }
@@ -120,5 +120,5 @@ export async function resolveUrl(raw: string): Promise<ResolveResult> {
     return { type: "go_out", resolved: false, data: { place_name: place, source_url: url } };
   }
 
-  return { type: null, resolved: false, reason: "not a link kizu knows — pick a type and add it" };
+  return { type: null, resolved: false, reason: "not a link kizu knows. pick a type and add it" };
 }

@@ -59,7 +59,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
         </div>
       ) : (
         <p className="mt-5 text-muted font-b text-sm">
-          nothing&apos;s landed yet — drop something <span className="text-vibe-2">for</span> someone, or run with a rec.
+          nothing&apos;s landed yet. drop something <span className="text-vibe-2">for</span> someone, or run with a rec.
         </p>
       )}
 
@@ -68,7 +68,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
         <TasteRead initial={cached} />
       ) : (
         <p className="text-muted mt-6 font-b text-sm">
-          soon: your taste signature — the shape of what you love, in one line.
+          soon: your taste signature. the shape of what you love, in one line.
           drop or queue a few more things and it shows up here.
         </p>
       )}

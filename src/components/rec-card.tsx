@@ -18,7 +18,7 @@ export default function RecCard({
   const [saved, setSaved] = useState(false);
 
   if (isSender) {
-    return <div className="font-m text-[12px] text-muted text-center">this is your rec — share the link.</div>;
+    return <div className="font-m text-[12px] text-muted text-center">this is your rec. share the link.</div>;
   }
 
   async function claim() {

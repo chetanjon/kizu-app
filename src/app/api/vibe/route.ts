@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const { count } = await admin.from("items").select("id", { count: "exact", head: true }).eq("group_id", group_id);
   if ((count ?? 0) < MIN_VIBE_DROPS) {
     return NextResponse.json(
-      { error: `drop at least ${MIN_VIBE_DROPS} things first — the vibe read needs something to read (${count ?? 0}/${MIN_VIBE_DROPS}).` },
+      { error: `drop at least ${MIN_VIBE_DROPS} things first. the vibe read needs something to read (${count ?? 0}/${MIN_VIBE_DROPS}).` },
       { status: 400 }
     );
   }

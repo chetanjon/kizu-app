@@ -25,10 +25,10 @@ function NewGroupInner() {
         body: JSON.stringify({ name, color }),
       });
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) { setErr(j.error || `error ${res.status} — check server env vars`); return; }
+      if (!res.ok) { setErr(j.error || `error ${res.status}. check server env vars`); return; }
       router.push("/home");
     } catch {
-      setErr("network error — try again");
+      setErr("network error. try again");
     } finally {
       setBusy(false);
     }
@@ -47,7 +47,7 @@ function NewGroupInner() {
       if (!res.ok) { setErr(j.error || `error ${res.status}`); return; }
       router.push("/home");
     } catch {
-      setErr("network error — try again");
+      setErr("network error. try again");
     } finally {
       setBusy(false);
     }

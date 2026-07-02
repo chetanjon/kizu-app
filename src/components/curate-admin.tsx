@@ -67,7 +67,7 @@ export default function CurateAdmin() {
       setResolved((j.data.title as string) || (j.data.place_name as string) || "resolved");
       setMsg(null);
     } else {
-      setMsg(j.reason || "couldn't resolve — use manual title");
+      setMsg(j.reason || "couldn't resolve. use manual title");
     }
   }
 

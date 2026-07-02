@@ -125,7 +125,7 @@ export default async function Queue() {
       {rows.length === 0 ? (
         <div className="mt-8 border-[2px] border-dashed border-frame rounded-2xl p-12 text-center">
           <div className="font-h text-xl font-bold">nothing saved yet.</div>
-          <p className="text-muted text-sm mt-1">tap <b>＋ save</b> on anything your people — or kizu — drop.</p>
+          <p className="text-muted text-sm mt-1">tap <b>＋ save</b> on anything your people or kizu drop.</p>
           <Link href="/home" className="inline-block mt-5 font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full px-5 py-2.5 shadow-[3px_3px_0_#0D0B09]">go to home</Link>
         </div>
       ) : (

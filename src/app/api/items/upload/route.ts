@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       .toBuffer({ resolveWithObject: true });
     out = data; width = info.width; height = info.height;
   } catch {
-    return NextResponse.json({ error: "couldn't read that image — try a different photo" }, { status: 400 });
+    return NextResponse.json({ error: "couldn't read that image. try a different photo" }, { status: 400 });
   }
 
   const path = `groups/${group_id}/${crypto.randomUUID()}.webp`;

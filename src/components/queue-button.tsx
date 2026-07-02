@@ -52,7 +52,7 @@ export default function QueueButton({
         onClick={toggle}
         disabled={busy}
         aria-pressed={queued}
-        aria-label={queued ? "saved — tap to remove from your watchlist" : "save to your watchlist"}
+        aria-label={queued ? "saved. tap to remove from your watchlist" : "save to your watchlist"}
         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 disabled:opacity-60 ${
           queued ? "text-vibe-2" : "text-ink-2 hover:text-vibe-2"
         }`}

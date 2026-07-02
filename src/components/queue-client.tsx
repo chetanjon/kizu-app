@@ -95,7 +95,7 @@ export default function QueueClient({ rows, musicApp = null, surprisePool = [] }
         </div>
         <div className="min-w-0 flex-1">
           {/* "up next" stays loud — a reserved kizu signal, not chrome */}
-          {r.key === upNextKey && <span title="easiest to start right now — a song plays instantly, a movie you have is one tap" className="inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 mb-1">↑ up next</span>}
+          {r.key === upNextKey && <span title="easiest to start right now: a song plays instantly, a movie you have is one tap" className="inline-block font-m text-[8px] font-bold border-[1.5px] border-vibe text-vibe rounded px-1.5 py-0.5 mb-1">↑ up next</span>}
           <h3 className="font-h font-extrabold text-[16px] leading-tight line-clamp-1">{title(r)}</h3>
           <div className="font-m text-[10px] text-muted truncate mt-0.5">
             <span className="font-bold" style={{ color: t.color }}>{typeWord(r)}</span>{detail(r) && <> · {detail(r)}</>}{r.who ? ` · ${r.who.toLowerCase()}` : ""}

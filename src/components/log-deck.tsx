@@ -137,7 +137,7 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
       {n === 0 ? (
         <div className="font-m text-[11px] text-muted py-24 leading-relaxed">
           {lens === "all"
-            ? <>nothing logged yet — hit <b className="text-ink-2">＋</b> and pick <b className="text-ink-2">just me</b>.</>
+            ? <>nothing logged yet. hit <b className="text-ink-2">＋</b> and pick <b className="text-ink-2">just me</b>.</>
             : <>no {PICKS.find((p) => p.k === lens)?.label} logged yet.</>}
         </div>
       ) : (

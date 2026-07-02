@@ -61,7 +61,7 @@ export default function InstallPrompt({ inline = false }: { inline?: boolean }) 
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[2px] border-frame bg-surface-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 14V4" /><path d="M8.5 7.5 12 4l3.5 3.5" /><path d="M6 12v6.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V12" /></svg>
           </span>
-          <span>tap <b>Share</b> — the box-with-an-arrow at the <b>bottom</b> of Safari</span>
+          <span>tap <b>Share</b>, the box-with-an-arrow at the <b>bottom</b> of Safari</span>
         </div>
         <div className="flex items-center gap-2.5">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[2px] border-frame bg-surface-2">
@@ -70,7 +70,7 @@ export default function InstallPrompt({ inline = false }: { inline?: boolean }) 
           <span>choose <b>Add to Home Screen</b></span>
         </div>
       </div>
-      <div className="mt-2.5 font-m text-[11px] text-muted">then open it from your home screen — it stays signed in.</div>
+      <div className="mt-2.5 font-m text-[11px] text-muted">then open it from your home screen. it stays signed in.</div>
     </div>
   ) : null;
 

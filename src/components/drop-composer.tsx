@@ -133,9 +133,9 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
           const s = await (await fetch(`/api/search?type=watch&q=${encodeURIComponent(r.query)}`)).json();
           const list = (s.results ?? []) as Picked[];
           if (list.length) { setResults(list); setMsg("pick the film:"); }
-          else setMsg("couldn't read that link — type the movie's name");
+          else setMsg("couldn't read that link. type the movie's name");
         } else {
-          setMsg(r.reason || "couldn't resolve — type the title instead");
+          setMsg(r.reason || "couldn't resolve. type the title instead");
         }
       } else {
         // typed a title → search (movies=TMDB, music=iTunes) and show a pick-list
@@ -150,7 +150,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             : { data: { title: v, artist: null }, title: v, sub: "", img: null });
         }
       }
-    } catch { setMsg("something went wrong — try again"); }
+    } catch { setMsg("something went wrong. try again"); }
     setBusy(false);
   }
 
@@ -245,7 +245,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
 
       {tab === "go_out" ? (
         <div className="flex flex-col gap-3">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="place name — e.g. Cafe Mogador"
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="place name, e.g. Cafe Mogador"
             className="w-full bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[15px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
           <div className="flex gap-2 flex-wrap">
             {SUBTYPES.map((s) => (
@@ -254,7 +254,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
             ))}
           </div>
           {["bar", "brewery", "pub"].includes(subtype) && (
-            <input value={musicNote} onChange={(e) => setMusicNote(e.target.value)} placeholder="music vibe (optional) — e.g. italo + funk"
+            <input value={musicNote} onChange={(e) => setMusicNote(e.target.value)} placeholder="music vibe (optional), e.g. italo + funk"
               className="w-full bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
           )}
           <div className="flex items-center gap-3 mt-1">
@@ -329,7 +329,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
         className="w-full mt-4 bg-surface border-[2.5px] border-frame rounded-xl px-3.5 py-3 text-[14px] outline-none focus:shadow-[3px_3px_0_#6B4BD6]" />
 
       {log ? (
-        <p className="mt-4 font-m text-[11px] text-muted">kept in your <b className="text-ink-2">log</b> — only you see it. it still shapes your taste signature.</p>
+        <p className="mt-4 font-m text-[11px] text-muted">kept in your <b className="text-ink-2">log</b>. only you see it. it still shapes your taste signature.</p>
       ) : (
       <div className="mt-4">
         <div className="font-m text-[10px] font-bold tracking-widest uppercase text-muted mb-2">drop it for… (optional)</div>
@@ -385,7 +385,7 @@ export default function DropComposer({ groupId, members = [] }: { groupId: strin
 
       {shareUrl ? (
         <div className="mt-5 bg-surface border-[2.5px] border-frame rounded-xl p-3.5">
-          <div className="font-h font-bold text-sm">your rec link — send it to them.</div>
+          <div className="font-h font-bold text-sm">your rec link. send it to them.</div>
           <div className="font-m text-[10px] text-muted mt-0.5">they see just this one thing, can react, and join if they want.</div>
           <input readOnly value={shareUrl} onClick={(e) => e.currentTarget.select()} className="w-full mt-2 bg-surface-2 border-[2px] border-frame rounded-lg px-2.5 py-2 text-[12px] font-m" />
           <div className="flex gap-2 mt-2">

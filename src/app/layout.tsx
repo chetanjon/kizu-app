@@ -22,12 +22,12 @@ const spaceMono = Space_Mono({
 });
 
 const DESC =
-  "A private taste space for you and your people. Drop the movies, music, and places you love — and let an AI read your group's vibe back to you.";
+  "A private taste space for you and your people. Drop the movies, music, and places you love, and let an AI read your group's vibe back to you.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kizu.app"),
   title: {
-    default: "kizu — good taste runs in the group",
+    default: "kizu · good taste runs in the group",
     template: "%s · kizu",
   },
   description: DESC,
@@ -38,12 +38,12 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://kizu.app",
     siteName: "kizu",
-    title: "kizu — good taste runs in the group",
+    title: "kizu · good taste runs in the group",
     description: DESC,
   },
   twitter: {
     card: "summary_large_image",
-    title: "kizu — good taste runs in the group",
+    title: "kizu · good taste runs in the group",
     description: DESC,
   },
   appleWebApp: { capable: true, title: "kizu", statusBarStyle: "default" },

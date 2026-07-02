@@ -73,7 +73,7 @@ function landedTake(ns: string[], type: DropType, idx: number): string {
   }
   const n = ns[0];
   const verb = type === "listen" ? "had it on repeat" : type === "watch" ? "couldn't stop thinking about it" : "went, and loved it";
-  const opts = [`${n} loved the one you dropped.`, `${n} ${verb} — your pick.`, `landed with ${n}. your drop.`];
+  const opts = [`${n} loved the one you dropped.`, `${n} ${verb}. your pick.`, `landed with ${n}. your drop.`];
   return opts[idx % opts.length];
 }
 
@@ -360,7 +360,7 @@ export default async function Home() {
                   <CurateRiver initial={curate} queuedIds={queuedCurate} nextOffset={RIVER_PAGE} done={curate.length < RIVER_PAGE} />
                 </>
               ) : (
-                <div className="mt-10 text-center font-m text-[12px] text-muted">nothing here yet — kizu curate is still picking.</div>
+                <div className="mt-10 text-center font-m text-[12px] text-muted">nothing here yet. kizu curate is still picking.</div>
               )
             }
           />

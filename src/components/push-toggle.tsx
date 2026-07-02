@@ -99,7 +99,7 @@ export default function PushToggle() {
   if (state === "blocked") {
     return (
       <div className={shell}>
-        <span className="font-m text-[12px] text-muted">notifications are blocked — turn them on in your browser settings.</span>
+        <span className="font-m text-[12px] text-muted">notifications are blocked. turn them on in your browser settings.</span>
       </div>
     );
   }

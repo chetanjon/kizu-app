@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 // ink border + the one allowed red dot. Generated at build — no asset, $0.
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "kizu — good taste runs in the group";
+export const alt = "kizu · good taste runs in the group";
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -39,7 +39,7 @@ export default function OpengraphImage() {
             good taste runs in the group.
           </div>
           <div style={{ fontSize: 30, color: "#5b524a", marginTop: 28, maxWidth: 880 }}>
-            a private taste space for you and your people — movies, music, and places you love.
+            a private taste space for you and your people. movies, music, and places you love.
           </div>
         </div>
       </div>

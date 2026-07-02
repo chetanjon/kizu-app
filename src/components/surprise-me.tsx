@@ -69,7 +69,7 @@ export default function SurpriseMe({ pool, musicApp, label }: { pool: Cand[]; mu
     <>
       <button onClick={launch}
         className="w-full mb-6 rounded-2xl border-[2.5px] border-frame bg-vibe text-white px-5 py-3.5 shadow-[4px_5px_0_#7C5CE6] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-transform flex items-center justify-center gap-2.5 font-h font-extrabold text-[15px]">
-        <span className="text-[18px]" aria-hidden>🎲</span> can&apos;t decide? — surprise me
+        <span className="text-[18px]" aria-hidden>🎲</span> can&apos;t decide? surprise me
       </button>
 
       {open && (
