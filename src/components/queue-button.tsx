@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation";
 // - "pill" (default): "＋ save" / "✓ saved" text pill (curate river, etc.)
 // - "icon": a bookmark on the card's cover — outline when unsaved, filled violet
 //   when saved. This IS the watchlist save; the watchlist is the product.
-// - "action": the feed drawer's 42px action-row pill, sized to sit beside
-//   "where to watch" / share.
+// - "action": a 42px action-row text pill.
+// - "flag": the feed drawer's save-for-later — a 42px circle carrying the
+//   bookmark flag alone (outline → filled violet), no words needed.
 export default function QueueButton({
   itemId,
   curateDropId,
@@ -18,7 +19,7 @@ export default function QueueButton({
   itemId?: string;
   curateDropId?: string;
   initialQueued: boolean;
-  variant?: "pill" | "icon" | "action";
+  variant?: "pill" | "icon" | "action" | "flag";
 }) {
   const [queued, setQueued] = useState(initialQueued);
   const [busy, setBusy] = useState(false);
@@ -59,6 +60,25 @@ export default function QueueButton({
         }`}
       >
         <svg width="19" height="19" viewBox="0 0 24 24" fill={queued ? "currentColor" : "none"}
+          stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M6 4.5h12a1 1 0 0 1 1 1V20l-7-4-7 4V5.5a1 1 0 0 1 1-1z" />
+        </svg>
+      </button>
+    );
+  }
+
+  if (variant === "flag") {
+    return (
+      <button
+        onClick={toggle}
+        disabled={busy}
+        aria-pressed={queued}
+        aria-label={queued ? "saved. tap to remove from your watchlist" : "save for later"}
+        className={`w-[42px] h-[42px] flex-none rounded-full flex items-center justify-center border-[1.5px] transition-all active:scale-90 disabled:opacity-60 ${
+          queued ? "bg-vibe border-vibe text-white" : "bg-surface-2 border-frame text-ink-2"
+        }`}
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill={queued ? "currentColor" : "none"}
           stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M6 4.5h12a1 1 0 0 1 1 1V20l-7-4-7 4V5.5a1 1 0 0 1 1-1z" />
         </svg>
