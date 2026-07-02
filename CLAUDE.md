@@ -66,7 +66,7 @@ The app went from 1–2.5s page loads to ~200ms by removing serialized round tri
 7. **`sw.js` caches immutable assets only** (`/_next/static`, cover art). Never cache pages or APIs in the service worker.
 8. **New tabs get a content-shaped `loading.tsx` skeleton** (see `home/loading.tsx`), not a spinner.
 9. **Feed-type queries stay bounded** (`.limit(...)`) — nothing unbounded on the hot path.
-10. **Keep-warm:** `.github/workflows/keep-warm.yml` pings prod every 10 min so Hobby cold starts never hit users. Don't delete it without a replacement.
+10. **Keep-warm:** a Supabase pg_cron job (`kizu-keep-warm`, every 5 min, `net.http_get('https://kizu.app/')`) keeps the Hobby lambda warm so cold opens never hit users. GitHub Actions cron proved too throttled for this (`keep-warm.yml` stays as a free backup layer). Don't remove the pg_cron job without a replacement; check it with `select * from cron.job`.
 
 ---
 

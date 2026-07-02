@@ -1,8 +1,9 @@
-# Keep the Vercel function warm. Hobby-tier lambdas cold-start after idling
-# (~1s+ added to the first open after a quiet stretch — exactly the "open the
-# app after work" moment). A tiny ping every 10 minutes keeps that from ever
-# being user-visible. Free on a public repo; delete this file to turn it off.
-# Note: GitHub pauses schedules after 60 days without repo activity.
+# BACKUP warmer only. GitHub throttles high-frequency schedules on quiet
+# repos to near-zero (this fired ONCE in its first 12 hours), so the real
+# keep-warm is a Supabase pg_cron job ("kizu-keep-warm", every 5 min,
+# net.http_get to kizu.app — see cron.job in the project DB). This stays as
+# a free second layer; delete it if it ever causes noise.
+# Note: GitHub also pauses schedules after 60 days without repo activity.
 name: keep-warm
 on:
   schedule:
