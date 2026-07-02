@@ -2,12 +2,17 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { availabilityMap } from "@/lib/providers";
 import { NextResponse } from "next/server";
 
-// Keep-warm + cache-warm in one. The Supabase pg_cron job hits this every
-// 5 minutes:
-//  1. the request itself keeps the Vercel function warm (no cold starts), and
-//  2. running availabilityMap over the recent watch drops re-primes the 24h
-//     TMDB data cache, so no real person ever pays those external fetches —
-//     the first open of the day was eating 2s+ exactly there.
+// Cache-warm ONLY. The Supabase pg_cron job hits this every 5 minutes to
+// re-prime the 24h TMDB data cache over the recent watch drops, so no real
+// person ever pays those external fetches — the first open of the day was
+// eating 2s+ exactly there.
+//
+// This route does NOT keep the page lambda warm: maxDuration=60 is a
+// different function config, so Vercel builds it as its OWN lambda, separate
+// from the pages. (Learned the hard way: pointing the cron only here brought
+// back 3s+ cold TTFBs on /home while this lambda sat toasty.) The pg_cron
+// job therefore pings BOTH https://kizu.app/ — the root page shares the
+// pages lambda, which is what actually prevents cold opens — and this route.
 //
 // Deliberately UNAUTHED (unlike the other cron routes): so the pg_cron job
 // carries no secret in its SQL. Safe because the work is fixed and bounded
