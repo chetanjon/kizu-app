@@ -51,6 +51,23 @@ Route-handler writes with the user-scoped Supabase client hit `new row violates 
 
 ---
 
+## Performance rules — LOAD-BEARING (perf overhaul 2026-07-01; don't regress)
+
+The app went from 1–2.5s page loads to ~200ms by removing serialized round trips. Every new feature must honor these:
+
+1. **Never add a sequential `await` to a page's data path.** Batch independent queries in ONE `Promise.all`; enrichments (`signPhotos` / `availabilityMap` / `fetchPositiveVerdicts`) run together in a second batch after the rows land. Look at `home/page.tsx` for the canonical shape.
+2. **Auth is verified locally.** Middleware + `getCurrentUser()` use `supabase.auth.getClaims()` (ES256, no network). Never reintroduce `auth.getUser()` on the page/middleware path. `getCurrentUser()` returns a slim `{ id, email }` — need more user fields? Query `users` inside your page's Promise.all.
+3. **Tab pages reuse the layout's request-memoized `getMemberships`** (`@/lib/auth`) — never re-query `group_members` for the active group.
+4. **External fetches in the render path need a hard timeout** (`AbortSignal.timeout`) + `next: { revalidate }`. See `providers.ts`.
+5. **Covers:** list surfaces (feed, reel, watchlist rows, grids) use `imgSm()` (w342); only single-card/detail surfaces use `img()` (w500).
+6. **Client router cache is ON** (`staleTimes.dynamic: 30`). Any mutation whose result must appear on another tab (save, drop, delete, verdict) MUST call `router.refresh()` after success — otherwise it looks lost for up to 30s.
+7. **`sw.js` caches immutable assets only** (`/_next/static`, cover art). Never cache pages or APIs in the service worker.
+8. **New tabs get a content-shaped `loading.tsx` skeleton** (see `home/loading.tsx`), not a spinner.
+9. **Feed-type queries stay bounded** (`.limit(...)`) — nothing unbounded on the hot path.
+10. **Keep-warm:** `.github/workflows/keep-warm.yml` pings prod every 10 min so Hobby cold starts never hit users. Don't delete it without a replacement.
+
+---
+
 ## Brand DNA — visual constraints (source of truth: `src/app/globals.css`)
 
 Locked direction (rebranded 2026-06-29, light→dark): **cinematic-brutalist-glass** — a dark warm-black stage, brutalist cream frames with hard blur-less shadows, glass on floating layers. Roughly 50 brutalist / 25 cinematic-dark / 25 glass. *(The earlier light "neo-brutal cream paper" direction is retired; `CLAUDE-old.md`-era. Real poster/album/place art is the design — chrome gets out of its way.)*
