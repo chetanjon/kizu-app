@@ -52,7 +52,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   // cover art — poster/artwork urls never change content
-  if (url.hostname === "image.tmdb.org" || url.hostname.endsWith("mzstatic.com")) {
+  if (url.hostname === "image.tmdb.org" || url.hostname.endsWith("mzstatic.com") || url.hostname === "i.ytimg.com") {
     event.respondWith(cacheFirst(IMG_CACHE, req, IMG_MAX));
     return;
   }

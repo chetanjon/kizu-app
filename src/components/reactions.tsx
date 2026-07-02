@@ -73,7 +73,7 @@ export default function Reactions({
       <span className="relative flex items-center gap-1.5">
         {Object.entries(counts).map(([e, c]) => (
           <button key={e} onClick={() => toggle(e)} aria-label={`${e} reaction, ${c.n} — tap to toggle yours`} aria-pressed={c.mine}
-            className={`font-m text-[11px] font-bold rounded-full px-2 py-[3px] ${c.mine ? "bg-vibe text-white" : "bg-surface-2 text-ink-2"}`}>
+            className={`font-m text-[11px] font-bold rounded-full px-1.5 py-[3px] whitespace-nowrap shrink-0 ${c.mine ? "bg-vibe text-white" : "bg-surface-2 text-ink-2"}`}>
             {e} {c.n}
           </button>
         ))}

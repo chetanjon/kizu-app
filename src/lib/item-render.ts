@@ -29,9 +29,22 @@ type RenderItem = { type: DropType; data: Record<string, unknown> | null | undef
 
 const s = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
 
+// Odesli sometimes returns no artwork for YouTube tracks → the card renders a
+// blank color block. Fall back to the video's own thumbnail, derived from the
+// stored links (i.ytimg.com/vi/<id>/hqdefault.jpg exists for every video).
+function ytThumb(it: RenderItem): string | null {
+  if (it.type !== "listen") return null;
+  const d = it.data ?? {};
+  const links = (d["platform_links"] && typeof d["platform_links"] === "object")
+    ? (d["platform_links"] as Record<string, unknown>) : {};
+  const url = s(links["youtube"]) || s(links["youtubeMusic"]) || s(d["source_url"]);
+  const m = url?.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` : null;
+}
+
 export function img(it: RenderItem): string | null {
   const d = it.data ?? {};
-  return s(d["poster_url"]) || s(d["artwork_url"]) || s(d["photo_url"]) || null;
+  return s(d["poster_url"]) || s(d["artwork_url"]) || s(d["photo_url"]) || ytThumb(it) || null;
 }
 
 // Small-cover variant for LIST surfaces (feed cards, reel tiles, watchlist

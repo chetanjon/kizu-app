@@ -52,14 +52,34 @@ export function actionsFor(item: ActItem, musicApp?: string | null, suggestApp =
     // else a search in that app, so it always works.
     if (musicApp) {
       const out: Action[] = [];
-      const primary = appPill(musicApp, links, d);
-      if (primary) { primary.primary = true; out.push(primary); } // their app → highlighted
-      // universal second option: yt music (free, has ~everything) — or spotify
-      // when they already picked yt music as their app.
-      const secondSlug = musicApp === "youtubeMusic" ? "spotify" : "youtubeMusic";
-      const second = appPill(secondSlug, links, d);
-      if (second) out.push(second);
-      if (out.length) return out;
+      const direct = str(links[musicApp]);
+      if (direct) {
+        out.push({ label: MUSIC_APPS.find((a) => a.slug === musicApp)?.pill ?? "play", url: direct, kind: "play", primary: true });
+        // universal second option: yt music (free, has ~everything) — or spotify
+        // when they already picked yt music as their app.
+        const secondSlug = musicApp === "youtubeMusic" ? "spotify" : "youtubeMusic";
+        const second = appPill(secondSlug, links, d);
+        if (second) out.push(second);
+        return out;
+      }
+      // Their app has NO match for this song (odesli linked it elsewhere but not
+      // here — e.g. a YouTube-only track a Spotify person is viewing). A search
+      // in their app would dead-end, so lead with a link that actually PLAYS;
+      // their-app search rides along as the second option. yt/yt-music first:
+      // free, no subscription needed.
+      const altOrder = ["youtubeMusic", "youtube", "spotify", "apple", "soundcloud", "tidal", "deezer", "amazon"];
+      const altKey = altOrder.find((k) => k !== musicApp && str(links[k]));
+      if (altKey) {
+        const label = MUSIC_PRIORITY.find((p) => p.key === altKey)?.label ?? "listen";
+        out.push({ label, url: str(links[altKey])!, kind: "play", primary: true });
+        const mine = appPill(musicApp, links, d);
+        if (mine) out.push(mine);
+        return out;
+      }
+      // no platform links at all (manual drop / odesli miss) → honest best
+      // effort: a search in their app. The song may well be there.
+      const search = appPill(musicApp, links, d);
+      if (search) { search.primary = true; return [search]; }
     }
 
     // no app picked → the song's available play pills + a clear prompt to pick one

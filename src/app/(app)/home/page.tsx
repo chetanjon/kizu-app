@@ -40,6 +40,11 @@ type Item = {
 // hook color = a light tint of the drop's type color (landed uses violet).
 const HOOK_TINT: Record<DropType, string> = { watch: "#C9DBFF", listen: "#FFC7DA", go_out: "#C4F5E1" };
 
+// cover placeholder glyph for drops with no art anywhere (manual drops of
+// tracks/places no catalog knows) — a quiet mark on the type color, so the
+// card reads designed instead of broken.
+const COVER_GLYPH: Record<DropType, string> = { watch: "▷", listen: "♪", go_out: "↗" };
+
 // positive-verdict voter names for a drop, excluding some ids, lowercased & deduped.
 function voterNames(voters: Voter[] | undefined, excludeIds: string[]): string[] {
   if (!voters?.length) return [];
@@ -265,20 +270,28 @@ export default async function Home() {
                   ? it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id, name: r.users?.name ?? null }))
                   : it.reactions.map((r) => ({ emoji: r.emoji, user_id: r.user_id }));
                 const dropperName = (it.users?.name || "someone").toLowerCase();
+                // footer shows the FIRST name only — full names get chopped mid-word
+                // ("myla…") once reactions + the act pill claim the row; full name
+                // stays available on hover/long-press via title.
+                const dropperFirst = dropperName.split(" ")[0];
                 const avatarCh = it.anon ? (mine ? "Y" : "?") : dropperName.slice(0, 1).toUpperCase();
                 // the single "act on it" — for music this resolves to THEIR picked
                 // subscription app (actionsFor returns it as the primary); for film
                 // "where to watch" / "you have it", for places "open in maps".
                 const acts = availMap.get(it.id) ? [availMap.get(it.id)!] : actionsFor(it, myMusicApp, false);
                 const act = acts.find((a) => a.kind !== "set") ?? null;
+                // the footer is one tight line — compact the two widest labels so the
+                // dropper's name survives next to them ("where to watch" ate the row).
+                const actLabel = act ? (act.kind === "watch" ? "watch" : act.kind === "map" ? "maps" : act.label) : null;
                 return (
                   // bigger card: the colored type kicker bar fills the row (the type
                   // signal), big cover with the one corner affordance on a dark scrim,
                   // title hero, the take, an avatar+name footer, one filled act-on-it.
                   <article key={it.id} className="relative flex gap-4 py-6 border-t border-hair first:border-t-0">
                     <div className={`relative w-[116px] h-[174px] flex-none rounded-[12px] border-[2.5px] border-frame overflow-hidden bg-surface-2 ${SHADOW[it.type]}`} style={{ background: cover ? undefined : t.color }}>
-                      {cover && <img src={cover} alt="" loading="lazy" decoding="async"
-                          className="w-full h-full object-cover object-center" />}
+                      {cover ? <img src={cover} alt="" loading="lazy" decoding="async"
+                          className="w-full h-full object-cover object-center" />
+                        : <span aria-hidden className="absolute inset-0 flex items-center justify-center text-[44px] text-[#15110D]/30 select-none">{COVER_GLYPH[it.type]}</span>}
                       {/* the card's one affordance, on a dark scrim so it reads over any art:
                           ⋯ delete on your own drops · bookmark (save→watchlist) on others' */}
                       <div className="absolute top-1.5 right-1.5 z-10 rounded-full bg-black/45 backdrop-blur-sm">
@@ -297,7 +310,7 @@ export default async function Home() {
                       {forYou && (
                         <div className="mt-1.5 inline-flex w-fit items-center rounded-full bg-vibe/20 border border-vibe/40 px-2.5 py-1 font-h font-bold text-[11px] text-vibe-2"
                           title={`${dropperName} dropped this only for you`}>
-                          just for you · from {dropperName}
+                          just for you · from {dropperFirst}
                         </div>
                       )}
                       {/* your own targeted drop — a quiet reminder it went privately */}
@@ -309,18 +322,18 @@ export default async function Home() {
 
                       {/* one engagement line, bottom-aligned to the cover:
                           avatar · who · their reactions ........ act on it */}
-                      <div className="mt-auto pt-3 flex items-center gap-1.5 min-w-0">
-                        <span className="w-[26px] h-[26px] flex-none rounded-full bg-surface-2 border border-hair flex items-center justify-center font-h font-extrabold text-[11px] text-ink-2">{avatarCh}</span>
-                        <span className="font-m text-[12px] text-ink-2 truncate min-w-0">{it.anon ? (mine ? "you · anon" : "someone") : dropperName}</span>
+                      <div className="mt-auto pt-3 flex items-center gap-1 min-w-0">
+                        <span className="w-[24px] h-[24px] flex-none rounded-full bg-surface-2 border border-hair flex items-center justify-center font-h font-extrabold text-[11px] text-ink-2">{avatarCh}</span>
+                        <span className="font-m text-[11px] text-ink-2 truncate min-w-0" title={it.anon ? undefined : dropperName}>{it.anon ? (mine ? "you · anon" : "someone") : dropperFirst}</span>
                         <Reactions itemId={it.id} initial={rx} userId={user.id} canSeeWho={mine} compact />
                         {act && (
                           <a href={act.url} {...(act.kind === "set" ? {} : { target: "_blank", rel: "noreferrer" })}
-                            className={`ml-auto flex-none font-h text-[12px] font-bold rounded-full px-3 py-2 transition-all active:scale-95 ${
+                            className={`ml-auto flex-none font-h text-[12px] font-bold rounded-full px-2.5 py-2 transition-all active:scale-95 ${
                               act.kind === "have" ? "bg-go text-[#15110D]"
                               : act.primary ? "bg-vibe text-white"
                               : "bg-surface-2 text-ink border-[1.5px] border-frame"
                             }`}>
-                            {act.kind === "have" ? `✓ ${act.label}` : act.label}
+                            {actLabel}
                           </a>
                         )}
                       </div>

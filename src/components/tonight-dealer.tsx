@@ -138,7 +138,7 @@ export default function TonightDealer({ pool, musicApp = null, initialLens = nul
                   : act.primary ? "bg-vibe text-white"
                   : "glass text-white border border-white/30"
                 }`}>
-                {act.kind === "have" ? `✓ ${act.label}` : act.label}
+                {act.label}
               </a>
             )}
           </div>

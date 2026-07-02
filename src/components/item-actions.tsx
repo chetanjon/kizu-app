@@ -3,7 +3,8 @@
 import type { Action } from "@/lib/item-actions";
 
 // Play pills carry no glyph — the brand-colored border IS the affordance.
-const GLYPH: Record<Action["kind"], string> = { play: "", watch: "▷", map: "↗", have: "✓", set: "+" };
+// "have" carries none either: the green tint + service name already say you own it.
+const GLYPH: Record<Action["kind"], string> = { play: "", watch: "▷", map: "↗", have: "", set: "+" };
 
 // Music services get their own brand-colored border so you recognise them at a
 // glance: spotify green, youtube/yt-music red. Kept dim (~45% alpha) so they sit
