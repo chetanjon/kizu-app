@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // Save-to-watchlist toggle. Target is a group item or a curate pick.
 // - "pill" (default): "＋ save" / "✓ saved" text pill (curate river, etc.)
@@ -20,6 +21,7 @@ export default function QueueButton({
 }) {
   const [queued, setQueued] = useState(initialQueued);
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
   const body = itemId ? { item_id: itemId } : { curate_drop_id: curateDropId };
 
   async function toggle() {
@@ -34,6 +36,9 @@ export default function QueueButton({
         body: JSON.stringify(body),
       });
       if (!res.ok) setQueued(!next);
+      // bust the client router cache (staleTimes) so hopping straight to the
+      // watchlist tab shows this save — never a "where did it go?" moment.
+      else router.refresh();
     } catch {
       setQueued(!next);
     } finally {

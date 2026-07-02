@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserSignals } from "@/lib/taste-signals";
 import { getTasteMatches } from "@/lib/taste-match";
-import { TYPE, SHADOW, img, title as titleOf, typeWord as typeWordOf, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, imgSm, title as titleOf, typeWord as typeWordOf, type DropType } from "@/lib/item-render";
 import TasteRead from "@/components/taste-read";
 import { SignOutButton } from "@/components/sign-out-button";
 import InstallPrompt from "@/components/install-prompt";
@@ -80,7 +80,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
           <div className="grid grid-cols-3 gap-2.5">
             {signals.picks.map((p, i) => {
               const t = TYPE[p.type as DropType];
-              const cover = img(p);
+              const cover = imgSm(p);
               const showImg = !!cover && cover.startsWith("http");
               return (
                 <div key={i}>

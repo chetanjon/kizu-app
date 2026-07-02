@@ -34,6 +34,16 @@ export function img(it: RenderItem): string | null {
   return s(d["poster_url"]) || s(d["artwork_url"]) || s(d["photo_url"]) || null;
 }
 
+// Small-cover variant for LIST surfaces (feed cards, reel tiles, watchlist
+// thumbs, profile picks) where covers draw at ≤240 CSS px: stored TMDB urls
+// carry w500 (750px files) — w342 is still ≥2× there and cuts bytes ~45%.
+// One shared size across surfaces means the phone downloads each poster once.
+// Single-card/detail surfaces (log deck, tonight, curate river) keep img().
+export function imgSm(it: RenderItem): string | null {
+  const u = img(it);
+  return u ? u.replace("https://image.tmdb.org/t/p/w500/", "https://image.tmdb.org/t/p/w342/") : null;
+}
+
 export function title(it: RenderItem): string {
   const d = it.data ?? {};
   return s(d["title"]) || s(d["place_name"]) || "untitled";

@@ -14,7 +14,7 @@ import FeedTabs from "@/components/feed-tabs";
 import FeedReveal from "@/components/feed-reveal";
 import GroupSwitcher from "@/components/group-switcher";
 import HighlightReel, { type Highlight } from "@/components/highlight-reel";
-import { TYPE, SHADOW, img, title, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW, imgSm, title, type DropType } from "@/lib/item-render";
 import { actionsFor } from "@/lib/item-actions";
 import { fetchPositiveVerdicts, proofLine, type Voter } from "@/lib/social-proof";
 import { createAdminClient } from "@/lib/supabase-admin";
@@ -78,7 +78,7 @@ function landedTake(ns: string[], type: DropType, idx: number): string {
 function buildHighlights(items: Item[], proof: Map<string, Voter[]>, meId: string): Highlight[] {
   const dropper = (it: Item) => (it.anon ? "someone" : (it.users?.name || "someone").toLowerCase());
   const mk = (it: Item, x: { hook: string; hookCol: string; take: string; who: string }): Highlight =>
-    ({ id: it.id, type: it.type, cover: img(it), title: title(it), ...x });
+    ({ id: it.id, type: it.type, cover: imgSm(it), title: title(it), ...x });
 
   const landed: Highlight[] = [], consensus: Highlight[] = [], takes: Highlight[] = [], fresh: Highlight[] = [];
   let li = 0;
@@ -254,7 +254,7 @@ export default async function Home() {
                   <FeedReveal>
               {items.map((it) => {
                 const t = TYPE[it.type];
-                const cover = img(it);
+                const cover = imgSm(it);
                 const mine = it.created_by === user.id;
                 // targeted + not mine ⇒ I'm a recipient (RLS wouldn't show it otherwise).
                 const forYou = it.targeted && !mine;

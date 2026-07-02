@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TYPE, SHADOW_SM, img, title, typeWord, detail, type DropType } from "@/lib/item-render";
+import { TYPE, SHADOW_SM, imgSm, title, typeWord, detail, type DropType } from "@/lib/item-render";
 import { actionsFor, type Action } from "@/lib/item-actions";
 import ItemActions from "@/components/item-actions";
 import SurpriseMe from "@/components/surprise-me";
@@ -84,7 +84,7 @@ export default function QueueClient({ rows, musicApp = null, surprisePool = [] }
 
   const Row = ({ r }: { r: QRow }) => {
     const t = TYPE[r.type];
-    const cover = img(r);
+    const cover = imgSm(r);
     // one act-on-it — their subscription app for music, "you have it" / "where
     // to watch" for film, "maps" for places.
     const act = r.availability ?? actionsFor(r, musicApp, false).find((a) => a.kind !== "set") ?? null;
