@@ -11,7 +11,9 @@ if (configured) {
 
 // `kind` is an optional marker echoed into the notification's data so the app
 // can find and auto-dismiss a class of notifications later (e.g. "drop").
-export type PushPayload = { title: string; body?: string; url?: string; kind?: string };
+// `tag` collapses same-tag notifications into ONE tray entry (used to de-dupe a
+// burst of kizu-curate pings into a single "kizu drop.").
+export type PushPayload = { title: string; body?: string; url?: string; kind?: string; tag?: string };
 
 // Send a web push to all of a user's subscriptions. No-ops if VAPID isn't
 // configured (safe to deploy before the env vars exist). Never throws.

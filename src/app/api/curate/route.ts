@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { sendPushToUser } from "@/lib/push";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 // Founder-only Curate admin API. Gated by FOUNDER_EMAIL (one founder, no DB role).
@@ -10,6 +12,24 @@ async function gate() {
   const founder = process.env.FOUNDER_EMAIL;
   if (!user || !founder || user.email !== founder) return null;
   return user;
+}
+
+// Curate is global (not group-scoped), so a published pick pings EVERYONE with a
+// push subscription — honoring the same drop-ping mute, skipping the founder who
+// just published. The fixed `tag` collapses a burst of publishes into ONE tray
+// entry. Cryptic + push-only, like member drops (no in-app row). Awaited, not
+// fire-and-forget: serverless freezes work after the response.
+async function pingKizuDrop(admin: SupabaseClient, exceptUserId: string) {
+  const { data: subs } = await admin.from("push_subscriptions").select("user_id");
+  const userIds = [...new Set((subs ?? []).map((s) => s.user_id as string))].filter((id) => id !== exceptUserId);
+  if (!userIds.length) return;
+  const { data: muted } = await admin.from("users").select("id").eq("mute_drop_pings", true).in("id", userIds);
+  const mutedSet = new Set((muted ?? []).map((u) => u.id as string));
+  await Promise.all(
+    userIds
+      .filter((id) => !mutedSet.has(id))
+      .map((id) => sendPushToUser(admin, id, { title: "kizu drop.", url: "/home", kind: "drop", tag: "kizu-drop" })),
+  );
 }
 
 // list everything (drops + their person) for the admin view.
@@ -25,7 +45,8 @@ export async function GET() {
 
 // create a curate drop (and its person, if new).
 export async function POST(req: Request) {
-  if (!(await gate())) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const user = await gate();
+  if (!user) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const b = await req.json().catch(() => ({}));
   const admin = createAdminClient();
 
@@ -63,12 +84,15 @@ export async function POST(req: Request) {
     })
     .select("id").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  // created straight to published → it just went live, so ping the world.
+  if (b.published === true) await pingKizuDrop(admin, user.id);
   return NextResponse.json({ id: drop.id });
 }
 
 // toggle published / edit fields by drop id.
 export async function PATCH(req: Request) {
-  if (!(await gate())) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const user = await gate();
+  if (!user) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const b = await req.json().catch(() => ({}));
   const admin0 = createAdminClient();
 
@@ -89,8 +113,18 @@ export async function PATCH(req: Request) {
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: "nothing to update" }, { status: 400 });
 
   const admin = createAdminClient();
+  // detect a genuine unpublished→published transition so editing a LIVE drop
+  // (still published) never re-pings the world.
+  const goingLive = patch.published === true;
+  let wasPublished = true;
+  if (goingLive) {
+    const { data: cur } = await admin.from("curate_drops").select("published").eq("id", id).maybeSingle();
+    wasPublished = cur?.published === true;
+  }
+
   const { error } = await admin.from("curate_drops").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (goingLive && !wasPublished) await pingKizuDrop(admin, user.id);
   return NextResponse.json({ ok: true });
 }
 
