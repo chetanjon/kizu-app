@@ -6,10 +6,15 @@ import { createClient } from "@/lib/supabase-server";
 // they share ONE network round-trip instead of one each — the layout's auth
 // guard no longer doubles the cost of every tab navigation.
 
+// getClaims verifies the JWT locally against the project's ES256 signing key
+// (JWKS cached in-process) — no round-trip to the Auth server per page view.
+// Pages only ever need id + email; middleware handles token refresh.
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return null;
+  return { id: claims.sub, email: (claims.email as string | undefined) ?? null };
 });
 
 export type Membership = {

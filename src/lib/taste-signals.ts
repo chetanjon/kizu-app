@@ -32,31 +32,35 @@ function titleOf(d: Record<string, unknown>): string {
 }
 
 export async function getUserSignals(admin: Admin, userId: string): Promise<UserSignals> {
-  // 1. My drops (with reaction counts, to surface signature picks).
-  const { data: dropRows } = await admin
-    .from("items")
-    .select("type, data, rating_value, note, created_at, reactions(count)")
-    .eq("created_by", userId)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  // All four reads are independent → one round-trip's latency, not four.
+  // 1. My drops (with reaction counts) · 2. my verdicts · 3./4. recs sent/landed.
+  const [{ data: dropRows }, { data: qRows }, { count: recsSent }, { count: recsLanded }] = await Promise.all([
+    admin
+      .from("items")
+      .select("type, data, rating_value, note, created_at, reactions(count)")
+      .eq("created_by", userId)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    admin
+      .from("queue_items")
+      .select(
+        "verdict, " +
+        "items!queue_items_item_id_fkey(type, data, rating_value, note, created_by), " +
+        "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words)"
+      )
+      .eq("user_id", userId)
+      .not("verdict", "is", null)
+      .limit(100),
+    admin.from("recs").select("id", { count: "exact", head: true }).eq("from_user", userId),
+    admin.from("recs").select("id", { count: "exact", head: true })
+      .eq("from_user", userId).not("landed_at", "is", null),
+  ]);
 
   type DropRow = {
     type: DropType; data: Record<string, unknown> | null; rating_value: string | null;
     note: string | null; created_at: string; reactions: { count: number }[] | null;
   };
   const drops = (dropRows ?? []) as unknown as DropRow[];
-
-  // 2. My verdicts (things I queued from others/curate and judged).
-  const { data: qRows } = await admin
-    .from("queue_items")
-    .select(
-      "verdict, " +
-      "items!queue_items_item_id_fkey(type, data, rating_value, note, created_by), " +
-      "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words)"
-    )
-    .eq("user_id", userId)
-    .not("verdict", "is", null)
-    .limit(100);
 
   type QRow = {
     verdict: "loved" | "liked" | "meh" | null;
@@ -72,13 +76,6 @@ export async function getUserSignals(admin: Admin, userId: string): Promise<User
     if (q.curate_drops) return true;                 // curate is always "theirs"
     return !!q.items && q.items.created_by !== userId; // a friend's drop, not yours
   }).length;
-
-  // 3. Recs I sent — and how many landed (north-star, sender side).
-  const { count: recsSent } = await admin
-    .from("recs").select("id", { count: "exact", head: true }).eq("from_user", userId);
-  const { count: recsLanded } = await admin
-    .from("recs").select("id", { count: "exact", head: true })
-    .eq("from_user", userId).not("landed_at", "is", null);
 
   // ── build the signal list for the read ──
   const signals: TasteSignal[] = [];

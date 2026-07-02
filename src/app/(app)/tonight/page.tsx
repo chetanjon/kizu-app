@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import TonightDealer from "@/components/tonight-dealer";
@@ -14,14 +14,16 @@ export default async function Tonight({ searchParams }: { searchParams: Promise<
   const initialLens = (LENSES as readonly string[]).includes(lensParam ?? "") ? (lensParam as Lens) : null;
   const supabase = await createClient();
 
-  const { data: mRaw } = await supabase
-    .from("group_members").select("group_id, is_home").eq("user_id", user.id);
-  const memberships = (mRaw ?? []) as { group_id: string; is_home: boolean }[];
+  // memoized — the layout already fetched memberships this request.
+  const memberships = await getMemberships(user.id);
   if (memberships.length === 0) redirect("/groups/new");
   const active = memberships.find((m) => m.is_home) ?? memberships[0];
 
-  const pool = await buildPeoplePool(user.id, active.group_id);
-  const { data: me } = await supabase.from("users").select("music_app").eq("id", user.id).maybeSingle();
+  const [pool, meRes] = await Promise.all([
+    buildPeoplePool(user.id, active.group_id),
+    supabase.from("users").select("music_app").eq("id", user.id).maybeSingle(),
+  ]);
+  const me = meRes.data;
 
   return (
     <main className="max-w-[480px] mx-auto px-6 py-10">

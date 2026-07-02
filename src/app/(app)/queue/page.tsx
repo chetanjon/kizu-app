@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import QueueClient, { type QRow } from "@/components/queue-client";
@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { signPhotos } from "@/lib/drop-photos";
 import { availabilityMap } from "@/lib/providers";
 import { cleanServices } from "@/lib/services";
-import { buildSurprisePool } from "@/lib/tonight-pool";
+import { buildPeoplePool, buildSurprisePool } from "@/lib/tonight-pool";
 import type { Cand } from "@/components/tonight-dealer";
 
 type Raw = {
@@ -38,25 +38,37 @@ export default async function Queue() {
   if (!user) redirect("/login");
   const supabase = await createClient();
 
-  const { data: raw } = await supabase
-    .from("queue_items")
-    .select(
-      "item_id, curate_drop_id, verdict, done_at, " +
-      "items!queue_items_item_id_fkey(type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)), " +
-      "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words, curate_people!curate_drops_person_id_fkey(name))"
-    )
-    .eq("user_id", user.id)
-    .order("added_at", { ascending: false });
+  // memberships is request-memoized (the layout already fetched it), so it
+  // resolves instantly — and the surprise-me people pool can then build in
+  // parallel with this page's own reads instead of after all of them.
+  const memberships = await getMemberships(user.id);
+  const activeGroup = memberships.find((m) => m.is_home) ?? memberships[0];
 
-  await signPhotos(createAdminClient(), (raw ?? []) as unknown as Raw[], (r) => (r as { items?: { data?: Record<string, unknown> } }).items?.data);
+  const [rawRes, meRes, people] = await Promise.all([
+    supabase
+      .from("queue_items")
+      .select(
+        "item_id, curate_drop_id, verdict, done_at, " +
+        "items!queue_items_item_id_fkey(type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)), " +
+        "curate_drops!queue_items_curate_drop_id_fkey(type, data, their_words, curate_people!curate_drops_person_id_fkey(name))"
+      )
+      .eq("user_id", user.id)
+      .order("added_at", { ascending: false }),
+    supabase.from("users").select("services, music_app").eq("id", user.id).maybeSingle(),
+    activeGroup ? buildPeoplePool(user.id, activeGroup.group_id) : Promise.resolve([] as Cand[]),
+  ]);
+  const raw = rawRes.data;
+  const me = meRes.data;
 
-  const { data: me } = await supabase.from("users").select("services, music_app").eq("id", user.id).maybeSingle();
-  const availMap = await availabilityMap(
-    ((raw ?? []) as unknown as Raw[])
-      .filter((r) => r.items && r.item_id)
-      .map((r) => ({ id: r.item_id!, type: r.items!.type, data: r.items!.data })),
-    cleanServices(me?.services),
-  );
+  const [, availMap] = await Promise.all([
+    signPhotos(createAdminClient(), (raw ?? []) as unknown as Raw[], (r) => (r as { items?: { data?: Record<string, unknown> } }).items?.data),
+    availabilityMap(
+      ((raw ?? []) as unknown as Raw[])
+        .filter((r) => r.items && r.item_id)
+        .map((r) => ({ id: r.item_id!, type: r.items!.type, data: r.items!.data })),
+      cleanServices(meRes.data?.services),
+    ),
+  ]);
 
   const rows: QRow[] = ((raw ?? []) as unknown as Raw[])
     .map((r): QRow | null => {
@@ -94,10 +106,8 @@ export default async function Queue() {
     .filter((r): r is QRow => r !== null);
 
   // SURPRISE-ME pool = "everything you could do tonight": your watchlist + group
-  // drops + kizu curate + your own logs, de-duped by title (see buildSurprisePool).
-  const { data: mRaw } = await supabase.from("group_members").select("group_id, is_home").eq("user_id", user.id);
-  const memberships = (mRaw ?? []) as { group_id: string; is_home: boolean }[];
-  const activeGroup = memberships.find((m) => m.is_home) ?? memberships[0];
+  // drops + kizu curate, de-duped by title (see buildSurprisePool). The people
+  // pool was fetched above, in parallel — this is just the merge.
   const watchlistWants: Cand[] = rows
     .filter((r) => !r.done)
     .map((r) => ({
@@ -105,9 +115,7 @@ export default async function Queue() {
       type: r.type, data: r.data, note: r.note, who: r.who,
       rating: r.ratingValue, availability: r.availability ?? null, source: "shelf",
     }));
-  const surprisePool: Cand[] = activeGroup
-    ? await buildSurprisePool(user.id, activeGroup.group_id, watchlistWants)
-    : watchlistWants;
+  const surprisePool: Cand[] = buildSurprisePool(watchlistWants, people);
 
   return (
     <main className="max-w-[700px] mx-auto px-6 py-10">

@@ -15,8 +15,11 @@ async function fetchFlatrate(mediaType: "movie" | "tv", tmdbId: number | string)
   const k = process.env.TMDB_API_KEY;
   if (!k) return null;
   try {
+    // hard 2s cap — this runs in the page render path, and an unbounded fetch
+    // would hold the whole page hostage; a miss just means no "you have it" pill.
     const res = await fetch(`${BASE}/${mediaType}/${tmdbId}/watch/providers?api_key=${k}`, {
       next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) return null;
     const us = (await res.json())?.results?.[REGION];

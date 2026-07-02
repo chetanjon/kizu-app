@@ -25,9 +25,10 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Local JWT verification (ES256 signing keys) — validates + refreshes the
+  // session without a network call to the Auth server on every request.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   // /r/<token> is intentionally public (rec-as-invite preview before signup).
   const protectedPaths = ["/home", "/tonight", "/queue", "/you", "/drop", "/groups", "/join", "/admin"];

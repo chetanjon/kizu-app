@@ -21,25 +21,29 @@ export default async function Log() {
   if (!user) redirect("/login");
   const supabase = await createClient();
 
-  const { data: raw } = await supabase
-    .from("items")
-    .select("id, type, data, rating_value, note, private, created_at")
-    .eq("created_by", user.id)
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [rawRes, meRes] = await Promise.all([
+    supabase
+      .from("items")
+      .select("id, type, data, rating_value, note, private, created_at")
+      .eq("created_by", user.id)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase.from("users").select("music_app, services").eq("id", user.id).maybeSingle(),
+  ]);
 
-  const items = (raw ?? []) as unknown as Raw[];
-  await signPhotos(createAdminClient(), items, (it) => it.data);
+  const items = (rawRes.data ?? []) as unknown as Raw[];
+  const musicApp = meRes.data?.music_app ?? null;
 
   // act-on-it buttons for the detail sheet: play-in-your-app / where-to-watch /
   // open-in-maps, plus the green "you have it" pill when a movie streams on a
   // service you've saved. Same merge rule as the feed + read page.
-  const { data: me } = await supabase.from("users").select("music_app, services").eq("id", user.id).maybeSingle();
-  const musicApp = me?.music_app ?? null;
-  const availMap = await availabilityMap(
-    items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
-    cleanServices(me?.services),
-  );
+  const [, availMap] = await Promise.all([
+    signPhotos(createAdminClient(), items, (it) => it.data),
+    availabilityMap(
+      items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
+      cleanServices(meRes.data?.services),
+    ),
+  ]);
 
   const cards: DeckCard[] = items.map((it) => ({
     id: it.id, type: it.type, data: it.data ?? {},

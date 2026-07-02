@@ -25,20 +25,22 @@ export async function getTasteMatches(admin: Admin, userId: string): Promise<Tas
   if (!home) return [];
   const groupId = home.group_id;
 
-  const { data: memRows } = await admin
-    .from("group_members").select("user_id, users(name)").eq("group_id", groupId);
+  // members + group drops are independent → fetch together.
+  // 2. (drops) All GROUP-WIDE drops → per-user "dropped" set + an id→title map.
+  // Private logs and targeted (person-to-person) drops are excluded: they're not
+  // part of the shared taste graph, so they neither leak as evidence nor skew
+  // the score.
+  const [{ data: memRows }, { data: itemRows }] = await Promise.all([
+    admin.from("group_members").select("user_id, users(name)").eq("group_id", groupId),
+    admin
+      .from("items").select("id, created_by, data, anon")
+      .eq("group_id", groupId)
+      .eq("private", false)
+      .eq("targeted", false),
+  ]);
   const members = ((memRows ?? []) as unknown as { user_id: string; users: { name: string | null } | null }[])
     .filter((m) => m.user_id !== userId);
   if (members.length === 0) return [];
-
-  // 2. All GROUP-WIDE drops → per-user "dropped" set + an id→title map. Private
-  // logs and targeted (person-to-person) drops are excluded: they're not part of
-  // the shared taste graph, so they neither leak as evidence nor skew the score.
-  const { data: itemRows } = await admin
-    .from("items").select("id, created_by, data, anon")
-    .eq("group_id", groupId)
-    .eq("private", false)
-    .eq("targeted", false);
   const items = (itemRows ?? []) as unknown as { id: string; created_by: string; data: Record<string, unknown> | null; anon: boolean }[];
 
   const titleById = new Map<string, string>();

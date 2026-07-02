@@ -22,35 +22,39 @@ export async function buildPeoplePool(userId: string, groupId: string): Promise<
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const { data: iRaw } = await supabase
-    .from("items")
-    .select("id, type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)")
-    .eq("group_id", groupId)
-    .neq("created_by", userId)
-    .eq("private", false)
-    .order("created_at", { ascending: false })
-    .limit(40);
+  // the four base reads are independent → one round-trip's latency, not four.
+  const [iRes, cRes, qRes, meRes] = await Promise.all([
+    supabase
+      .from("items")
+      .select("id, type, data, note, rating_value, anon, created_by, users!items_created_by_fkey(name)")
+      .eq("group_id", groupId)
+      .neq("created_by", userId)
+      .eq("private", false)
+      .order("created_at", { ascending: false })
+      .limit(40),
+    supabase
+      .from("curate_drops")
+      .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, consent)")
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+      .limit(40),
+    supabase.from("queue_items").select("item_id, curate_drop_id").eq("user_id", userId),
+    supabase.from("users").select("services").eq("id", userId).maybeSingle(),
+  ]);
+  const cRaw = cRes.data;
+  const queuedItems = new Set((qRes.data ?? []).map((q) => q.item_id).filter(Boolean));
+  const queuedCurate = new Set((qRes.data ?? []).map((q) => q.curate_drop_id).filter(Boolean));
 
-  const { data: cRaw } = await supabase
-    .from("curate_drops")
-    .select("id, type, moment, their_words, data, curate_people!curate_drops_person_id_fkey(name, consent)")
-    .eq("published", true)
-    .order("created_at", { ascending: false })
-    .limit(40);
-
-  const { data: qRaw } = await supabase
-    .from("queue_items").select("item_id, curate_drop_id").eq("user_id", userId);
-  const queuedItems = new Set((qRaw ?? []).map((q) => q.item_id).filter(Boolean));
-  const queuedCurate = new Set((qRaw ?? []).map((q) => q.curate_drop_id).filter(Boolean));
-
-  const itemRows = (iRaw ?? []) as unknown as ItemRow[];
-  await signPhotos(admin, itemRows, (it) => (it as { data?: Record<string, unknown> }).data);
-  const proofMap = await fetchPositiveVerdicts(admin, itemRows.map((i) => i.id));
-  const { data: me } = await supabase.from("users").select("services").eq("id", userId).maybeSingle();
-  const availMap = await availabilityMap(
-    itemRows.map((i) => ({ id: i.id, type: i.type, data: i.data })),
-    cleanServices(me?.services),
-  );
+  const itemRows = (iRes.data ?? []) as unknown as ItemRow[];
+  // the three enrichments all derive from itemRows → run together too.
+  const [, proofMap, availMap] = await Promise.all([
+    signPhotos(admin, itemRows, (it) => (it as { data?: Record<string, unknown> }).data),
+    fetchPositiveVerdicts(admin, itemRows.map((i) => i.id)),
+    availabilityMap(
+      itemRows.map((i) => ({ id: i.id, type: i.type, data: i.data })),
+      cleanServices(meRes.data?.services),
+    ),
+  ]);
 
   const fromItems: Cand[] = itemRows
     .filter((i) => !queuedItems.has(i.id))
@@ -80,9 +84,9 @@ export async function buildPeoplePool(userId: string, groupId: string): Promise<
 // pool. De-duped by display title so nothing appears twice (saved-and-also-a-
 // group-drop, or one film dropped by two people). First occurrence wins:
 // watchlist → people/curate. Untitled items are never collapsed together.
-export async function buildSurprisePool(userId: string, groupId: string, watchlist: Cand[]): Promise<Cand[]> {
-  const people = await buildPeoplePool(userId, groupId);
-
+// Sync merge — the caller fetches the people pool itself (in parallel with its
+// own queries) and hands it in, so the two never serialize behind each other.
+export function buildSurprisePool(watchlist: Cand[], people: Cand[]): Cand[] {
   const seen = new Set<string>();
   const out: Cand[] = [];
   for (const c of [...watchlist, ...people]) {

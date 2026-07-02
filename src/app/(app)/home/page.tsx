@@ -118,10 +118,16 @@ export default async function Home() {
   if (!user) redirect("/login");
   const supabase = await createClient();
 
-  // everything that doesn't need the active group → fire together.
-  // (getMemberships is request-memoized, so this reuses the layout's call.)
-  const [memberships, meRes, cRes, cqRes] = await Promise.all([
-    getMemberships(user.id),
+  // memberships first (request-memoized — the layout already paid for this
+  // call, so it resolves instantly); the items + vibe-read queries need g.id.
+  const memberships = await getMemberships(user.id);
+  if (memberships.length === 0) redirect("/groups/new");
+  const active = memberships.find((m) => m.is_home) ?? memberships[0];
+  const g = active.groups!;
+
+  // ONE parallel batch for everything that only needs user/group ids — these
+  // used to run one-after-another, serializing five network round-trips.
+  const [meRes, cRes, cqRes, iRes, readRes] = await Promise.all([
     supabase.from("users").select("name, music_app, services").eq("id", user.id).maybeSingle(),
     supabase
       .from("curate_drops")
@@ -130,53 +136,43 @@ export default async function Home() {
       .order("created_at", { ascending: false })
       .range(0, RIVER_PAGE - 1),
     supabase.from("queue_items").select("curate_drop_id").eq("user_id", user.id).not("curate_drop_id", "is", null),
+    // group items — USER-scoped client, so items RLS applies: a targeted drop
+    // (dropped for specific people) only comes back for its sender + recipients.
+    // Bounded: the feed reveals 8 then "show earlier", so 120 covers it with room.
+    supabase
+      .from("items")
+      .select("id, type, anon, targeted, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
+      .eq("group_id", g.id)
+      .eq("private", false)
+      .order("created_at", { ascending: false })
+      .limit(120),
+    // the group's latest vibe read (the weekly cron writes these) → surfaced on
+    // the button so people can open the week's read without regenerating it.
+    createAdminClient()
+      .from("vibe_reads").select("card_data")
+      .eq("group_id", g.id).order("generated_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
 
-  if (memberships.length === 0) redirect("/groups/new");
-  const active = memberships.find((m) => m.is_home) ?? memberships[0];
-  const g = active.groups!;
   const myName = meRes.data?.name ?? null;
   const myMusicApp = meRes.data?.music_app ?? null;
   const curate = ((cRes.data ?? []) as unknown as CDrop[]).filter((d) => d.curate_people);
   const queuedCurate = (cqRes.data ?? []).map((r) => r.curate_drop_id as string);
-
-  // group items, then which of them I've already queued.
-  // NOTE: this is the USER-scoped client, so items RLS applies — a targeted drop
-  // (dropped for specific people) only comes back for its sender + recipients.
-  const { data: iRaw } = await supabase
-    .from("items")
-    .select("id, type, anon, targeted, rating_value, note, data, created_by, users!items_created_by_fkey(name), reactions(emoji, user_id, users!reactions_user_id_fkey(name))")
-    .eq("group_id", g.id)
-    .eq("private", false)
-    .order("created_at", { ascending: false });
-  const items = (iRaw ?? []) as unknown as Item[];
-  await signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>);
-  // "you have it" for movies/tv you can stream on a service you picked.
-  const availMap = await availabilityMap(
-    items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
-    cleanServices(meRes.data?.services),
-  );
-
+  const items = (iRes.data ?? []) as unknown as Item[];
+  const latestRead = readRes.data;
   const ids = items.map((i) => i.id);
-  // who in the group is into each drop (loved/liked) — admin: verdicts are owner-scoped.
-  const proofMap = await fetchPositiveVerdicts(createAdminClient(), ids);
-  const { data: qRaw } = await supabase
-    .from("queue_items")
-    .select("item_id")
-    .eq("user_id", user.id)
-    .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-  const queued = new Set((qRaw ?? []).map((q) => q.item_id));
 
   // A targeted drop is private to its sender + recipients (RLS enforces it), so
   // just SEEING one you didn't send means it's for you. For your OWN targeted
   // drops, look up who you sent them to, to show a quiet "sent to …" note.
-  const mySentTargeted = items.filter((it) => it.created_by === user.id && it.targeted).map((it) => it.id);
-  const sentTo = new Map<string, string[]>();
-  if (mySentTargeted.length) {
+  const uid = user.id;
+  const mySentTargeted = items.filter((it) => it.created_by === uid && it.targeted).map((it) => it.id);
+  async function loadSentTo(): Promise<Map<string, string[]>> {
+    const map = new Map<string, string[]>();
+    if (!mySentTargeted.length) return map;
     const admin = createAdminClient();
     const { data: recRows } = await admin
       .from("recs").select("item_id, to_user")
-      .eq("from_user", user.id).in("item_id", mySentTargeted).not("to_user", "is", null);
+      .eq("from_user", uid).in("item_id", mySentTargeted).not("to_user", "is", null);
     const toIds = [...new Set((recRows ?? []).map((r) => r.to_user as string))];
     const nameById = new Map<string, string>();
     if (toIds.length) {
@@ -184,18 +180,32 @@ export default async function Home() {
       for (const u of us ?? []) nameById.set(u.id as string, ((u.name as string | null) || "someone").toLowerCase());
     }
     for (const r of recRows ?? []) {
-      const arr = sentTo.get(r.item_id as string) ?? [];
+      const arr = map.get(r.item_id as string) ?? [];
       const nm = nameById.get(r.to_user as string);
       if (nm && !arr.includes(nm)) arr.push(nm);
-      sentTo.set(r.item_id as string, arr);
+      map.set(r.item_id as string, arr);
     }
+    return map;
   }
 
-  // the group's latest vibe read (the weekly cron writes these) → surfaced on the
-  // button so people can open the week's read without regenerating it.
-  const { data: latestRead } = await createAdminClient()
-    .from("vibe_reads").select("card_data")
-    .eq("group_id", g.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
+  // second batch — every enrichment derived from the items list, together:
+  // signed photo urls, "you have it" availability, who's into what (admin:
+  // verdicts are owner-scoped), what I've already saved, targeted-drop names.
+  const [, availMap, proofMap, qRes, sentTo] = await Promise.all([
+    signPhotos(createAdminClient(), items, (it) => it.data as Record<string, unknown>),
+    availabilityMap(
+      items.map((it) => ({ id: it.id, type: it.type, data: it.data })),
+      cleanServices(meRes.data?.services),
+    ),
+    fetchPositiveVerdicts(createAdminClient(), ids),
+    supabase
+      .from("queue_items")
+      .select("item_id")
+      .eq("user_id", user.id)
+      .in("item_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]),
+    loadSentTo(),
+  ]);
+  const queued = new Set((qRes.data ?? []).map((q) => q.item_id));
 
   // the cinematic highlight reel — the best of what your people did lately.
   const highlights = buildHighlights(items, proofMap, user.id);

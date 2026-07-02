@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getMemberships } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import DropComposer from "@/components/drop-composer";
 
@@ -8,9 +8,8 @@ export default async function Drop() {
   if (!user) redirect("/login");
   const supabase = await createClient();
 
-  const { data: mRaw } = await supabase
-    .from("group_members").select("group_id, is_home").eq("user_id", user.id);
-  const memberships = (mRaw ?? []) as { group_id: string; is_home: boolean }[];
+  // memoized — the layout already fetched memberships this request.
+  const memberships = await getMemberships(user.id);
   if (memberships.length === 0) redirect("/groups/new");
   const active = memberships.find((m) => m.is_home) ?? memberships[0];
 
