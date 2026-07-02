@@ -52,13 +52,20 @@ function typesetSize(title: string): number {
   return 40 * (longest > 9 ? Math.min(1, 9 / longest) : 1);
 }
 
+// only one preview plays at a time, app-wide: starting a card's preview hands
+// off from whichever card was playing (its own pause listener flips its UI).
+let activePreview: HTMLAudioElement | null = null;
+
 function Preview({ url }: { url: string }) {
   const audio = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
   const [dur, setDur] = useState(30);
 
-  useEffect(() => () => { audio.current?.pause(); }, []);
+  useEffect(() => () => {
+    audio.current?.pause();
+    if (activePreview === audio.current) activePreview = null;
+  }, []);
 
   function toggle(e: React.MouseEvent) {
     e.stopPropagation();
@@ -71,19 +78,33 @@ function Preview({ url }: { url: string }) {
       a.addEventListener("play", () => setPlaying(true));
       audio.current = a;
     }
-    if (audio.current.paused) void audio.current.play().catch(() => {});
-    else audio.current.pause();
+    if (audio.current.paused) {
+      if (activePreview && activePreview !== audio.current) activePreview.pause();
+      activePreview = audio.current;
+      void audio.current.play().catch(() => {});
+    } else {
+      audio.current.pause();
+    }
   }
 
   const mmss = (s: number) => `0:${String(Math.floor(s)).padStart(2, "0")}`;
   return (
     <div className="mt-3 flex items-center gap-3 bg-surface-2 border border-hair rounded-2xl px-3.5 py-3" onClick={(e) => e.stopPropagation()}>
       <button onClick={toggle} aria-label={playing ? "pause preview" : "play preview"}
-        className="w-[42px] h-[42px] flex-none rounded-full bg-vibe text-white flex items-center justify-center text-[15px] shadow-[2.5px_2.5px_0_#0D0B09] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-transform">
-        {playing ? "❚❚" : "▶"}
+        className="w-[42px] h-[42px] flex-none rounded-full bg-vibe text-white flex items-center justify-center shadow-[2.5px_2.5px_0_#0D0B09] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-transform">
+        {playing ? (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <rect x="6.2" y="4.8" width="4.2" height="14.4" rx="1.8" />
+            <rect x="13.6" y="4.8" width="4.2" height="14.4" rx="1.8" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="ml-[2px]">
+            <path d="M8.4 5.1a1.2 1.2 0 0 1 1.82-1.03l11 6.9a1.2 1.2 0 0 1 0 2.06l-11 6.9A1.2 1.2 0 0 1 8.4 18.9V5.1z" transform="translate(-2 0)" />
+          </svg>
+        )}
       </button>
       <div className="flex-1 min-w-0">
-        <div className="h-[4px] rounded-full bg-white/10 overflow-hidden">
+        <div className="h-[5px] rounded-full bg-white/10 overflow-hidden">
           <div className="h-full rounded-full bg-vibe-2 transition-[width] duration-300" style={{ width: `${Math.min(100, (t / dur) * 100)}%` }} />
         </div>
         <div className="font-m text-[10px] text-muted mt-1.5">{mmss(t)} / {mmss(dur)} · preview</div>

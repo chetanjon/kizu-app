@@ -62,24 +62,22 @@ export function actionsFor(item: ActItem, musicApp?: string | null, suggestApp =
         if (second) out.push(second);
         return out;
       }
-      // Their app has NO match for this song (odesli linked it elsewhere but not
-      // here — e.g. a YouTube-only track a Spotify person is viewing). A search
-      // in their app would dead-end, so lead with a link that actually PLAYS;
-      // their-app search rides along as the second option. yt/yt-music first:
-      // free, no subscription needed.
+      // Their app has NO direct match (odesli linked it elsewhere — e.g. an
+      // iTunes-resolved drop a Spotify person is viewing). STILL lead with
+      // THEIR app: a search there nearly always lands the song, and the
+      // in-card 30s preview already covers "hear it right now" — the button's
+      // job is opening the app they'd actually keep listening in. (Owner call
+      // 2026-07-02: a Spotify picker must never be handed "apple music".)
+      // The strongest direct link rides second for the rare search miss.
+      const mine = appPill(musicApp, links, d);
+      if (mine) { mine.primary = true; out.push(mine); }
       const altOrder = ["youtubeMusic", "youtube", "spotify", "apple", "soundcloud", "tidal", "deezer", "amazon"];
       const altKey = altOrder.find((k) => k !== musicApp && str(links[k]));
       if (altKey) {
         const label = MUSIC_PRIORITY.find((p) => p.key === altKey)?.label ?? "listen";
-        out.push({ label, url: str(links[altKey])!, kind: "play", primary: true });
-        const mine = appPill(musicApp, links, d);
-        if (mine) out.push(mine);
-        return out;
+        out.push({ label, url: str(links[altKey])!, kind: "play", primary: out.length === 0 });
       }
-      // no platform links at all (manual drop / odesli miss) → honest best
-      // effort: a search in their app. The song may well be there.
-      const search = appPill(musicApp, links, d);
-      if (search) { search.primary = true; return [search]; }
+      if (out.length) return out;
     }
 
     // no app picked → the song's available play pills + a clear prompt to pick one
