@@ -49,9 +49,18 @@ function fmtDate(iso: string): string {
 
 function CardArt({ card }: { card: DeckCard }) {
   const cover = img(card);
-  return cover
-    ? <img src={cover} alt="" draggable={false} className="w-full h-full object-cover object-center" />
-    : <div className="w-full h-full" style={{ background: grad(card.type) }} />;
+  if (!cover) return <div className="w-full h-full" style={{ background: grad(card.type) }} />;
+  // music art is square — zoom-cropping it into the tall poster frame slices
+  // the cover. Show it whole, anchored top; the type gradient fills the rest
+  // (exactly where the text overlay sits). Posters already fit the frame.
+  if (card.type === "listen") {
+    return (
+      <div className="w-full h-full" style={{ background: grad(card.type) }}>
+        <img src={cover} alt="" draggable={false} className="w-full aspect-square object-cover" />
+      </div>
+    );
+  }
+  return <img src={cover} alt="" draggable={false} className="w-full h-full object-cover object-center" />;
 }
 
 export default function LogDeck({ cards }: { cards: DeckCard[] }) {
@@ -204,8 +213,10 @@ export default function LogDeck({ cards }: { cards: DeckCard[] }) {
       {open && cur && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4 text-left" onClick={() => setOpen(false)}>
           <div className="w-full max-w-[380px] bg-surface border-[2.5px] border-frame rounded-3xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="relative aspect-[3/4]" style={{ background: img(cur) ? undefined : grad(cur.type) }}>
-              {img(cur) && <img src={img(cur)!} alt="" className="w-full h-full object-cover object-center" />}
+            <div className="relative aspect-[3/4]" style={{ background: img(cur) && cur.type !== "listen" ? undefined : grad(cur.type) }}>
+              {img(cur) && (cur.type === "listen"
+                ? <img src={img(cur)!} alt="" className="w-full aspect-square object-cover" />
+                : <img src={img(cur)!} alt="" className="w-full h-full object-cover object-center" />)}
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,12,.92), transparent 45%)" }} />
               <div className="absolute left-0 right-0 bottom-0 p-5">
                 <div className="font-h font-black text-2xl text-white leading-tight">{title(cur)}</div>

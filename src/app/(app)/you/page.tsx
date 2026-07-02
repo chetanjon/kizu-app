@@ -17,6 +17,10 @@ const MIN_SIGNALS = 5; // keep in sync with /api/read
 
 type Read = { signature: string; tags: string[] };
 
+// evidence titles come straight from drop data — a playlist-style track name
+// can run 50+ chars and wrap the row into a paragraph. Keep each one short.
+const trunc = (s: string) => (s.length > 30 ? s.slice(0, 29).trimEnd() + "…" : s);
+
 export default async function You({ searchParams }: { searchParams: Promise<{ music?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -106,9 +110,9 @@ export default async function You({ searchParams }: { searchParams: Promise<{ mu
             {matches.map((m, i) => (
               <div key={i} className="flex items-baseline justify-between gap-3 border-t border-hair py-3 first:border-t-0 first:pt-0">
                 <div className="min-w-0">
-                  <span className="font-h font-bold text-sm">you &amp; {m.name}</span>
+                  <span className="font-h font-bold text-sm" title={`you & ${m.name}`}>you &amp; {m.name.split(" ")[0]}</span>
                   {m.evidence.length > 0 && (
-                    <span className="font-b text-[13px] text-muted"> · you both love {m.evidence.join(", ")}</span>
+                    <span className="font-b text-[13px] text-muted"> · you both love {m.evidence.map(trunc).join(", ")}</span>
                   )}
                 </div>
                 <span className="font-m text-sm font-bold text-vibe-2 shrink-0">{m.pct}%</span>
