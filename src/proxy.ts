@@ -30,9 +30,10 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims ?? null;
 
-  // /r/<token> and /read/<id> gate themselves; / and /login are public.
+  // /r/<token>, /read/<id> and /join/<code> gate themselves (join shows a
+  // public invite landing so link previews can crawl it); / and /login public.
   // Segment-aware match: bare startsWith would make "/log" swallow "/login".
-  const protectedPaths = ["/home", "/tonight", "/queue", "/you", "/drop", "/log", "/groups", "/join", "/admin"];
+  const protectedPaths = ["/home", "/tonight", "/queue", "/you", "/drop", "/log", "/groups", "/admin"];
   const path = request.nextUrl.pathname;
   const isProtected = protectedPaths.some((p) => path === p || path.startsWith(p + "/"));
 
