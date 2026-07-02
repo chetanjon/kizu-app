@@ -7,7 +7,7 @@ import { useState } from "react";
 // "just read it out" case.
 export async function shareInvite(code: string, groupName: string): Promise<"shared" | "copied" | "failed"> {
   const url = `${window.location.origin}/join/${code}`;
-  const payload = { title: "kizu.", text: `join "${groupName.toLowerCase()}" on kizu`, url };
+  const payload = { title: "kizu.", text: `you're invited to "${groupName.toLowerCase()}".`, url };
   // the sheet only on touch devices: desktop Chrome also has navigator.share,
   // but there it means a clunky OS popover when a copied link is what you want.
   const touch = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
@@ -39,15 +39,25 @@ export default function InviteShare({ code, groupName }: { code: string; groupNa
     }
   }
 
+  // The LINK is the hero: it carries the code, opens the invite page, and
+  // auto-joins after sign-in — nothing to share separately. The code stays as
+  // a quiet footnote for the "just read it out across the room" case.
   return (
     <div className="bg-surface border-[2.5px] border-frame rounded-2xl p-5 shadow-[4px_4px_0_#0D0B09]">
-      <div className="font-h font-black text-[32px] tracking-[0.18em] text-center">{code}</div>
-      <div className="font-m text-[11px] text-muted text-center mt-1 break-all">{`kizu.app/join/${code}`}</div>
+      <div className="font-m text-[10px] tracking-widest uppercase text-muted text-center">one link, that&apos;s it</div>
+      <div className="font-h font-extrabold text-[19px] tracking-[-0.02em] text-center mt-1.5 break-all">
+        kizu.app<span className="text-vibe-2">/join/{code}</span>
+      </div>
       <button onClick={onShare}
         className="mt-4 w-full font-h font-bold text-sm bg-vibe text-white border-[2.5px] border-frame rounded-full py-2.5 shadow-[3px_3px_0_#0D0B09] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-transform">
         {copied ? "link copied" : "share invite link"}
       </button>
-      <p className="font-m text-[11px] text-muted text-center mt-3">anyone with this gets in. send it to someone whose taste you trust.</p>
+      <p className="font-b text-xs text-muted text-center mt-3 leading-snug">
+        the link does everything: opens the invite, signs them in, drops them into the space.
+      </p>
+      <p className="font-m text-[11px] text-muted text-center mt-2">
+        in person? just read it out: <span className="text-ink tracking-[0.18em]">{code}</span>
+      </p>
     </div>
   );
 }
