@@ -217,8 +217,8 @@ export default async function Home() {
         {/* the aurora read — the one showstopper, framed in cream on the dark stage */}
         <VibeRead groupId={g.id} initial={(latestRead?.card_data as VibeReadData) ?? null} />
 
-        {/* the highlight reel — a wide cinematic band of the group's best moments */}
-        {highlights.length > 0 && <div className="mt-6"><HighlightReel items={highlights} /></div>}
+        {/* "from your people" — a calm swipe rail beneath the hero read */}
+        {highlights.length > 0 && <HighlightReel items={highlights} />}
 
         <PushNudge />
         {!myName && <div className="mt-4 max-w-[420px]"><NameSetter /></div>}
